@@ -1,4 +1,6 @@
 
+Accelerator "accel-bvh"
+
 LookAt 400 20 30   0 63 -110   0 0 1
 Rotate -5 0 0 1
 Camera "perspective" "float fov" [39]

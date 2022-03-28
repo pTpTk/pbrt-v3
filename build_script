@@ -1,0 +1,2 @@
+cmake -S. -Bbuild -DCMAKE_CXX_COMPILER=/software/gcc/11.2.0/b1/bin/g++
+cmake --build build
