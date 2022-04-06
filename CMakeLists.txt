@@ -527,11 +527,6 @@ TARGET_COMPILE_FEATURES ( pbrt_exe PRIVATE ${PBRT_CXX11_FEATURES} )
 TARGET_LINK_LIBRARIES ( pbrt_exe ${ALL_PBRT_LIBS} )
 
 # Tools
-ADD_EXECUTABLE ( bsdftest src/tools/bsdftest.cpp )
-ADD_SANITIZERS ( bsdftest )
-TARGET_COMPILE_FEATURES ( bsdftest PRIVATE ${PBRT_CXX11_FEATURES} )
-TARGET_LINK_LIBRARIES ( bsdftest ${ALL_PBRT_LIBS} )
-
 ADD_EXECUTABLE ( imgtool src/tools/imgtool.cpp )
 ADD_SANITIZERS ( imgtool )
 TARGET_COMPILE_FEATURES ( imgtool PRIVATE ${PBRT_CXX11_FEATURES} )
@@ -551,18 +546,17 @@ FILE ( GLOB PBRT_TEST_SOURCE
   src/tests/gtest/*.cc
   )
 
-ADD_EXECUTABLE ( pbrt_test ${PBRT_TEST_SOURCE} )
-ADD_SANITIZERS ( pbrt_test )
-TARGET_COMPILE_FEATURES ( pbrt_test PRIVATE ${PBRT_CXX11_FEATURES} )
-TARGET_LINK_LIBRARIES ( pbrt_test ${ALL_PBRT_LIBS} )
-
-ADD_TEST ( pbrt_unit_test pbrt_test )
+#ADD_EXECUTABLE ( pbrt_test ${PBRT_TEST_SOURCE} )
+#ADD_SANITIZERS ( pbrt_test )
+#TARGET_COMPILE_FEATURES ( pbrt_test PRIVATE ${PBRT_CXX11_FEATURES} )
+#TARGET_LINK_LIBRARIES ( pbrt_test ${ALL_PBRT_LIBS} )
+#
+#ADD_TEST ( pbrt_unit_test pbrt_test )
 
 # Installation
 
 INSTALL ( TARGETS
   pbrt_exe
-  bsdftest
   imgtool
   obj2pbrt
   cyhair2pbrt

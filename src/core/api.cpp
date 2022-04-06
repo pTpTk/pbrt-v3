@@ -42,63 +42,17 @@
 
 // API Additional Headers
 #include "accelerators/bvh.h"
-#include "accelerators/kdtreeaccel.h"
-#include "cameras/environment.h"
-#include "cameras/orthographic.h"
 #include "cameras/perspective.h"
-#include "cameras/realistic.h"
 #include "filters/box.h"
-#include "filters/gaussian.h"
-#include "filters/mitchell.h"
-#include "filters/sinc.h"
-#include "filters/triangle.h"
-#include "integrators/bdpt.h"
 #include "integrators/directlighting.h"
-#include "integrators/mlt.h"
-#include "integrators/ao.h"
 #include "integrators/path.h"
-#include "integrators/sppm.h"
-#include "integrators/volpath.h"
-#include "integrators/whitted.h"
 #include "lights/diffuse.h"
-#include "lights/distant.h"
-#include "lights/goniometric.h"
-#include "lights/infinite.h"
-#include "lights/point.h"
-#include "lights/projection.h"
-#include "lights/spot.h"
-#include "materials/disney.h"
-#include "materials/fourier.h"
-#include "materials/glass.h"
-#include "materials/hair.h"
-#include "materials/kdsubsurface.h"
 #include "materials/matte.h"
-#include "materials/metal.h"
-#include "materials/mirror.h"
-#include "materials/mixmat.h"
 #include "materials/plastic.h"
-#include "materials/substrate.h"
-#include "materials/subsurface.h"
-#include "materials/translucent.h"
-#include "materials/uber.h"
 #include "samplers/halton.h"
-#include "samplers/maxmin.h"
-#include "samplers/random.h"
-#include "samplers/sobol.h"
-#include "samplers/stratified.h"
-#include "samplers/zerotwosequence.h"
-#include "shapes/cone.h"
-#include "shapes/curve.h"
-#include "shapes/cylinder.h"
-#include "shapes/disk.h"
-#include "shapes/heightfield.h"
-#include "shapes/hyperboloid.h"
 #include "shapes/loopsubdiv.h"
-#include "shapes/nurbs.h"
-#include "shapes/paraboloid.h"
 #include "shapes/sphere.h"
 #include "shapes/triangle.h"
-#include "shapes/plymesh.h"
 #include "textures/bilerp.h"
 #include "textures/checkerboard.h"
 #include "textures/constant.h"
@@ -434,27 +388,27 @@ std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
         s = CreateSphereShape(object2world, world2object, reverseOrientation,
                               paramSet);
     // Create remaining single _Shape_ types
-    else if (name == "cylinder")
-        s = CreateCylinderShape(object2world, world2object, reverseOrientation,
-                                paramSet);
-    else if (name == "disk")
-        s = CreateDiskShape(object2world, world2object, reverseOrientation,
-                            paramSet);
-    else if (name == "cone")
-        s = CreateConeShape(object2world, world2object, reverseOrientation,
-                            paramSet);
-    else if (name == "paraboloid")
-        s = CreateParaboloidShape(object2world, world2object,
-                                  reverseOrientation, paramSet);
-    else if (name == "hyperboloid")
-        s = CreateHyperboloidShape(object2world, world2object,
-                                   reverseOrientation, paramSet);
+    //else if (name == "cylinder")
+    //    s = CreateCylinderShape(object2world, world2object, reverseOrientation,
+    //                            paramSet);
+    //else if (name == "disk")
+    //    s = CreateDiskShape(object2world, world2object, reverseOrientation,
+    //                        paramSet);
+    //else if (name == "cone")
+    //    s = CreateConeShape(object2world, world2object, reverseOrientation,
+    //                        paramSet);
+    //else if (name == "paraboloid")
+    //    s = CreateParaboloidShape(object2world, world2object,
+    //                              reverseOrientation, paramSet);
+    //else if (name == "hyperboloid")
+    //    s = CreateHyperboloidShape(object2world, world2object,
+    //                               reverseOrientation, paramSet);
     if (s != nullptr) shapes.push_back(s);
 
     // Create multiple-_Shape_ types
-    else if (name == "curve")
-        shapes = CreateCurveShape(object2world, world2object,
-                                  reverseOrientation, paramSet);
+    //else if (name == "curve")
+    //    shapes = CreateCurveShape(object2world, world2object,
+    //                              reverseOrientation, paramSet);
     else if (name == "trianglemesh") {
         if (PbrtOptions.toPly) {
             int nvi;
@@ -515,18 +469,19 @@ std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
             shapes = CreateTriangleMeshShape(object2world, world2object,
                                              reverseOrientation, paramSet,
                                              &*graphicsState.floatTextures);
-    } else if (name == "plymesh")
-        shapes = CreatePLYMesh(object2world, world2object, reverseOrientation,
-                               paramSet, &*graphicsState.floatTextures);
-    else if (name == "heightfield")
-        shapes = CreateHeightfield(object2world, world2object,
-                                   reverseOrientation, paramSet);
+    } 
+    //else if (name == "plymesh")
+    //    shapes = CreatePLYMesh(object2world, world2object, reverseOrientation,
+    //                           paramSet, &*graphicsState.floatTextures);
+    //else if (name == "heightfield")
+    //    shapes = CreateHeightfield(object2world, world2object,
+    //                               reverseOrientation, paramSet);
     else if (name == "loopsubdiv")
         shapes = CreateLoopSubdiv(object2world, world2object,
                                   reverseOrientation, paramSet);
-    else if (name == "nurbs")
-        shapes = CreateNURBS(object2world, world2object, reverseOrientation,
-                             paramSet);
+    //else if (name == "nurbs")
+    //    shapes = CreateNURBS(object2world, world2object, reverseOrientation,
+    //                         paramSet);
     else
         Warning("Shape \"%s\" unknown.", name.c_str());
     return shapes;
@@ -543,49 +498,49 @@ std::shared_ptr<Material> MakeMaterial(const std::string &name,
         material = CreateMatteMaterial(mp);
     else if (name == "plastic")
         material = CreatePlasticMaterial(mp);
-    else if (name == "translucent")
-        material = CreateTranslucentMaterial(mp);
-    else if (name == "glass")
-        material = CreateGlassMaterial(mp);
-    else if (name == "mirror")
-        material = CreateMirrorMaterial(mp);
-    else if (name == "hair")
-        material = CreateHairMaterial(mp);
-    else if (name == "disney")
-        material = CreateDisneyMaterial(mp);
-    else if (name == "mix") {
-        std::string m1 = mp.FindString("namedmaterial1", "");
-        std::string m2 = mp.FindString("namedmaterial2", "");
-        std::shared_ptr<Material> mat1, mat2;
-        if (graphicsState.namedMaterials->find(m1) ==
-            graphicsState.namedMaterials->end()) {
-            Error("Named material \"%s\" undefined.  Using \"matte\"",
-                  m1.c_str());
-            mat1 = MakeMaterial("matte", mp);
-        } else
-            mat1 = (*graphicsState.namedMaterials)[m1]->material;
+    //else if (name == "translucent")
+    //    material = CreateTranslucentMaterial(mp);
+    //else if (name == "glass")
+    //    material = CreateGlassMaterial(mp);
+    //else if (name == "mirror")
+    //    material = CreateMirrorMaterial(mp);
+    //else if (name == "hair")
+    //    material = CreateHairMaterial(mp);
+    //else if (name == "disney")
+    //    material = CreateDisneyMaterial(mp);
+    //else if (name == "mix") {
+    //    std::string m1 = mp.FindString("namedmaterial1", "");
+    //    std::string m2 = mp.FindString("namedmaterial2", "");
+    //    std::shared_ptr<Material> mat1, mat2;
+    //    if (graphicsState.namedMaterials->find(m1) ==
+    //        graphicsState.namedMaterials->end()) {
+    //        Error("Named material \"%s\" undefined.  Using \"matte\"",
+    //              m1.c_str());
+    //        mat1 = MakeMaterial("matte", mp);
+    //    } else
+    //        mat1 = (*graphicsState.namedMaterials)[m1]->material;
 
-        if (graphicsState.namedMaterials->find(m2) ==
-            graphicsState.namedMaterials->end()) {
-            Error("Named material \"%s\" undefined.  Using \"matte\"",
-                  m2.c_str());
-            mat2 = MakeMaterial("matte", mp);
-        } else
-            mat2 = (*graphicsState.namedMaterials)[m2]->material;
+    //    if (graphicsState.namedMaterials->find(m2) ==
+    //        graphicsState.namedMaterials->end()) {
+    //        Error("Named material \"%s\" undefined.  Using \"matte\"",
+    //              m2.c_str());
+    //        mat2 = MakeMaterial("matte", mp);
+    //    } else
+    //        mat2 = (*graphicsState.namedMaterials)[m2]->material;
 
-        material = CreateMixMaterial(mp, mat1, mat2);
-    } else if (name == "metal")
-        material = CreateMetalMaterial(mp);
-    else if (name == "substrate")
-        material = CreateSubstrateMaterial(mp);
-    else if (name == "uber")
-        material = CreateUberMaterial(mp);
-    else if (name == "subsurface")
-        material = CreateSubsurfaceMaterial(mp);
-    else if (name == "kdsubsurface")
-        material = CreateKdSubsurfaceMaterial(mp);
-    else if (name == "fourier")
-        material = CreateFourierMaterial(mp);
+    //    material = CreateMixMaterial(mp, mat1, mat2);
+    //} else if (name == "metal")
+    //    material = CreateMetalMaterial(mp);
+    //else if (name == "substrate")
+    //    material = CreateSubstrateMaterial(mp);
+    //else if (name == "uber")
+    //    material = CreateUberMaterial(mp);
+    //else if (name == "subsurface")
+    //    material = CreateSubsurfaceMaterial(mp);
+    //else if (name == "kdsubsurface")
+    //    material = CreateKdSubsurfaceMaterial(mp);
+    //else if (name == "fourier")
+    //    material = CreateFourierMaterial(mp);
     else {
         Warning("Material \"%s\" unknown. Using \"matte\".", name.c_str());
         material = CreateMatteMaterial(mp);
@@ -731,22 +686,22 @@ std::shared_ptr<Light> MakeLight(const std::string &name,
                                  const Transform &light2world,
                                  const MediumInterface &mediumInterface) {
     std::shared_ptr<Light> light;
-    if (name == "point")
-        light =
-            CreatePointLight(light2world, mediumInterface.outside, paramSet);
-    else if (name == "spot")
-        light = CreateSpotLight(light2world, mediumInterface.outside, paramSet);
-    else if (name == "goniometric")
-        light = CreateGoniometricLight(light2world, mediumInterface.outside,
-                                       paramSet);
-    else if (name == "projection")
-        light = CreateProjectionLight(light2world, mediumInterface.outside,
-                                      paramSet);
-    else if (name == "distant")
-        light = CreateDistantLight(light2world, paramSet);
-    else if (name == "infinite" || name == "exinfinite")
-        light = CreateInfiniteLight(light2world, paramSet);
-    else
+    //if (name == "point")
+    //    light =
+    //        CreatePointLight(light2world, mediumInterface.outside, paramSet);
+    //else if (name == "spot")
+    //    light = CreateSpotLight(light2world, mediumInterface.outside, paramSet);
+    //else if (name == "goniometric")
+    //    light = CreateGoniometricLight(light2world, mediumInterface.outside,
+    //                                   paramSet);
+    //else if (name == "projection")
+    //    light = CreateProjectionLight(light2world, mediumInterface.outside,
+    //                                  paramSet);
+    //else if (name == "distant")
+    //    light = CreateDistantLight(light2world, paramSet);
+    //else if (name == "infinite" || name == "exinfinite")
+    //    light = CreateInfiniteLight(light2world, paramSet);
+    //else
         Warning("Light \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();
     return light;
@@ -774,8 +729,8 @@ std::shared_ptr<Primitive> MakeAccelerator(
     std::shared_ptr<Primitive> accel;
     if (name == "bvh")
         accel = CreateBVHAccelerator(std::move(prims), paramSet);
-    else if (name == "kdtree")
-        accel = CreateKdTreeAccelerator(std::move(prims), paramSet);
+    //else if (name == "kdtree")
+    //    accel = CreateKdTreeAccelerator(std::move(prims), paramSet);
     else
         Warning("Accelerator \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();
@@ -798,15 +753,15 @@ Camera *MakeCamera(const std::string &name, const ParamSet &paramSet,
     if (name == "perspective")
         camera = CreatePerspectiveCamera(paramSet, animatedCam2World, film,
                                          mediumInterface.outside);
-    else if (name == "orthographic")
-        camera = CreateOrthographicCamera(paramSet, animatedCam2World, film,
-                                          mediumInterface.outside);
-    else if (name == "realistic")
-        camera = CreateRealisticCamera(paramSet, animatedCam2World, film,
-                                       mediumInterface.outside);
-    else if (name == "environment")
-        camera = CreateEnvironmentCamera(paramSet, animatedCam2World, film,
-                                         mediumInterface.outside);
+    //else if (name == "orthographic")
+    //    camera = CreateOrthographicCamera(paramSet, animatedCam2World, film,
+    //                                      mediumInterface.outside);
+    //else if (name == "realistic")
+    //    camera = CreateRealisticCamera(paramSet, animatedCam2World, film,
+    //                                   mediumInterface.outside);
+    //else if (name == "environment")
+    //    camera = CreateEnvironmentCamera(paramSet, animatedCam2World, film,
+    //                                     mediumInterface.outside);
     else
         Warning("Camera \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();
@@ -817,18 +772,18 @@ std::shared_ptr<Sampler> MakeSampler(const std::string &name,
                                      const ParamSet &paramSet,
                                      const Film *film) {
     Sampler *sampler = nullptr;
-    if (name == "lowdiscrepancy" || name == "02sequence")
-        sampler = CreateZeroTwoSequenceSampler(paramSet);
-    else if (name == "maxmindist")
-        sampler = CreateMaxMinDistSampler(paramSet);
-    else if (name == "halton")
+    //if (name == "lowdiscrepancy" || name == "02sequence")
+    //    sampler = CreateZeroTwoSequenceSampler(paramSet);
+    //else if (name == "maxmindist")
+    //    sampler = CreateMaxMinDistSampler(paramSet);
+    if (name == "halton")
         sampler = CreateHaltonSampler(paramSet, film->GetSampleBounds());
-    else if (name == "sobol")
-        sampler = CreateSobolSampler(paramSet, film->GetSampleBounds());
-    else if (name == "random")
-        sampler = CreateRandomSampler(paramSet);
-    else if (name == "stratified")
-        sampler = CreateStratifiedSampler(paramSet);
+    //else if (name == "sobol")
+    //    sampler = CreateSobolSampler(paramSet, film->GetSampleBounds());
+    //else if (name == "random")
+    //    sampler = CreateRandomSampler(paramSet);
+    //else if (name == "stratified")
+    //    sampler = CreateStratifiedSampler(paramSet);
     else
         Warning("Sampler \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();
@@ -840,14 +795,14 @@ std::unique_ptr<Filter> MakeFilter(const std::string &name,
     Filter *filter = nullptr;
     if (name == "box")
         filter = CreateBoxFilter(paramSet);
-    else if (name == "gaussian")
-        filter = CreateGaussianFilter(paramSet);
-    else if (name == "mitchell")
-        filter = CreateMitchellFilter(paramSet);
-    else if (name == "sinc")
-        filter = CreateSincFilter(paramSet);
-    else if (name == "triangle")
-        filter = CreateTriangleFilter(paramSet);
+    //else if (name == "gaussian")
+    //    filter = CreateGaussianFilter(paramSet);
+    //else if (name == "mitchell")
+    //    filter = CreateMitchellFilter(paramSet);
+    //else if (name == "sinc")
+    //    filter = CreateSincFilter(paramSet);
+    //else if (name == "triangle")
+    //    filter = CreateTriangleFilter(paramSet);
     else {
         Error("Filter \"%s\" unknown.", name.c_str());
         exit(1);
@@ -1674,24 +1629,25 @@ Integrator *RenderOptions::MakeIntegrator() const {
     }
 
     Integrator *integrator = nullptr;
-    if (IntegratorName == "whitted")
-        integrator = CreateWhittedIntegrator(IntegratorParams, sampler, camera);
-    else if (IntegratorName == "directlighting")
+    //if (IntegratorName == "whitted")
+    //    integrator = CreateWhittedIntegrator(IntegratorParams, sampler, camera);
+    if (IntegratorName == "directlighting")
         integrator =
             CreateDirectLightingIntegrator(IntegratorParams, sampler, camera);
     else if (IntegratorName == "path")
         integrator = CreatePathIntegrator(IntegratorParams, sampler, camera);
-    else if (IntegratorName == "volpath")
-        integrator = CreateVolPathIntegrator(IntegratorParams, sampler, camera);
-    else if (IntegratorName == "bdpt") {
-        integrator = CreateBDPTIntegrator(IntegratorParams, sampler, camera);
-    } else if (IntegratorName == "mlt") {
-        integrator = CreateMLTIntegrator(IntegratorParams, camera);
-    } else if (IntegratorName == "ambientocclusion") {
-        integrator = CreateAOIntegrator(IntegratorParams, sampler, camera);
-    } else if (IntegratorName == "sppm") {
-        integrator = CreateSPPMIntegrator(IntegratorParams, camera);
-    } else {
+    //else if (IntegratorName == "volpath")
+    //    integrator = CreateVolPathIntegrator(IntegratorParams, sampler, camera);
+    //else if (IntegratorName == "bdpt") {
+    //    integrator = CreateBDPTIntegrator(IntegratorParams, sampler, camera);
+    //} else if (IntegratorName == "mlt") {
+    //    integrator = CreateMLTIntegrator(IntegratorParams, camera);
+    //} else if (IntegratorName == "ambientocclusion") {
+    //    integrator = CreateAOIntegrator(IntegratorParams, sampler, camera);
+    //} else if (IntegratorName == "sppm") {
+    //    integrator = CreateSPPMIntegrator(IntegratorParams, camera);
+    //} 
+    else {
         Error("Integrator \"%s\" unknown.", IntegratorName.c_str());
         return nullptr;
     }
