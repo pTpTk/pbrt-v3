@@ -66,6 +66,10 @@ ENDIF()
 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
+IF(PROFILE)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+ENDIF()
+
 ###########################################################################
 # Annoying compiler-specific details
 

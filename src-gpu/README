@@ -1,0 +1,38 @@
+Since objects with virtual functions and objects derived from base class with 
+virtual functions are not allowed to be passed to __global__, the following needs
+to be done:
+
+Create interface classes in host functions. The interface classes should contain
+a GPU mem pointer to the actual object created in the GPU. All functions should
+be defined as just calling the corresponding GPU object functions.
+    class CPUclass{
+        GPUclass* GPUobject;
+        func(a, b);
+    };
+
+    CPUclass::CPUclass(A){
+        GPUclass = CreateGPUclass(A);
+    }
+
+    __global__ CPUclass::func(a, b){
+        ProfileFunction();
+        GPUobject->func(a, b);
+    }
+
+    GPUclass* CreateGPUclass(A){
+        GPUclass* tmp = new GPUclass(A);
+        GPUclass* GPUptr;
+        cudaMalloc(GPUptr, sizeof(tmp));
+        cudaMemcpy(GPUptr, tmp);
+        delete(tmp);
+        return GPUptr;
+    }
+
+====================================================================
+
+New thought, same problem.
+
+baseclass{
+    pointer;
+    enum obtectClass;
+};

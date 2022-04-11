@@ -3,4 +3,5 @@ src/build
 src/bin
 src/objs
 .sconsign.dblite
+src-gpu/ext
 build
