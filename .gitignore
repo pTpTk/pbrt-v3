@@ -5,3 +5,4 @@ src/objs
 .sconsign.dblite
 src-gpu/ext
 build
+src-bak

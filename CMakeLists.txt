@@ -82,6 +82,8 @@ ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+SET(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+
   FIND_PROGRAM(XIAR xiar)
   IF(XIAR)
     SET(CMAKE_AR "${XIAR}")
@@ -529,6 +531,10 @@ ADD_SANITIZERS ( pbrt_exe )
 SET_TARGET_PROPERTIES ( pbrt_exe PROPERTIES OUTPUT_NAME pbrt )
 TARGET_COMPILE_FEATURES ( pbrt_exe PRIVATE ${PBRT_CXX11_FEATURES} )
 TARGET_LINK_LIBRARIES ( pbrt_exe ${ALL_PBRT_LIBS} )
+
+# GPU renderer
+ADD_EXECUTABLE ( pbrt_gpu src-gpu/main/pbrt.cpp )
+ADD_SANITIZERS ( pbrt_gpu )
 
 # Tools
 ADD_EXECUTABLE ( imgtool src/tools/imgtool.cpp )

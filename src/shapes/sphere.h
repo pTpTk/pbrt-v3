@@ -44,29 +44,33 @@
 namespace pbrt {
 
 // Sphere Declarations
-class Sphere : public Shape {
+class Sphere : public ShapeBase {
   public:
     // Sphere Public Methods
-    Sphere(const Transform *ObjectToWorld, const Transform *WorldToObject,
-           bool reverseOrientation, Float radius, Float zMin, Float zMax,
-           Float phiMax)
-        : Shape(ObjectToWorld, WorldToObject, reverseOrientation),
+    __host__
+    __device__
+    Sphere(const Transform *ObjectToWorld, 
+           const Transform *WorldToObject,
+           bool reverseOrientation, Float radius, Float zMin, 
+           Float zMax, Float phiMax)
+        : ShapeBase(ObjectToWorld, WorldToObject, reverseOrientation),
           radius(radius),
           zMin(Clamp(std::min(zMin, zMax), -radius, radius)),
           zMax(Clamp(std::max(zMin, zMax), -radius, radius)),
           thetaMin(std::acos(Clamp(std::min(zMin, zMax) / radius, -1, 1))),
           thetaMax(std::acos(Clamp(std::max(zMin, zMax) / radius, -1, 1))),
-          phiMax(Radians(Clamp(phiMax, 0, 360))) {}
-    Bounds3f ObjectBound() const;
-    bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
-                   bool testAlphaTexture) const;
-    bool IntersectP(const Ray &ray, bool testAlphaTexture) const;
-    Float Area() const;
-    Interaction Sample(const Point2f &u, Float *pdf) const;
-    Interaction Sample(const Interaction &ref, const Point2f &u,
-                       Float *pdf) const;
-    Float Pdf(const Interaction &ref, const Vector3f &wi) const;
-    Float SolidAngle(const Point3f &p, int nSamples) const;
+                     phiMax(Radians(Clamp(phiMax, 0, 360))) {}
+    __device__ Bounds3f ObjectBound() const;
+    __device__ bool Intersect(const Ray &ray, Float *tHit, 
+                              SurfaceInteraction *isect,
+                              bool testAlphaTexture) const;
+    __device__ bool IntersectP(const Ray &ray, bool testAlphaTexture) const;
+    __device__ Float Area() const;
+    __device__ Interaction Sample(const Point2f &u, Float *pdf) const;
+    __device__ Interaction Sample(const Interaction &ref, const Point2f &u,
+                                  Float *pdf) const;
+    __device__ Float Pdf(const Interaction &ref, const Vector3f &wi) const;
+    __device__ Float SolidAngle(const Point3f &p, int nSamples) const;
 
   private:
     // Sphere Private Data
@@ -75,10 +79,17 @@ class Sphere : public Shape {
     const Float thetaMin, thetaMax, phiMax;
 };
 
-std::shared_ptr<Shape> CreateSphereShape(const Transform *o2w,
-                                         const Transform *w2o,
-                                         bool reverseOrientation,
-                                         const ParamSet &params);
+Shape* CreateSphereShape(const Transform *o2w, const Transform *w2o,
+                         bool reverseOrientation, const ParamSet &params);
+
+__global__
+void CreateSphereShapeGPU(const Transform *o2w, const Transform *w2o,
+                          bool reverseOrientation, Float radius, Float zMin,
+                          Float zMax, Float phiMax, Shape* ptrGPU);
+
+void SphereShapeTest(const Transform *o2w, const Transform *w2o,
+                     bool reverseOrientation, Float radius, Float zMin,
+                     Float zMax, Float phiMax, Shape* ptrGPU);
 
 }  // namespace pbrt
 

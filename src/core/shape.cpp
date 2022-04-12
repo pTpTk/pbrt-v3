@@ -39,9 +39,11 @@
 namespace pbrt {
 
 // Shape Method Definitions
+__device__
 Shape::~Shape() {}
 
 STAT_COUNTER("Scene/Shapes created", nShapesCreated);
+__device__
 Shape::Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
              bool reverseOrientation)
     : ObjectToWorld(ObjectToWorld),
@@ -53,6 +55,7 @@ Shape::Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
 
 Bounds3f Shape::WorldBound() const { return (*ObjectToWorld)(ObjectBound()); }
 
+__device__
 Interaction Shape::Sample(const Interaction &ref, const Point2f &u,
                           Float *pdf) const {
     Interaction intr = Sample(u, pdf);
@@ -69,6 +72,7 @@ Interaction Shape::Sample(const Interaction &ref, const Point2f &u,
     return intr;
 }
 
+__device__
 Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
     // Intersect sample ray with area light geometry
     Ray ray = ref.SpawnRay(wi);
@@ -86,6 +90,7 @@ Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
     return pdf;
 }
 
+__device__
 Float Shape::SolidAngle(const Point3f &p, int nSamples) const {
     Interaction ref(p, Normal3f(), Vector3f(), Vector3f(0, 0, 1), 0,
                     MediumInterface{});

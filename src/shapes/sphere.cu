@@ -41,6 +41,7 @@
 namespace pbrt {
 
 // Sphere Method Definitions
+__host__
 __device__
 Bounds3f Sphere::ObjectBound() const {
     return Bounds3f(Point3f(-radius, -radius, zMin),
@@ -351,6 +352,17 @@ void CreateSphereShapeGPU(const Transform *o2w, const Transform *w2o,
                           bool reverseOrientation, Float radius, Float zMin,
                           Float zMax, Float phiMax, Shape* ptrGPU) {
     new(ptrGPU) Sphere(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
+}
+
+void SphereShapeTest(const Transform *o2w, const Transform *w2o,
+                     bool reverseOrientation, Float radius, Float zMin,
+                     Float zMax, Float phiMax, Shape* ptrGPU) {
+    Shape* ptrCPU;
+    Sphere objCPU(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
+    cudaMemcpy(ptrCPU, ptrGPU, sizeof(Sphere), cudaMemcpyDeviceToHost);
+
+    assert(ptrCPU->radius == objCPU.radius);
+    printf("SphereShape works!\n");
 }
 
 }  // namespace pbrt

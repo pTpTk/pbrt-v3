@@ -387,101 +387,19 @@ std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
     if (name == "sphere")
         s = CreateSphereShape(object2world, world2object, reverseOrientation,
                               paramSet);
-    // Create remaining single _Shape_ types
-    //else if (name == "cylinder")
-    //    s = CreateCylinderShape(object2world, world2object, reverseOrientation,
-    //                            paramSet);
-    //else if (name == "disk")
-    //    s = CreateDiskShape(object2world, world2object, reverseOrientation,
-    //                        paramSet);
-    //else if (name == "cone")
-    //    s = CreateConeShape(object2world, world2object, reverseOrientation,
-    //                        paramSet);
-    //else if (name == "paraboloid")
-    //    s = CreateParaboloidShape(object2world, world2object,
-    //                              reverseOrientation, paramSet);
-    //else if (name == "hyperboloid")
-    //    s = CreateHyperboloidShape(object2world, world2object,
-    //                               reverseOrientation, paramSet);
     if (s != nullptr) shapes.push_back(s);
 
-    // Create multiple-_Shape_ types
-    //else if (name == "curve")
-    //    shapes = CreateCurveShape(object2world, world2object,
-    //                              reverseOrientation, paramSet);
     else if (name == "trianglemesh") {
         if (PbrtOptions.toPly) {
-            int nvi;
-            const int *vi = paramSet.FindInt("indices", &nvi);
-
-            if (nvi < 500) {
-                // It's a small mesh; don't bother with a PLY file after all.
-                printf("%*sShape \"%s\" ", catIndentCount, "", name.c_str());
-                paramSet.Print(catIndentCount);
-                printf("\n");
-            } else {
-                static int count = 1;
-                const char *plyPrefix =
-                    getenv("PLY_PREFIX") ? getenv("PLY_PREFIX") : "mesh";
-                std::string fn = StringPrintf("%s_%05d.ply", plyPrefix, count++);
-
-                int npi, nuvi, nsi, nni;
-                const Point3f *P = paramSet.FindPoint3f("P", &npi);
-                const Point2f *uvs = paramSet.FindPoint2f("uv", &nuvi);
-                if (!uvs) uvs = paramSet.FindPoint2f("st", &nuvi);
-                std::vector<Point2f> tempUVs;
-                if (!uvs) {
-                    const Float *fuv = paramSet.FindFloat("uv", &nuvi);
-                    if (!fuv) fuv = paramSet.FindFloat("st", &nuvi);
-                    if (fuv) {
-                        nuvi /= 2;
-                        tempUVs.reserve(nuvi);
-                        for (int i = 0; i < nuvi; ++i)
-                            tempUVs.push_back(Point2f(fuv[2 * i], fuv[2 * i + 1]));
-                        uvs = &tempUVs[0];
-                    }
-                }
-                const Normal3f *N = paramSet.FindNormal3f("N", &nni);
-                const Vector3f *S = paramSet.FindVector3f("S", &nsi);
-                int nfi;
-                const int *faceIndices = paramSet.FindInt("faceIndices", &nfi);
-                if (faceIndices) CHECK_EQ(nfi, nvi / 3);
-
-                if (!WritePlyFile(fn.c_str(), nvi / 3, vi, npi, P, S, N, uvs,
-                                  faceIndices))
-                    Error("Unable to write PLY file \"%s\"", fn.c_str());
-
-                ParamSet ps = paramSet;
-                ps.EraseInt("indices");
-                ps.ErasePoint3f("P");
-                ps.ErasePoint2f("uv");
-                ps.ErasePoint2f("st");
-                ps.EraseNormal3f("N");
-                ps.EraseVector3f("S");
-                ps.EraseInt("faceIndices");
-
-                printf("%*sShape \"plymesh\" \"string filename\" \"%s\" ",
-                       catIndentCount, "", fn.c_str());
-                ps.Print(catIndentCount);
-                printf("\n");
-            }
+            Warning("Option toPly unknown.");
         } else
             shapes = CreateTriangleMeshShape(object2world, world2object,
                                              reverseOrientation, paramSet,
                                              &*graphicsState.floatTextures);
     } 
-    //else if (name == "plymesh")
-    //    shapes = CreatePLYMesh(object2world, world2object, reverseOrientation,
-    //                           paramSet, &*graphicsState.floatTextures);
-    //else if (name == "heightfield")
-    //    shapes = CreateHeightfield(object2world, world2object,
-    //                               reverseOrientation, paramSet);
     else if (name == "loopsubdiv")
         shapes = CreateLoopSubdiv(object2world, world2object,
                                   reverseOrientation, paramSet);
-    //else if (name == "nurbs")
-    //    shapes = CreateNURBS(object2world, world2object, reverseOrientation,
-    //                         paramSet);
     else
         Warning("Shape \"%s\" unknown.", name.c_str());
     return shapes;
