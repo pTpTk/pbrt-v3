@@ -82,7 +82,8 @@ ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-SET(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+#SET(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+SET(CMAKE_CXX_COMPILER g++)
 
   FIND_PROGRAM(XIAR xiar)
   IF(XIAR)
@@ -373,6 +374,7 @@ INCLUDE_DIRECTORIES ( src/ext/ptex/src/ptex )
 # On to pbrt...
 
 SET ( PBRT_CORE_SOURCE
+  src/core/api.cu
   src/core/api.cpp
   src/core/bssrdf.cpp
   src/core/camera.cpp
@@ -404,7 +406,7 @@ SET ( PBRT_CORE_SOURCE
   src/core/sampler.cpp
   src/core/sampling.cpp
   src/core/scene.cpp
-  src/core/shape.cpp
+  src/core/shape.cu
   src/core/sobolmatrices.cpp
   src/core/spectrum.cpp
   src/core/stats.cpp
@@ -532,10 +534,6 @@ SET_TARGET_PROPERTIES ( pbrt_exe PROPERTIES OUTPUT_NAME pbrt )
 TARGET_COMPILE_FEATURES ( pbrt_exe PRIVATE ${PBRT_CXX11_FEATURES} )
 TARGET_LINK_LIBRARIES ( pbrt_exe ${ALL_PBRT_LIBS} )
 
-# GPU renderer
-ADD_EXECUTABLE ( pbrt_gpu src-gpu/main/pbrt.cpp )
-ADD_SANITIZERS ( pbrt_gpu )
-
 # Tools
 ADD_EXECUTABLE ( imgtool src/tools/imgtool.cpp )
 ADD_SANITIZERS ( imgtool )
@@ -551,11 +549,11 @@ ADD_SANITIZERS ( cyhair2pbrt )
 
 # Unit test
 
-FILE ( GLOB PBRT_TEST_SOURCE
-  src/tests/*.cpp
-  src/tests/gtest/*.cc
-  )
-
+#FILE ( GLOB PBRT_TEST_SOURCE
+#  src/tests/*.cpp
+#  src/tests/gtest/*.cc
+#  )
+#
 #ADD_EXECUTABLE ( pbrt_test ${PBRT_TEST_SOURCE} )
 #ADD_SANITIZERS ( pbrt_test )
 #TARGET_COMPILE_FEATURES ( pbrt_test PRIVATE ${PBRT_CXX11_FEATURES} )

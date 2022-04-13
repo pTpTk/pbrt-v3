@@ -43,7 +43,7 @@ namespace pbrt {
 DiffuseAreaLight::DiffuseAreaLight(const Transform &LightToWorld,
                                    const MediumInterface &mediumInterface,
                                    const Spectrum &Lemit, int nSamples,
-                                   const std::shared_ptr<Shape> &shape,
+                                   const Shape* shape,
                                    bool twoSided)
     : AreaLight(LightToWorld, mediumInterface, nSamples),
       Lemit(Lemit),
@@ -53,7 +53,7 @@ DiffuseAreaLight::DiffuseAreaLight(const Transform &LightToWorld,
     // Warn if light has transformation with non-uniform scale, though not
     // for Triangles, since this doesn't matter for them.
     if (WorldToLight.HasScale() &&
-        dynamic_cast<const Triangle *>(shape.get()) == nullptr)
+        dynamic_cast<const Triangle *>(shape) == nullptr)
         Warning(
             "Scaling detected in world to light transformation! "
             "The system has numerous assumptions, implicit and explicit, "
@@ -134,7 +134,7 @@ void DiffuseAreaLight::Pdf_Le(const Ray &ray, const Normal3f &n, Float *pdfPos,
 
 std::shared_ptr<AreaLight> CreateDiffuseAreaLight(
     const Transform &light2world, const Medium *medium,
-    const ParamSet &paramSet, const std::shared_ptr<Shape> &shape) {
+    const ParamSet &paramSet, const Shape* shape) {
     Spectrum L = paramSet.FindOneSpectrum("L", Spectrum(1.0));
     Spectrum sc = paramSet.FindOneSpectrum("scale", Spectrum(1.0));
     int nSamples = paramSet.FindOneInt("samples",

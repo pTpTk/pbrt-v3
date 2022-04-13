@@ -197,19 +197,6 @@ STAT_MEMORY_COUNTER("Memory/TransformCache", transformCacheBytes);
 STAT_PERCENT("Scene/TransformCache hits", nTransformCacheHits, nTransformCacheLookups);
 STAT_INT_DISTRIBUTION("Scene/Probes per TransformCache lookup", transformCacheProbes);
 
-// Note: TransformCache has been reimplemented and has a slightly different
-// interface compared to the version described in the third edition of
-// Physically Based Rendering.  The new version is more efficient in both
-// space and memory, which is helpful for highly complex scenes.
-//
-// The new implementation uses a hash table to store Transforms (rather
-// than a std::map, which generally uses a red-black tree).  Further,
-// it doesn't always store the inverse of the transform; if a caller
-// wants the inverse as well, they are responsible for storing it.
-//
-// The hash table size is always a power of two, allowing for the use of a
-// bitwise AND to turn hash values into table offsets.  Quadratic probing
-// is used when there is a hash collision.
 class TransformCache {
   public:
     TransformCache()
@@ -235,8 +222,7 @@ class TransformCache {
         if (tCached)
             ++nTransformCacheHits;
         else {
-            tCached = arena.Alloc<Transform>();
-            *tCached = t;
+            tCached = TransferToGPU(t);
             Insert(tCached);
         }
         return tCached;
@@ -247,7 +233,7 @@ class TransformCache {
         hashTable.clear();
         hashTable.resize(512);
         hashTableOccupancy = 0;
-        arena.Reset();
+        //arena.Reset();
     }
 
   private:
@@ -310,7 +296,6 @@ void TransformCache::Grow() {
     std::swap(hashTable, newTable);
 }
 
-
 // API Static Data
 enum class APIState { Uninitialized, OptionsBlock, WorldBlock };
 static APIState currentApiState = APIState::Uninitialized;
@@ -326,7 +311,7 @@ static TransformCache transformCache;
 int catIndentCount = 0;
 
 // API Forward Declarations
-std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
+std::vector<Shape*> MakeShapes(const std::string &name,
                                                const Transform *ObjectToWorld,
                                                const Transform *WorldToObject,
                                                bool reverseOrientation,
@@ -377,29 +362,29 @@ std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
     } while (false) /* swallow trailing semicolon */
 
 // Object Creation Function Definitions
-std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
+std::vector<Shape*> MakeShapes(const std::string &name,
                                                const Transform *object2world,
                                                const Transform *world2object,
                                                bool reverseOrientation,
                                                const ParamSet &paramSet) {
-    std::vector<std::shared_ptr<Shape>> shapes;
-    std::shared_ptr<Shape> s;
+    std::vector<Shape*> shapes;
+    Shape* s;
     if (name == "sphere")
         s = CreateSphereShape(object2world, world2object, reverseOrientation,
                               paramSet);
     if (s != nullptr) shapes.push_back(s);
 
-    else if (name == "trianglemesh") {
-        if (PbrtOptions.toPly) {
-            Warning("Option toPly unknown.");
-        } else
-            shapes = CreateTriangleMeshShape(object2world, world2object,
-                                             reverseOrientation, paramSet,
-                                             &*graphicsState.floatTextures);
-    } 
-    else if (name == "loopsubdiv")
-        shapes = CreateLoopSubdiv(object2world, world2object,
-                                  reverseOrientation, paramSet);
+//    else if (name == "trianglemesh") {
+//        if (PbrtOptions.toPly) {
+//            Warning("Option toPly unknown.");
+//        } else
+//            shapes = CreateTriangleMeshShape(object2world, world2object,
+//                                             reverseOrientation, paramSet,
+//                                             &*graphicsState.floatTextures);
+//    } 
+//    else if (name == "loopsubdiv")
+//        shapes = CreateLoopSubdiv(object2world, world2object,
+//                                  reverseOrientation, paramSet);
     else
         Warning("Shape \"%s\" unknown.", name.c_str());
     return shapes;
@@ -629,7 +614,7 @@ std::shared_ptr<AreaLight> MakeAreaLight(const std::string &name,
                                          const Transform &light2world,
                                          const MediumInterface &mediumInterface,
                                          const ParamSet &paramSet,
-                                         const std::shared_ptr<Shape> &shape) {
+                                         const Shape* shape) {
     std::shared_ptr<AreaLight> area;
     if (name == "area" || name == "diffuse")
         area = CreateDiffuseAreaLight(light2world, mediumInterface.outside,
@@ -1215,7 +1200,7 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
         // Create shapes for shape _name_
         Transform *ObjToWorld = transformCache.Lookup(curTransform[0]);
         Transform *WorldToObj = transformCache.Lookup(Inverse(curTransform[0]));
-        std::vector<std::shared_ptr<Shape>> shapes =
+        std::vector<Shape*> shapes =
             MakeShapes(name, ObjToWorld, WorldToObj,
                        graphicsState.reverseOrientation, params);
         if (shapes.empty()) return;
@@ -1243,7 +1228,7 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
                 "Ignoring currently set area light when creating "
                 "animated shape");
         Transform *identity = transformCache.Lookup(Transform());
-        std::vector<std::shared_ptr<Shape>> shapes = MakeShapes(
+        std::vector<Shape*> shapes = MakeShapes(
             name, identity, identity, graphicsState.reverseOrientation, params);
         if (shapes.empty()) return;
 

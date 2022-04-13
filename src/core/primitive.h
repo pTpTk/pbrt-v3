@@ -70,7 +70,7 @@ class GeometricPrimitive : public Primitive {
     virtual Bounds3f WorldBound() const;
     virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const;
     virtual bool IntersectP(const Ray &r) const;
-    GeometricPrimitive(const std::shared_ptr<Shape> &shape,
+    GeometricPrimitive(const Shape* shape,
                        const std::shared_ptr<Material> &material,
                        const std::shared_ptr<AreaLight> &areaLight,
                        const MediumInterface &mediumInterface);
@@ -82,7 +82,7 @@ class GeometricPrimitive : public Primitive {
 
   private:
     // GeometricPrimitive Private Data
-    std::shared_ptr<Shape> shape;
+    const Shape* shape;
     std::shared_ptr<Material> material;
     std::shared_ptr<AreaLight> areaLight;
     MediumInterface mediumInterface;

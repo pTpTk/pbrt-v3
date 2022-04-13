@@ -96,7 +96,7 @@ bool TransformedPrimitive::IntersectP(const Ray &r) const {
 }
 
 // GeometricPrimitive Method Definitions
-GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape> &shape,
+GeometricPrimitive::GeometricPrimitive(const Shape* shape,
                                        const std::shared_ptr<Material> &material,
                                        const std::shared_ptr<AreaLight> &areaLight,
                                        const MediumInterface &mediumInterface)

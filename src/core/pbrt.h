@@ -59,6 +59,7 @@
 #include <assert.h>
 #include <string.h>
 #include <glog/logging.h>
+#include <cuda_runtime.h>
 
 // Platform-specific definitions
 #if defined(_WIN32) || defined(_WIN64)

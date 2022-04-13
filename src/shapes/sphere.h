@@ -38,13 +38,13 @@
 #ifndef PBRT_SHAPES_SPHERE_H
 #define PBRT_SHAPES_SPHERE_H
 
-// shapes/sphere.h*
+// shapes/sphere.cuh*
 #include "shape.h"
 
 namespace pbrt {
 
 // Sphere Declarations
-class Sphere : public ShapeBase {
+class Sphere : public Shape {
   public:
     // Sphere Public Methods
     __host__
@@ -53,7 +53,7 @@ class Sphere : public ShapeBase {
            const Transform *WorldToObject,
            bool reverseOrientation, Float radius, Float zMin, 
            Float zMax, Float phiMax)
-        : ShapeBase(ObjectToWorld, WorldToObject, reverseOrientation),
+        : Shape(ObjectToWorld, WorldToObject, reverseOrientation),
           radius(radius),
           zMin(Clamp(std::min(zMin, zMax), -radius, radius)),
           zMax(Clamp(std::max(zMin, zMax), -radius, radius)),

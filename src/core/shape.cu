@@ -39,10 +39,12 @@
 namespace pbrt {
 
 // Shape Method Definitions
+__host__
 __device__
 Shape::~Shape() {}
 
 STAT_COUNTER("Scene/Shapes created", nShapesCreated);
+__host__
 __device__
 Shape::Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
              bool reverseOrientation)
