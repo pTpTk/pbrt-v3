@@ -43,7 +43,8 @@ __host__
 __device__
 Shape::~Shape() {}
 
-STAT_COUNTER("Scene/Shapes created", nShapesCreated);
+//TODO: STAT_COUNTER
+
 __host__
 __device__
 Shape::Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
@@ -51,10 +52,9 @@ Shape::Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
     : ObjectToWorld(ObjectToWorld),
       WorldToObject(WorldToObject),
       reverseOrientation(reverseOrientation),
-      transformSwapsHandedness(ObjectToWorld->SwapsHandedness()) {
-    ++nShapesCreated;
-}
+      transformSwapsHandedness(ObjectToWorld->SwapsHandedness()) {}
 
+__device__
 Bounds3f Shape::WorldBound() const { return (*ObjectToWorld)(ObjectBound()); }
 
 __device__

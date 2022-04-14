@@ -90,6 +90,7 @@
 
 // Global Macros
 #define ALLOCA(TYPE, COUNT) (TYPE *) alloca((COUNT) * sizeof(TYPE))
+#define __both__ __device__ __host__
 
 namespace pbrt {
 
@@ -214,31 +215,37 @@ static PBRT_CONSTEXPR Float Sqrt2 = 1.41421356237309504880;
 #define alloca _alloca
 #endif
 
+
 // Global Inline Functions
+__both__
 inline uint32_t FloatToBits(float f) {
     uint32_t ui;
     memcpy(&ui, &f, sizeof(float));
     return ui;
 }
 
+__both__
 inline float BitsToFloat(uint32_t ui) {
     float f;
     memcpy(&f, &ui, sizeof(uint32_t));
     return f;
 }
 
+__both__
 inline uint64_t FloatToBits(double f) {
     uint64_t ui;
     memcpy(&ui, &f, sizeof(double));
     return ui;
 }
 
+__both__
 inline double BitsToFloat(uint64_t ui) {
     double f;
     memcpy(&f, &ui, sizeof(uint64_t));
     return f;
 }
 
+__both__
 inline float NextFloatUp(float v) {
     // Handle infinity and negative zero for _NextFloatUp()_
     if (std::isinf(v) && v > 0.) return v;
@@ -253,6 +260,7 @@ inline float NextFloatUp(float v) {
     return BitsToFloat(ui);
 }
 
+__both__
 inline float NextFloatDown(float v) {
     // Handle infinity and positive zero for _NextFloatDown()_
     if (std::isinf(v) && v < 0.) return v;
@@ -265,6 +273,7 @@ inline float NextFloatDown(float v) {
     return BitsToFloat(ui);
 }
 
+__both__
 inline double NextFloatUp(double v, int delta = 1) {
     if (std::isinf(v) && v > 0.) return v;
     if (v == -0.f) v = 0.f;
@@ -276,6 +285,7 @@ inline double NextFloatUp(double v, int delta = 1) {
     return BitsToFloat(ui);
 }
 
+__both__
 inline double NextFloatDown(double v, int delta = 1) {
     if (std::isinf(v) && v < 0.) return v;
     if (v == 0.f) v = -0.f;
@@ -287,21 +297,25 @@ inline double NextFloatDown(double v, int delta = 1) {
     return BitsToFloat(ui);
 }
 
+__both__
 inline Float gamma(int n) {
     return (n * MachineEpsilon) / (1 - n * MachineEpsilon);
 }
 
+__both__
 inline Float GammaCorrect(Float value) {
     if (value <= 0.0031308f) return 12.92f * value;
     return 1.055f * std::pow(value, (Float)(1.f / 2.4f)) - 0.055f;
 }
 
+__both__
 inline Float InverseGammaCorrect(Float value) {
     if (value <= 0.04045f) return value * 1.f / 12.92f;
     return std::pow((value + 0.055f) * 1.f / 1.055f, (Float)2.4f);
 }
 
 template <typename T, typename U, typename V>
+__both__
 inline T Clamp(T val, U low, V high) {
     if (val < low)
         return low;
@@ -312,25 +326,31 @@ inline T Clamp(T val, U low, V high) {
 }
 
 template <typename T>
+__both__
 inline T Mod(T a, T b) {
     T result = a - (a / b) * b;
     return (T)((result < 0) ? result + b : result);
 }
 
 template <>
+__both__
 inline Float Mod(Float a, Float b) {
     return std::fmod(a, b);
 }
 
+__both__
 inline Float Radians(Float deg) { return (Pi / 180) * deg; }
 
+__both__
 inline Float Degrees(Float rad) { return (180 / Pi) * rad; }
 
+__both__
 inline Float Log2(Float x) {
     const Float invLog2 = 1.442695040888963387004650940071;
     return std::log(x) * invLog2;
 }
 
+__both__
 inline int Log2Int(uint32_t v) {
 #if defined(PBRT_IS_MSVC)
     unsigned long lz = 0;
@@ -341,8 +361,10 @@ inline int Log2Int(uint32_t v) {
 #endif
 }
 
+__both__
 inline int Log2Int(int32_t v) { return Log2Int((uint32_t)v); }
 
+__both__
 inline int Log2Int(uint64_t v) {
 #if defined(PBRT_IS_MSVC)
     unsigned long lz = 0;
@@ -360,13 +382,16 @@ inline int Log2Int(uint64_t v) {
 #endif
 }
 
+__both__
 inline int Log2Int(int64_t v) { return Log2Int((uint64_t)v); }
 
 template <typename T>
+__both__
 inline PBRT_CONSTEXPR bool IsPowerOf2(T v) {
     return v && !(v & (v - 1));
 }
 
+__both__
 inline int32_t RoundUpPow2(int32_t v) {
     v--;
     v |= v >> 1;
@@ -377,6 +402,7 @@ inline int32_t RoundUpPow2(int32_t v) {
     return v + 1;
 }
 
+__both__
 inline int64_t RoundUpPow2(int64_t v) {
     v--;
     v |= v >> 1;
@@ -388,6 +414,7 @@ inline int64_t RoundUpPow2(int64_t v) {
     return v + 1;
 }
 
+__both__
 inline int CountTrailingZeros(uint32_t v) {
 #if defined(PBRT_IS_MSVC)
     unsigned long index;
@@ -401,6 +428,7 @@ inline int CountTrailingZeros(uint32_t v) {
 }
 
 template <typename Predicate>
+__both__
 int FindInterval(int size, const Predicate &pred) {
     int first = 0, len = size;
     while (len > 0) {
@@ -415,8 +443,10 @@ int FindInterval(int size, const Predicate &pred) {
     return Clamp(first - 1, 0, size - 2);
 }
 
+__both__
 inline Float Lerp(Float t, Float v1, Float v2) { return (1 - t) * v1 + t * v2; }
 
+__both__
 inline bool Quadratic(Float a, Float b, Float c, Float *t0, Float *t1) {
     // Find quadratic discriminant
     double discrim = (double)b * (double)b - 4 * (double)a * (double)c;
@@ -431,10 +461,11 @@ inline bool Quadratic(Float a, Float b, Float c, Float *t0, Float *t1) {
         q = -.5 * (b + rootDiscrim);
     *t0 = q / a;
     *t1 = c / q;
-    if (*t0 > *t1) std::swap(*t0, *t1);
+    if (*t0 > *t1) {Float tmp = *t0; *t0 = *t1; *t1 = tmp;}
     return true;
 }
 
+__both__
 inline Float ErfInv(Float x) {
     Float w, p;
     x = Clamp(x, -.99999f, .99999f);
@@ -465,6 +496,7 @@ inline Float ErfInv(Float x) {
     return p * x;
 }
 
+__both__
 inline Float Erf(Float x) {
     // constants
     Float a1 = 0.254829592f;

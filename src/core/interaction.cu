@@ -41,6 +41,7 @@
 namespace pbrt {
 
 // SurfaceInteraction Method Definitions
+__both__
 SurfaceInteraction::SurfaceInteraction(
     const Point3f &p, const Vector3f &pError, const Point2f &uv,
     const Vector3f &wo, const Vector3f &dpdu, const Vector3f &dpdv,
@@ -70,6 +71,7 @@ SurfaceInteraction::SurfaceInteraction(
     }
 }
 
+__both__
 void SurfaceInteraction::SetShadingGeometry(const Vector3f &dpdus,
                                             const Vector3f &dpdvs,
                                             const Normal3f &dndus,
@@ -89,6 +91,7 @@ void SurfaceInteraction::SetShadingGeometry(const Vector3f &dpdus,
     shading.dndv = dndvs;
 }
 
+__both__
 void SurfaceInteraction::ComputeScatteringFunctions(const RayDifferential &ray,
                                                     MemoryArena &arena,
                                                     bool allowMultipleLobes,
@@ -98,6 +101,7 @@ void SurfaceInteraction::ComputeScatteringFunctions(const RayDifferential &ray,
                                           allowMultipleLobes);
 }
 
+__both__
 void SurfaceInteraction::ComputeDifferentials(
     const RayDifferential &ray) const {
     if (ray.hasDifferentials) {
@@ -146,6 +150,7 @@ void SurfaceInteraction::ComputeDifferentials(
     }
 }
 
+__both__
 Spectrum SurfaceInteraction::Le(const Vector3f &w) const {
     const AreaLight *area = primitive->GetAreaLight();
     return area ? area->L(*this, w) : Spectrum(0.f);

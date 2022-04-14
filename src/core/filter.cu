@@ -37,6 +37,7 @@
 namespace pbrt {
 
 // Filter Method Definitions
+__device__
 Filter::~Filter() {}
 
 }  // namespace pbrt

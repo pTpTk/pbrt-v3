@@ -58,30 +58,31 @@ struct FilmTilePixel {
 class Film {
   public:
     // Film Public Methods
+    __device__
     Film(const Point2i &resolution, const Bounds2f &cropWindow,
-         std::unique_ptr<Filter> filter, Float diagonal,
+         Filter* filter, Float diagonal,
          const std::string &filename, Float scale,
          Float maxSampleLuminance = Infinity);
-    Bounds2i GetSampleBounds() const;
-    Bounds2f GetPhysicalExtent() const;
-    std::unique_ptr<FilmTile> GetFilmTile(const Bounds2i &sampleBounds);
-    void MergeFilmTile(std::unique_ptr<FilmTile> tile);
-    void SetImage(const Spectrum *img) const;
-    void AddSplat(const Point2f &p, Spectrum v);
-    void WriteImage(Float splatScale = 1);
-    void Clear();
+    __device__ Bounds2i GetSampleBounds() const;
+    __device__ Bounds2f GetPhysicalExtent() const;
+    __device__ std::unique_ptr<FilmTile> GetFilmTile(const Bounds2i &sampleBounds);
+    __device__ void MergeFilmTile(std::unique_ptr<FilmTile> tile);
+    __device__ void SetImage(const Spectrum *img) const;
+    __device__ void AddSplat(const Point2f &p, Spectrum v);
+    __device__ void WriteImage(Float splatScale = 1);
+    __device__ void Clear();
 
     // Film Public Data
     const Point2i fullResolution;
     const Float diagonal;
-    std::unique_ptr<Filter> filter;
+    Filter* filter;
     const std::string filename;
     Bounds2i croppedPixelBounds;
 
   private:
     // Film Private Data
     struct Pixel {
-        Pixel() { xyz[0] = xyz[1] = xyz[2] = filterWeightSum = 0; }
+        __device__ Pixel() { xyz[0] = xyz[1] = xyz[2] = filterWeightSum = 0; }
         Float xyz[3];
         Float filterWeightSum;
         AtomicFloat splatXYZ[3];
@@ -95,6 +96,7 @@ class Film {
     const Float maxSampleLuminance;
 
     // Film Private Methods
+    __device__
     Pixel &GetPixel(const Point2i &p) {
         CHECK(InsideExclusive(p, croppedPixelBounds));
         int width = croppedPixelBounds.pMax.x - croppedPixelBounds.pMin.x;
@@ -107,6 +109,7 @@ class Film {
 class FilmTile {
   public:
     // FilmTile Public Methods
+    __device__
     FilmTile(const Bounds2i &pixelBounds, const Vector2f &filterRadius,
              const Float *filterTable, int filterTableSize,
              Float maxSampleLuminance)
@@ -118,6 +121,7 @@ class FilmTile {
           maxSampleLuminance(maxSampleLuminance) {
         pixels = std::vector<FilmTilePixel>(std::max(0, pixelBounds.Area()));
     }
+    __device__
     void AddSample(const Point2f &pFilm, Spectrum L,
                    Float sampleWeight = 1.) {
         ProfilePhase _(Prof::AddFilmSample);
@@ -159,6 +163,7 @@ class FilmTile {
             }
         }
     }
+    __device__
     FilmTilePixel &GetPixel(const Point2i &p) {
         CHECK(InsideExclusive(p, pixelBounds));
         int width = pixelBounds.pMax.x - pixelBounds.pMin.x;
@@ -166,6 +171,7 @@ class FilmTile {
             (p.x - pixelBounds.pMin.x) + (p.y - pixelBounds.pMin.y) * width;
         return pixels[offset];
     }
+    __device__
     const FilmTilePixel &GetPixel(const Point2i &p) const {
         CHECK(InsideExclusive(p, pixelBounds));
         int width = pixelBounds.pMax.x - pixelBounds.pMin.x;
@@ -186,7 +192,12 @@ class FilmTile {
     friend class Film;
 };
 
-Film *CreateFilm(const ParamSet &params, std::unique_ptr<Filter> filter);
+Film *CreateFilm(const ParamSet &params, Filter* filter);
+__global__
+void CreateFilmGPU(const Point2i &resolution, const Bounds2f &cropWindow,
+                   Filter* filt, Float diagonal,
+                   const std::string &filename, Float scale,
+                   Float maxSampleLuminance, Filter* ptrGPU);
 
 }  // namespace pbrt
 

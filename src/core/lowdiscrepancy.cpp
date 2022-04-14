@@ -387,6 +387,7 @@ uint32_t CMaxMinDist[17][32] = {
 
 // Low Discrepancy Static Functions
 template <int base>
+__both__
 PBRT_NOINLINE static Float RadicalInverseSpecialized(uint64_t a) {
     const Float invBase = (Float)1 / (Float)base;
     uint64_t reversedDigits = 0;
@@ -403,6 +404,7 @@ PBRT_NOINLINE static Float RadicalInverseSpecialized(uint64_t a) {
 }
 
 template <int base>
+__both__
 PBRT_NOINLINE static Float
 ScrambledRadicalInverseSpecialized(const uint16_t *perm, uint64_t a) {
     const Float invBase = (Float)1 / (Float)base;
@@ -424,6 +426,7 @@ ScrambledRadicalInverseSpecialized(const uint16_t *perm, uint64_t a) {
 }
 
 // Low Discrepancy Function Definitions
+__both__
 Float RadicalInverse(int baseIndex, uint64_t a) {
     switch (baseIndex) {
     case 0:

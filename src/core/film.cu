@@ -39,15 +39,16 @@
 
 namespace pbrt {
 
-STAT_MEMORY_COUNTER("Memory/Film pixels", filmPixelMemory);
+// TODO: STAT_MEMORY_COUNTER
 
 // Film Method Definitions
+__device__
 Film::Film(const Point2i &resolution, const Bounds2f &cropWindow,
-           std::unique_ptr<Filter> filt, Float diagonal,
+           Filter* filt, Float diagonal,
            const std::string &filename, Float scale, Float maxSampleLuminance)
     : fullResolution(resolution),
       diagonal(diagonal * .001),
-      filter(std::move(filt)),
+      filter(filt),
       filename(filename),
       scale(scale),
       maxSampleLuminance(maxSampleLuminance) {
@@ -77,6 +78,7 @@ Film::Film(const Point2i &resolution, const Bounds2f &cropWindow,
     }
 }
 
+__device__
 Bounds2i Film::GetSampleBounds() const {
     Bounds2f floatBounds(Floor(Point2f(croppedPixelBounds.pMin) +
                                Vector2f(0.5f, 0.5f) - filter->radius),
@@ -85,6 +87,7 @@ Bounds2i Film::GetSampleBounds() const {
     return (Bounds2i)floatBounds;
 }
 
+__device__
 Bounds2f Film::GetPhysicalExtent() const {
     Float aspect = (Float)fullResolution.y / (Float)fullResolution.x;
     Float x = std::sqrt(diagonal * diagonal / (1 + aspect * aspect));
@@ -92,6 +95,7 @@ Bounds2f Film::GetPhysicalExtent() const {
     return Bounds2f(Point2f(-x / 2, -y / 2), Point2f(x / 2, y / 2));
 }
 
+__device__
 std::unique_ptr<FilmTile> Film::GetFilmTile(const Bounds2i &sampleBounds) {
     // Bound image pixels that samples in _sampleBounds_ contribute to
     Vector2f halfPixel = Vector2f(0.5f, 0.5f);
@@ -105,6 +109,7 @@ std::unique_ptr<FilmTile> Film::GetFilmTile(const Bounds2i &sampleBounds) {
         maxSampleLuminance));
 }
 
+__device__
 void Film::Clear() {
     for (Point2i p : croppedPixelBounds) {
         Pixel &pixel = GetPixel(p);
@@ -114,6 +119,7 @@ void Film::Clear() {
     }
 }
 
+__device__
 void Film::MergeFilmTile(std::unique_ptr<FilmTile> tile) {
     ProfilePhase p(Prof::MergeFilmTile);
     VLOG(1) << "Merging film tile " << tile->pixelBounds;
@@ -129,6 +135,7 @@ void Film::MergeFilmTile(std::unique_ptr<FilmTile> tile) {
     }
 }
 
+__device__
 void Film::SetImage(const Spectrum *img) const {
     int nPixels = croppedPixelBounds.Area();
     for (int i = 0; i < nPixels; ++i) {
@@ -139,6 +146,7 @@ void Film::SetImage(const Spectrum *img) const {
     }
 }
 
+__device__
 void Film::AddSplat(const Point2f &p, Spectrum v) {
     ProfilePhase pp(Prof::SplatFilm);
 
@@ -166,6 +174,7 @@ void Film::AddSplat(const Point2f &p, Spectrum v) {
     for (int i = 0; i < 3; ++i) pixel.splatXYZ[i].Add(xyz[i]);
 }
 
+__device__
 void Film::WriteImage(Float splatScale) {
     // Convert image to RGB and compute final pixel values
     LOG(INFO) <<
@@ -210,7 +219,7 @@ void Film::WriteImage(Float splatScale) {
     pbrt::WriteImage(filename, &rgb[0], croppedPixelBounds, fullResolution);
 }
 
-Film *CreateFilm(const ParamSet &params, std::unique_ptr<Filter> filter) {
+Film *CreateFilm(const ParamSet &params, Filter* filter) {
     std::string filename;
     if (PbrtOptions.imageFile != "") {
         filename = PbrtOptions.imageFile;
@@ -247,8 +256,22 @@ Film *CreateFilm(const ParamSet &params, std::unique_ptr<Filter> filter) {
     Float diagonal = params.FindOneFloat("diagonal", 35.);
     Float maxSampleLuminance = params.FindOneFloat("maxsampleluminance",
                                                    Infinity);
-    return new Film(Point2i(xres, yres), crop, std::move(filter), diagonal,
-                    filename, scale, maxSampleLuminance);
+
+    Film* ptrGPU;
+    cudaMalloc(&ptrGPU, sizeof(Film));
+    CreateFilmGPU<<<1,1>>>(Point2i(xres, yres), crop, filter, diagonal,
+                           filename, scale, maxSampleLuminance, ptrGPU);
+
+    return ptrGPU;
+}
+
+__global__
+void CreateFilmGPU(const Point2i &resolution, const Bounds2f &cropWindow,
+                   Filter* filt, Float diagonal,
+                   const std::string &filename, Float scale,
+                   Float maxSampleLuminance, Filter* ptrGPU) {
+    new(ptrGPU) Film(resolution, cropWindow, filt, diagonal,
+                     filename, scale, maxSampleLuminance);
 }
 
 }  // namespace pbrt

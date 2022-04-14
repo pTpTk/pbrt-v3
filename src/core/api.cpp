@@ -32,6 +32,7 @@
 
 // core/api.cpp*
 #include "api.h"
+#include "api.cu"
 #include "parallel.h"
 #include "paramset.h"
 #include "spectrum.h"
@@ -50,9 +51,7 @@
 #include "materials/matte.h"
 #include "materials/plastic.h"
 #include "samplers/halton.h"
-#include "shapes/loopsubdiv.h"
 #include "shapes/sphere.h"
-#include "shapes/triangle.h"
 #include "textures/bilerp.h"
 #include "textures/checkerboard.h"
 #include "textures/constant.h"
@@ -693,7 +692,7 @@ std::shared_ptr<Sampler> MakeSampler(const std::string &name,
     return std::shared_ptr<Sampler>(sampler);
 }
 
-std::unique_ptr<Filter> MakeFilter(const std::string &name,
+Filter* MakeFilter(const std::string &name,
                                    const ParamSet &paramSet) {
     Filter *filter = nullptr;
     if (name == "box")
@@ -711,14 +710,14 @@ std::unique_ptr<Filter> MakeFilter(const std::string &name,
         exit(1);
     }
     paramSet.ReportUnused();
-    return std::unique_ptr<Filter>(filter);
+    return filter;
 }
 
 Film *MakeFilm(const std::string &name, const ParamSet &paramSet,
-               std::unique_ptr<Filter> filter) {
+               Filter* filter) {
     Film *film = nullptr;
     if (name == "image")
-        film = CreateFilm(paramSet, std::move(filter));
+        film = CreateFilm(paramSet, filter);
     else
         Warning("Film \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();
@@ -1573,8 +1572,8 @@ Integrator *RenderOptions::MakeIntegrator() const {
 }
 
 Camera *RenderOptions::MakeCamera() const {
-    std::unique_ptr<Filter> filter = MakeFilter(FilterName, FilterParams);
-    Film *film = MakeFilm(FilmName, FilmParams, std::move(filter));
+    Filter* filter = MakeFilter(FilterName, FilterParams);
+    Film *film = MakeFilm(FilmName, FilmParams, filter);
     if (!film) {
         Error("Unable to create film.");
         return nullptr;

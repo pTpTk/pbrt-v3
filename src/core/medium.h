@@ -100,11 +100,15 @@ class HenyeyGreenstein : public PhaseFunction {
 
 // MediumInterface Declarations
 struct MediumInterface {
+    __device__
     MediumInterface() : inside(nullptr), outside(nullptr) {}
     // MediumInterface Public Methods
+    __device__
     MediumInterface(const Medium *medium) : inside(medium), outside(medium) {}
+    __device__
     MediumInterface(const Medium *inside, const Medium *outside)
         : inside(inside), outside(outside) {}
+    __device__
     bool IsMediumTransition() const { return inside != outside; }
     const Medium *inside, *outside;
 };

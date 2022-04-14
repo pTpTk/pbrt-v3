@@ -91,7 +91,6 @@ void pbrtWorldEnd();
 void pbrtParseFile(std::string filename);
 void pbrtParseString(std::string str);
 
-Transform* TransferToGPU(const Transform &t);
 }  // namespace pbrt
 
 #endif  // PBRT_CORE_API_H

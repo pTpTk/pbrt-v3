@@ -34,7 +34,7 @@
 #include "lights/diffuse.h"
 #include "paramset.h"
 #include "sampling.h"
-#include "shapes/triangle.h"
+//#include "shapes/triangle.h"
 #include "stats.h"
 
 namespace pbrt {
@@ -53,7 +53,8 @@ DiffuseAreaLight::DiffuseAreaLight(const Transform &LightToWorld,
     // Warn if light has transformation with non-uniform scale, though not
     // for Triangles, since this doesn't matter for them.
     if (WorldToLight.HasScale() &&
-        dynamic_cast<const Triangle *>(shape) == nullptr)
+        shape == nullptr)
+        //dynamic_cast<const Triangle *>(shape) == nullptr)
         Warning(
             "Scaling detected in world to light transformation! "
             "The system has numerous assumptions, implicit and explicit, "

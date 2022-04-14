@@ -47,23 +47,31 @@
 namespace pbrt {
 
 // Low Discrepancy Declarations
+__both__
 Float RadicalInverse(int baseIndex, uint64_t a);
+__both__
 std::vector<uint16_t> ComputeRadicalInversePermutations(RNG &rng);
 static PBRT_CONSTEXPR int PrimeTableSize = 1000;
 extern const int Primes[PrimeTableSize];
+__both__
 Float ScrambledRadicalInverse(int baseIndex, uint64_t a, const uint16_t *perm);
 extern const int PrimeSums[PrimeTableSize];
+__both__
 inline void Sobol2D(int nSamplesPerPixelSample, int nPixelSamples,
                     Point2f *samples, RNG &rng);
 extern uint32_t CMaxMinDist[17][32];
+__both__
 inline uint64_t SobolIntervalToIndex(const uint32_t log2Resolution,
                                      uint64_t sampleNum, const Point2i &p);
+__both__
 inline float SobolSampleFloat(int64_t index, int dimension,
                               uint32_t scramble = 0);
+__both__
 inline double SobolSampleDouble(int64_t index, int dimension,
                                 uint64_t scramble = 0);
 
 // Low Discrepancy Inline Functions
+__both__
 inline uint32_t ReverseBits32(uint32_t n) {
     n = (n << 16) | (n >> 16);
     n = ((n & 0x00ff00ff) << 8) | ((n & 0xff00ff00) >> 8);
@@ -73,6 +81,7 @@ inline uint32_t ReverseBits32(uint32_t n) {
     return n;
 }
 
+__both__
 inline uint64_t ReverseBits64(uint64_t n) {
     uint64_t n0 = ReverseBits32((uint32_t)n);
     uint64_t n1 = ReverseBits32((uint32_t)(n >> 32));
@@ -80,6 +89,7 @@ inline uint64_t ReverseBits64(uint64_t n) {
 }
 
 template <int base>
+__both__
 inline uint64_t InverseRadicalInverse(uint64_t inverse, int nDigits) {
     uint64_t index = 0;
     for (int i = 0; i < nDigits; ++i) {
@@ -90,6 +100,7 @@ inline uint64_t InverseRadicalInverse(uint64_t inverse, int nDigits) {
     return index;
 }
 
+__both__
 inline uint32_t MultiplyGenerator(const uint32_t *C, uint32_t a) {
     uint32_t v = 0;
     for (int i = 0; a != 0; ++i, a >>= 1)
@@ -97,6 +108,7 @@ inline uint32_t MultiplyGenerator(const uint32_t *C, uint32_t a) {
     return v;
 }
 
+__both__
 inline Float SampleGeneratorMatrix(const uint32_t *C, uint32_t a,
                                    uint32_t scramble = 0) {
 #ifndef PBRT_HAVE_HEX_FP_CONSTANTS
@@ -108,8 +120,10 @@ inline Float SampleGeneratorMatrix(const uint32_t *C, uint32_t a,
 #endif
 }
 
+__both__
 inline uint32_t GrayCode(uint32_t v) { return (v >> 1) ^ v; }
 
+__both__
 inline void GrayCodeSample(const uint32_t *C, uint32_t n, uint32_t scramble,
                            Float *p) {
     uint32_t v = scramble;
@@ -125,6 +139,7 @@ inline void GrayCodeSample(const uint32_t *C, uint32_t n, uint32_t scramble,
     }
 }
 
+__both__
 inline void GrayCodeSample(const uint32_t *C0, const uint32_t *C1, uint32_t n,
                            const Point2i &scramble, Point2f *p) {
     uint32_t v[2] = {(uint32_t)scramble.x, (uint32_t)scramble.y};
@@ -141,6 +156,7 @@ inline void GrayCodeSample(const uint32_t *C0, const uint32_t *C1, uint32_t n,
     }
 }
 
+__both__
 inline void VanDerCorput(int nSamplesPerPixelSample, int nPixelSamples,
                          Float *samples, RNG &rng) {
     uint32_t scramble = rng.UniformUInt32();
@@ -200,6 +216,7 @@ inline void VanDerCorput(int nSamplesPerPixelSample, int nPixelSamples,
     Shuffle(samples, nPixelSamples, nSamplesPerPixelSample, rng);
 }
 
+__both__
 inline void Sobol2D(int nSamplesPerPixelSample, int nPixelSamples,
                     Point2f *samples, RNG &rng) {
     Point2i scramble;
@@ -226,6 +243,7 @@ inline void Sobol2D(int nSamplesPerPixelSample, int nPixelSamples,
     Shuffle(samples, nPixelSamples, nSamplesPerPixelSample, rng);
 }
 
+__both__
 inline uint64_t SobolIntervalToIndex(const uint32_t m, uint64_t frame,
                                      const Point2i &p) {
     if (m == 0) return 0;
@@ -248,6 +266,7 @@ inline uint64_t SobolIntervalToIndex(const uint32_t m, uint64_t frame,
     return index;
 }
 
+__both__
 inline Float SobolSample(int64_t index, int dimension, uint64_t scramble = 0) {
 #ifdef PBRT_FLOAT_AS_DOUBLE
     return SobolSampleDouble(index, dimension, scramble);
@@ -256,6 +275,7 @@ inline Float SobolSample(int64_t index, int dimension, uint64_t scramble = 0) {
 #endif
 }
 
+__both__
 inline float SobolSampleFloat(int64_t a, int dimension, uint32_t scramble) {
     CHECK_LT(dimension, NumSobolDimensions) <<
         "Integrator has consumed too many Sobol' dimensions; you "
@@ -273,6 +293,7 @@ inline float SobolSampleFloat(int64_t a, int dimension, uint32_t scramble) {
 #endif
 }
 
+__both__
 inline double SobolSampleDouble(int64_t a, int dimension, uint64_t scramble) {
   CHECK_LT(dimension, NumSobolDimensions) <<
       "Integrator has consumed too many Sobol' dimensions; you "

@@ -48,9 +48,12 @@ namespace pbrt {
 class Filter {
   public:
     // Filter Interface
+    __device__
     virtual ~Filter();
+    __device__
     Filter(const Vector2f &radius)
         : radius(radius), invRadius(Vector2f(1 / radius.x, 1 / radius.y)) {}
+    __device__
     virtual Float Evaluate(const Point2f &p) const = 0;
 
     // Filter Public Data
