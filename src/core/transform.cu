@@ -110,7 +110,7 @@ Matrix4x4 Inverse(const Matrix4x4 &m) {
         ++ipiv[icol];
         // Swap rows _irow_ and _icol_ for pivot
         if (irow != icol) {
-            for (int k = 0; k < 4; ++k) std::swap(minv[irow][k], minv[icol][k]);
+            for (int k = 0; k < 4; ++k) SWAP(minv[irow][k], minv[icol][k]);
         }
         indxr[i] = irow;
         indxc[i] = icol;
@@ -134,14 +134,13 @@ Matrix4x4 Inverse(const Matrix4x4 &m) {
     for (int j = 3; j >= 0; j--) {
         if (indxr[j] != indxc[j]) {
             for (int k = 0; k < 4; k++)
-                std::swap(minv[k][indxr[j]], minv[k][indxc[j]]);
+                SWAP(minv[k][indxr[j]], minv[k][indxc[j]]);
         }
     }
     return Matrix4x4(minv);
 }
 
 // Transform Method Definitions
-__both__
 void Transform::Print(FILE *f) const { m.Print(f); }
 
 __both__
@@ -337,7 +336,7 @@ class Interval {
     Interval(Float v) : low(v), high(v) {}
     __both__
     Interval(Float v0, Float v1)
-        : low(std::min(v0, v1)), high(std::max(v0, v1)) {}
+        : low(min(v0, v1)), high(max(v0, v1)) {}
     __both__
     Interval operator+(const Interval &i) const {
         return Interval(low + i.low, high + i.high);
@@ -348,20 +347,20 @@ class Interval {
     }
     __both__
     Interval operator*(const Interval &i) const {
-        return Interval(std::min(std::min(low * i.low, high * i.low),
-                                 std::min(low * i.high, high * i.high)),
-                        std::max(std::max(low * i.low, high * i.low),
-                                 std::max(low * i.high, high * i.high)));
+        return Interval(min(min(low * i.low, high * i.low),
+                                 min(low * i.high, high * i.high)),
+                        max(max(low * i.low, high * i.low),
+                                 max(low * i.high, high * i.high)));
     }
     Float low, high;
 };
 
 __both__
 inline Interval Sin(const Interval &i) {
-    CHECK_GE(i.low, 0);
-    CHECK_LE(i.high, 2.0001 * Pi);
+    assert(i.low => 0);
+    assert(i.high <= 2.0001 * Pi);
     Float sinLow = std::sin(i.low), sinHigh = std::sin(i.high);
-    if (sinLow > sinHigh) std::swap(sinLow, sinHigh);
+    if (sinLow > sinHigh) SWAP(sinLow, sinHigh);
     if (i.low < Pi / 2 && i.high > Pi / 2) sinHigh = 1.;
     if (i.low < (3.f / 2.f) * Pi && i.high > (3.f / 2.f) * Pi) sinLow = -1.;
     return Interval(sinLow, sinHigh);
@@ -369,10 +368,10 @@ inline Interval Sin(const Interval &i) {
 
 __both__
 inline Interval Cos(const Interval &i) {
-    CHECK_GE(i.low, 0);
-    CHECK_LE(i.high, 2.0001 * Pi);
+    assert(i.low => 0);
+    assert(i.high <= 2.0001 * Pi);
     Float cosLow = std::cos(i.low), cosHigh = std::cos(i.high);
-    if (cosLow > cosHigh) std::swap(cosLow, cosHigh);
+    if (cosLow > cosHigh) SWAP(cosLow, cosHigh);
     if (i.low < Pi && i.high > Pi) cosLow = -1.;
     return Interval(cosLow, cosHigh);
 }
@@ -1159,7 +1158,7 @@ void AnimatedTransform::Decompose(const Matrix4x4 &m, Vector3f *T,
             Float n = std::abs(R.m[i][0] - Rnext.m[i][0]) +
                       std::abs(R.m[i][1] - Rnext.m[i][1]) +
                       std::abs(R.m[i][2] - Rnext.m[i][2]);
-            norm = std::max(norm, n);
+            norm = max(norm, n);
         }
         R = Rnext;
     } while (++count < 100 && norm > .0001);
@@ -1271,7 +1270,7 @@ Bounds3f AnimatedTransform::BoundPointMotion(const Point3f &p) const {
         IntervalFindZeros(c1[c].Eval(p), c2[c].Eval(p), c3[c].Eval(p),
                           c4[c].Eval(p), c5[c].Eval(p), theta, Interval(0., 1.),
                           zeros, &nZeros);
-        CHECK_LE(nZeros, sizeof(zeros) / sizeof(zeros[0]));
+        assert(nZeros <= sizeof(zeros) / sizeof(zeros[0]));
 
         // Expand bounding box for any motion derivative zeros found
         for (int i = 0; i < nZeros; ++i) {

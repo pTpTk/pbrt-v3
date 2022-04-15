@@ -47,7 +47,7 @@ STAT_COUNTER("Scene/AreaLights", numAreaLights);
 Light::Light(int flags, const Transform &LightToWorld,
              const MediumInterface &mediumInterface, int nSamples)
     : flags(flags),
-      nSamples(std::max(1, nSamples)),
+      nSamples(max(1, nSamples)),
       mediumInterface(mediumInterface),
       LightToWorld(LightToWorld),
       WorldToLight(Inverse(LightToWorld)) {

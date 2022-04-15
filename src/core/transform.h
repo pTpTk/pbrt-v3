@@ -77,7 +77,6 @@ struct Matrix4x4 {
     }
     __both__
     friend Matrix4x4 Transpose(const Matrix4x4 &);
-    __both__
     void Print(FILE *f) const {
         fprintf(f, "[ ");
         for (int i = 0; i < 4; ++i) {
@@ -102,7 +101,6 @@ struct Matrix4x4 {
     __both__
     friend Matrix4x4 Inverse(const Matrix4x4 &);
 
-    __both__
     friend std::ostream &operator<<(std::ostream &os, const Matrix4x4 &m) {
         // clang-format off
         os << StringPrintf("[ [ %f, %f, %f, %f ] "
@@ -232,7 +230,6 @@ class Transform {
                           const Vector3f &dErrorIn, Vector3f *oErrorOut,
                           Vector3f *dErrorOut) const;
 
-    __both__
     friend std::ostream &operator<<(std::ostream &os, const Transform &t) {
         os << "t=" << t.m << ", inv=" << t.mInv;
         return os;
@@ -266,7 +263,7 @@ inline Point3<T> Transform::operator()(const Point3<T> &p) const {
     T yp = m.m[1][0] * x + m.m[1][1] * y + m.m[1][2] * z + m.m[1][3];
     T zp = m.m[2][0] * x + m.m[2][1] * y + m.m[2][2] * z + m.m[2][3];
     T wp = m.m[3][0] * x + m.m[3][1] * y + m.m[3][2] * z + m.m[3][3];
-    CHECK_NE(wp, 0);
+    assert(wp != 0);
     if (wp == 1)
         return Point3<T>(xp, yp, zp);
     else
@@ -338,7 +335,7 @@ inline Point3<T> Transform::operator()(const Point3<T> &p,
     T zAbsSum = (std::abs(m.m[2][0] * x) + std::abs(m.m[2][1] * y) +
                  std::abs(m.m[2][2] * z) + std::abs(m.m[2][3]));
     *pError = gamma(3) * Vector3<T>(xAbsSum, yAbsSum, zAbsSum);
-    CHECK_NE(wp, 0);
+    assert(wp != 0);
     if (wp == 1)
         return Point3<T>(xp, yp, zp);
     else
@@ -373,7 +370,7 @@ inline Point3<T> Transform::operator()(const Point3<T> &pt,
              std::abs(m.m[2][2]) * ptError.z) +
         gamma(3) * (std::abs(m.m[2][0] * x) + std::abs(m.m[2][1] * y) +
                     std::abs(m.m[2][2] * z) + std::abs(m.m[2][3]));
-    CHECK_NE(wp, 0);
+    assert(wp != 0);
     if (wp == 1.)
         return Point3<T>(xp, yp, zp);
     else

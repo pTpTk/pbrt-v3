@@ -46,16 +46,11 @@ namespace pbrt {
 // Box Filter Declarations
 class BoxFilter : public Filter {
   public:
-    __device__
     BoxFilter(const Vector2f &radius) : Filter(radius) {}
-    __device__
     Float Evaluate(const Point2f &p) const;
 };
 
 BoxFilter *CreateBoxFilter(const ParamSet &ps);
-
-__global__
-void CreateBoxFilterGPU(const Vector2f &radius, Filter* ptrGPU);
 
 }  // namespace pbrt
 

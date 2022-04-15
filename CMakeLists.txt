@@ -82,7 +82,19 @@ ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/usr/local/cuda/lib64 -lcudart")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/usr/local/cuda/lib64 -lcudart")
+set(CUDA_SEPARABLE_COMPILATION ON)
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} 
+-arch=sm_50 
+-gencode=arch=compute_50,code=sm_50  
+-gencode=arch=compute_52,code=sm_52  
+-gencode=arch=compute_60,code=sm_60  
+-gencode=arch=compute_61,code=sm_61  
+-gencode=arch=compute_70,code=sm_70  
+-gencode=arch=compute_75,code=sm_75 
+-gencode=arch=compute_75,code=compute_75")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_VERBOSE_MAKEFILE 1)
 
   FIND_PROGRAM(XIAR xiar)
   IF(XIAR)

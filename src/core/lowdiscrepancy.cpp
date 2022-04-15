@@ -400,7 +400,7 @@ PBRT_NOINLINE static Float RadicalInverseSpecialized(uint64_t a) {
         a = next;
     }
     DCHECK_LT(reversedDigits * invBaseN, 1.00001);
-    return std::min(reversedDigits * invBaseN, OneMinusEpsilon);
+    return min(reversedDigits * invBaseN, OneMinusEpsilon);
 }
 
 template <int base>
@@ -420,7 +420,7 @@ ScrambledRadicalInverseSpecialized(const uint16_t *perm, uint64_t a) {
     }
     DCHECK_LT(invBaseN * (reversedDigits + invBase * perm[0] / (1 - invBase)),
               1.00001);
-    return std::min(
+    return min(
         invBaseN * (reversedDigits + invBase * perm[0] / (1 - invBase)),
         OneMinusEpsilon);
 }

@@ -75,7 +75,7 @@ alignas(PBRT_L1_CACHE_LINE_SIZE)
 #elif !defined(PBRT_HAVE_ALIGNOF)
         const int align = 16;
 #else
-        const int align = alignof(std::max_align_t);
+        const int align = alignof(max_align_t);
 #endif
 #ifdef PBRT_HAVE_CONSTEXPR
         static_assert(IsPowerOf2(align), "Minimum alignment not a power of two");
@@ -103,7 +103,7 @@ alignas(PBRT_L1_CACHE_LINE_SIZE)
                 }
             }
             if (!currentBlock) {
-                currentAllocSize = std::max(nBytes, blockSize);
+                currentAllocSize = max(nBytes, blockSize);
                 currentBlock = AllocAligned<uint8_t>(currentAllocSize);
             }
             currentBlockPos = 0;

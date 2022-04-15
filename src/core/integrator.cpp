@@ -95,7 +95,7 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
         lightNum = lightDistrib->SampleDiscrete(sampler.Get1D(), &lightPdf);
         if (lightPdf == 0) return Spectrum(0.f);
     } else {
-        lightNum = std::min((int)(sampler.Get1D() * nLights), nLights - 1);
+        lightNum = min((int)(sampler.Get1D() * nLights), nLights - 1);
         lightPdf = Float(1) / nLights;
     }
     const std::shared_ptr<Light> &light = scene.lights[lightNum];
@@ -249,9 +249,9 @@ void SamplerIntegrator::Render(const Scene &scene) {
 
             // Compute sample bounds for tile
             int x0 = sampleBounds.pMin.x + tile.x * tileSize;
-            int x1 = std::min(x0 + tileSize, sampleBounds.pMax.x);
+            int x1 = min(x0 + tileSize, sampleBounds.pMax.x);
             int y0 = sampleBounds.pMin.y + tile.y * tileSize;
-            int y1 = std::min(y0 + tileSize, sampleBounds.pMax.y);
+            int y1 = min(y0 + tileSize, sampleBounds.pMax.y);
             Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
             LOG(INFO) << "Starting image tile " << tileBounds;
 

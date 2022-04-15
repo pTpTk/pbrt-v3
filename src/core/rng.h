@@ -45,17 +45,17 @@ namespace pbrt {
 
 // Random Number Declarations
 #ifndef PBRT_HAVE_HEX_FP_CONSTANTS
-static const double DoubleOneMinusEpsilon = 0.99999999999999989;
-static const float FloatOneMinusEpsilon = 0.99999994;
+const double DoubleOneMinusEpsilon = 0.99999999999999989;
+const float FloatOneMinusEpsilon = 0.99999994;
 #else
-static const double DoubleOneMinusEpsilon = 0x1.fffffffffffffp-1;
-static const float FloatOneMinusEpsilon = 0x1.fffffep-1;
+const double DoubleOneMinusEpsilon = 0x1.fffffffffffffp-1;
+const float FloatOneMinusEpsilon = 0x1.fffffep-1;
 #endif
 
 #ifdef PBRT_FLOAT_AS_DOUBLE
-static const Float OneMinusEpsilon = DoubleOneMinusEpsilon;
+const Float OneMinusEpsilon = DoubleOneMinusEpsilon;
 #else
-static const Float OneMinusEpsilon = FloatOneMinusEpsilon;
+const Float OneMinusEpsilon = FloatOneMinusEpsilon;
 #endif
 
 #define PCG32_DEFAULT_STATE 0x853c49e6748fea9bULL
@@ -75,12 +75,13 @@ class RNG {
             if (r >= threshold) return r % b;
         }
     }
+    __both__
     Float UniformFloat() {
 #ifndef PBRT_HAVE_HEX_FP_CONSTANTS
-        return std::min(OneMinusEpsilon,
+        return min(OneMinusEpsilon,
                         Float(UniformUInt32() * 2.3283064365386963e-10f));
 #else
-        return std::min(OneMinusEpsilon, Float(UniformUInt32() * 0x1p-32f));
+        return min(OneMinusEpsilon, Float(UniformUInt32() * 0x1p-32f));
 #endif
     }
     template <typename Iterator>

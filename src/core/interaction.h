@@ -98,7 +98,7 @@ struct Interaction {
     }
     __both__
     const Medium *GetMedium() const {
-        CHECK_EQ(mediumInterface.inside, mediumInterface.outside);
+        assert(mediumInterface.inside == mediumInterface.outside);
         return mediumInterface.inside;
     }
 

@@ -365,7 +365,7 @@ void ReportProfilerResults(FILE *dest) {
             indent += 2 * std::count(r.first.begin(), r.first.end(), '/');
         const char *toPrint = r.first.c_str() + slashIndex + 1;
         fprintf(dest, "%*c%s%*c %5.2f%% (%s)\n", indent, ' ', toPrint,
-                std::max(0, int(67 - strlen(toPrint) - indent)), ' ', pct,
+                max(0, int(67 - strlen(toPrint) - indent)), ' ', pct,
                 timeString(pct, now).c_str());
     }
 
@@ -384,7 +384,7 @@ void ReportProfilerResults(FILE *dest) {
         int indent = 4;
         const char *toPrint = r.first.c_str();
         fprintf(dest, "%*c%s%*c %5.2f%% (%s)\n", indent, ' ', toPrint,
-                std::max(0, int(67 - strlen(toPrint) - indent)), ' ', pct,
+                max(0, int(67 - strlen(toPrint) - indent)), ' ', pct,
                 timeString(pct, now).c_str());
     }
     fprintf(dest, "\n");

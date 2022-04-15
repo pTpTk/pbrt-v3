@@ -52,14 +52,14 @@ class Sphere : public Shape {
     Sphere(const Transform *ObjectToWorld, 
            const Transform *WorldToObject,
            bool reverseOrientation, Float radius, Float zMin, 
-           Float zMax, Float phiMax)
+           Float zMax, Float thetaMin, Float thetaMax, Float phiMax)
         : Shape(ObjectToWorld, WorldToObject, reverseOrientation),
           radius(radius),
-          zMin(Clamp(std::min(zMin, zMax), -radius, radius)),
-          zMax(Clamp(std::max(zMin, zMax), -radius, radius)),
-          thetaMin(std::acos(Clamp(std::min(zMin, zMax) / radius, -1, 1))),
-          thetaMax(std::acos(Clamp(std::max(zMin, zMax) / radius, -1, 1))),
-                     phiMax(Radians(Clamp(phiMax, 0, 360))) {}
+          zMin(zMin),
+          zMax(zMax),
+          thetaMin(thetaMin),
+          thetaMax(thetaMax),
+          phiMax(Radians(Clamp(phiMax, 0, 360))) {}
     __device__ Bounds3f ObjectBound() const;
     __device__ bool Intersect(const Ray &ray, Float *tHit, 
                               SurfaceInteraction *isect,
@@ -85,11 +85,12 @@ Shape* CreateSphereShape(const Transform *o2w, const Transform *w2o,
 __global__
 void CreateSphereShapeGPU(const Transform *o2w, const Transform *w2o,
                           bool reverseOrientation, Float radius, Float zMin,
-                          Float zMax, Float phiMax, Shape* ptrGPU);
+                          Float zMax, Float thetaMin, Float thetaMax, 
+                          Float phiMax, Shape* ptrGPU);
 
 void SphereShapeTest(const Transform *o2w, const Transform *w2o,
                      bool reverseOrientation, Float radius, Float zMin,
-                     Float zMax, Float phiMax, Shape* ptrGPU);
+                     Float zMax, Float thetaMin, Float thetaMax, Float phiMax, Shape* ptrGPU);
 
 }  // namespace pbrt
 

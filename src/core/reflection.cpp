@@ -49,17 +49,17 @@ Float FrDielectric(Float cosThetaI, Float etaI, Float etaT) {
     // Potentially swap indices of refraction
     bool entering = cosThetaI > 0.f;
     if (!entering) {
-        std::swap(etaI, etaT);
+        SWAP(etaI, etaT);
         cosThetaI = std::abs(cosThetaI);
     }
 
     // Compute _cosThetaT_ using Snell's law
-    Float sinThetaI = std::sqrt(std::max((Float)0, 1 - cosThetaI * cosThetaI));
+    Float sinThetaI = std::sqrt(max((Float)0, 1 - cosThetaI * cosThetaI));
     Float sinThetaT = etaI / etaT * sinThetaI;
 
     // Handle total internal reflection
     if (sinThetaT >= 1) return 1;
-    Float cosThetaT = std::sqrt(std::max((Float)0, 1 - sinThetaT * sinThetaT));
+    Float cosThetaT = std::sqrt(max((Float)0, 1 - sinThetaT * sinThetaT));
     Float Rparl = ((etaT * cosThetaI) - (etaI * cosThetaT)) /
                   ((etaT * cosThetaI) + (etaI * cosThetaT));
     Float Rperp = ((etaI * cosThetaI) - (etaT * cosThetaT)) /
@@ -203,7 +203,7 @@ Spectrum OrenNayar::f(const Vector3f &wo, const Vector3f &wi) const {
         Float sinPhiI = SinPhi(wi), cosPhiI = CosPhi(wi);
         Float sinPhiO = SinPhi(wo), cosPhiO = CosPhi(wo);
         Float dCos = cosPhiI * cosPhiO + sinPhiI * sinPhiO;
-        maxCos = std::max((Float)0, dCos);
+        maxCos = max((Float)0, dCos);
     }
 
     // Compute sine and tangent terms of Oren-Nayar model
@@ -297,7 +297,7 @@ Spectrum FresnelBlend::f(const Vector3f &wo, const Vector3f &wi) const {
     wh = Normalize(wh);
     Spectrum specular =
         distribution->D(wh) /
-        (4 * AbsDot(wi, wh) * std::max(AbsCosTheta(wi), AbsCosTheta(wo))) *
+        (4 * AbsDot(wi, wh) * max(AbsCosTheta(wi), AbsCosTheta(wo))) *
         SchlickFresnel(Dot(wi, wh));
     return diffuse + specular;
 }
@@ -336,7 +336,7 @@ Spectrum FourierBSDF::f(const Vector3f &wo, const Vector3f &wi) const {
             if (weight != 0) {
                 int m;
                 const Float *ap = bsdfTable.GetAk(offsetI + a, offsetO + b, &m);
-                mMax = std::max(mMax, m);
+                mMax = max(mMax, m);
                 for (int c = 0; c < bsdfTable.nChannels; ++c)
                     for (int k = 0; k < m; ++k)
                         ak[c * bsdfTable.mMax + k] += weight * ap[c * m + k];
@@ -345,7 +345,7 @@ Spectrum FourierBSDF::f(const Vector3f &wo, const Vector3f &wi) const {
     }
 
     // Evaluate Fourier expansion for angle $\phi$
-    Float Y = std::max((Float)0, Fourier(ak, mMax, cosPhi));
+    Float Y = max((Float)0, Fourier(ak, mMax, cosPhi));
     Float scale = muI != 0 ? (1 / std::abs(muI)) : (Float)0;
 
     // Update _scale_ to account for adjoint light transport
@@ -462,12 +462,12 @@ Spectrum FresnelBlend::Sample_f(const Vector3f &wo, Vector3f *wi,
                                 BxDFType *sampledType) const {
     Point2f u = uOrig;
     if (u[0] < .5) {
-        u[0] = std::min(2 * u[0], OneMinusEpsilon);
+        u[0] = min(2 * u[0], OneMinusEpsilon);
         // Cosine-sample the hemisphere, flipping the direction if necessary
         *wi = CosineSampleHemisphere(u);
         if (wo.z < 0) wi->z *= -1;
     } else {
-        u[0] = std::min(2 * (u[0] - .5f), OneMinusEpsilon);
+        u[0] = min(2 * (u[0] - .5f), OneMinusEpsilon);
         // Sample microfacet orientation $\wh$ and reflected direction $\wi$
         Vector3f wh = distribution->Sample_wh(wo, u);
         *wi = Reflect(wo, wh);
@@ -562,7 +562,7 @@ Spectrum FourierBSDF::Sample_f(const Vector3f &wo, Vector3f *wi,
             if (weight != 0) {
                 int m;
                 const Float *ap = bsdfTable.GetAk(offsetI + a, offsetO + b, &m);
-                mMax = std::max(mMax, m);
+                mMax = max(mMax, m);
                 for (int c = 0; c < bsdfTable.nChannels; ++c)
                     for (int k = 0; k < m; ++k)
                         ak[c * bsdfTable.mMax + k] += weight * ap[c * m + k];
@@ -573,10 +573,10 @@ Spectrum FourierBSDF::Sample_f(const Vector3f &wo, Vector3f *wi,
     // Importance sample the luminance Fourier expansion
     Float phi, pdfPhi;
     Float Y = SampleFourier(ak, bsdfTable.recip, mMax, u[0], &pdfPhi, &phi);
-    *pdf = std::max((Float)0, pdfPhi * pdfMu);
+    *pdf = max((Float)0, pdfPhi * pdfMu);
 
     // Compute the scattered direction for _FourierBSDF_
-    Float sin2ThetaI = std::max((Float)0, 1 - muI * muI);
+    Float sin2ThetaI = max((Float)0, 1 - muI * muI);
     Float norm = std::sqrt(sin2ThetaI / Sin2Theta(wo));
     if (std::isinf(norm)) norm = 0;
     Float sinPhi = std::sin(phi), cosPhi = std::cos(phi);
@@ -631,7 +631,7 @@ Float FourierBSDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
             int order;
             const Float *coeffs =
                 bsdfTable.GetAk(offsetI + i, offsetO + o, &order);
-            mMax = std::max(mMax, order);
+            mMax = max(mMax, order);
 
             for (int k = 0; k < order; ++k) ak[k] += *coeffs++ * weight;
         }
@@ -723,7 +723,7 @@ Spectrum BSDF::Sample_f(const Vector3f &woWorld, Vector3f *wiWorld,
         return Spectrum(0);
     }
     int comp =
-        std::min((int)std::floor(u[0] * matchingComps), matchingComps - 1);
+        min((int)std::floor(u[0] * matchingComps), matchingComps - 1);
 
     // Get _BxDF_ pointer for chosen component
     BxDF *bxdf = nullptr;
@@ -738,7 +738,7 @@ Spectrum BSDF::Sample_f(const Vector3f &woWorld, Vector3f *wiWorld,
         matchingComps << ", bxdf: " << bxdf->ToString();
 
     // Remap _BxDF_ sample _u_ to $[0,1)^2$
-    Point2f uRemapped(std::min(u[0] * matchingComps - comp, OneMinusEpsilon),
+    Point2f uRemapped(min(u[0] * matchingComps - comp, OneMinusEpsilon),
                       u[1]);
 
     // Sample chosen _BxDF_

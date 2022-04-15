@@ -51,7 +51,7 @@ Bounds3f Sphere::ObjectBound() const {
 __device__
 bool Sphere::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
                        bool testAlphaTexture) const {
-    ProfilePhase p(Prof::ShapeIntersect);
+    //ProfilePhase p(Prof::ShapeIntersect);
     Float phi;
     Point3f pHit;
     // Transform _Ray_ to object space
@@ -160,7 +160,7 @@ bool Sphere::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
 
 __device__
 bool Sphere::IntersectP(const Ray &r, bool testAlphaTexture) const {
-    ProfilePhase p(Prof::ShapeIntersectP);
+    //ProfilePhase p(Prof::ShapeIntersectP);
     Float phi;
     Point3f pHit;
     // Transform _Ray_ to object space
@@ -271,7 +271,7 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
     Float sinThetaMax = radius * invDc;
     Float sinThetaMax2 = sinThetaMax * sinThetaMax;
     Float invSinThetaMax = 1 / sinThetaMax;
-    Float cosThetaMax = std::sqrt(std::max((Float)0.f, 1 - sinThetaMax2));
+    Float cosThetaMax = std::sqrt(max((Float)0.f, 1 - sinThetaMax2));
 
     Float cosTheta  = (cosThetaMax - 1) * u[0] + 1;
     Float sinTheta2 = 1 - cosTheta * cosTheta;
@@ -285,8 +285,8 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
 
     // Compute angle $\alpha$ from center of sphere to sampled point on surface
     Float cosAlpha = sinTheta2 * invSinThetaMax +
-        cosTheta * std::sqrt(std::max((Float)0.f, 1.f - sinTheta2 * invSinThetaMax * invSinThetaMax));
-    Float sinAlpha = std::sqrt(std::max((Float)0.f, 1.f - cosAlpha*cosAlpha));
+        cosTheta * std::sqrt(max((Float)0.f, 1.f - sinTheta2 * invSinThetaMax * invSinThetaMax));
+    Float sinAlpha = std::sqrt(max((Float)0.f, 1.f - cosAlpha*cosAlpha));
     Float phi = u[1] * 2 * Pi;
 
     // Compute surface normal and sampled point on sphere
@@ -318,7 +318,7 @@ Float Sphere::Pdf(const Interaction &ref, const Vector3f &wi) const {
 
     // Compute general sphere PDF
     Float sinThetaMax2 = radius * radius / DistanceSquared(ref.p, pCenter);
-    Float cosThetaMax = std::sqrt(std::max((Float)0, 1 - sinThetaMax2));
+    Float cosThetaMax = std::sqrt(max((Float)0, 1 - sinThetaMax2));
     return UniformConePdf(cosThetaMax);
 }
 
@@ -328,7 +328,7 @@ Float Sphere::SolidAngle(const Point3f &p, int nSamples) const {
     if (DistanceSquared(p, pCenter) <= radius * radius)
         return 4 * Pi;
     Float sinTheta2 = radius * radius / DistanceSquared(p, pCenter);
-    Float cosTheta = std::sqrt(std::max((Float)0, 1 - sinTheta2));
+    Float cosTheta = std::sqrt(max((Float)0, 1 - sinTheta2));
     return (2 * Pi * (1 - cosTheta));
 }
 
@@ -337,28 +337,37 @@ Shape* CreateSphereShape(const Transform *o2w, const Transform *w2o,
     Float radius = params.FindOneFloat("radius", 1.f);
     Float zmin = params.FindOneFloat("zmin", -radius);
     Float zmax = params.FindOneFloat("zmax", radius);
-    Float phimax = params.FindOneFloat("phimax", 360.f);
+    Float phiMax = params.FindOneFloat("phimax", 360.f);
+    
+    Float zMin = Clamp(std::min(zmin, zmax), -radius, radius);
+    Float zMax = Clamp(std::max(zmin, zmax), -radius, radius);
+    Float thetaMin = std::acos(Clamp(std::min(zmin, zmax) / radius, -1, 1));
+    Float thetaMax = std::acos(Clamp(std::max(zmin, zmax) / radius, -1, 1));
 
     Shape* ptrGPU;
     cudaMalloc(&ptrGPU, sizeof(Sphere));
 
-    CreateSphereShapeGPU<<<1,1>>>(o2w, w2o, reverseOrientation, radius, zmin,
-                                  zmax, phimax, ptrGPU);
+    CreateSphereShapeGPU<<<1,1>>>(o2w, w2o, reverseOrientation, radius, zMin,
+                                  zMax, thetaMin, thetaMax, phiMax, ptrGPU);
     return ptrGPU;
 }
 
 __global__ 
 void CreateSphereShapeGPU(const Transform *o2w, const Transform *w2o,
                           bool reverseOrientation, Float radius, Float zMin,
-                          Float zMax, Float phiMax, Shape* ptrGPU) {
-    new(ptrGPU) Sphere(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
+                          Float zMax, Float thetaMin, Float thetaMax, 
+                          Float phiMax, Shape* ptrGPU) {
+    new(ptrGPU) Sphere(o2w, w2o, reverseOrientation, radius, zMin, zMax, 
+                       thetaMin, thetaMax, phiMax);
 }
 
 void SphereShapeTest(const Transform *o2w, const Transform *w2o,
                      bool reverseOrientation, Float radius, Float zMin,
-                     Float zMax, Float phiMax, Shape* ptrGPU) {
+                     Float zMax, Float thetaMin, Float thetaMax, 
+                     Float phiMax, Shape* ptrGPU) {
     Shape* ptrCPU;
-    Sphere objCPU(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
+    Sphere objCPU(o2w, w2o, reverseOrientation, radius, zMin, zMax, 
+                  thetaMin, thetaMax, phiMax);
     cudaMemcpy(ptrCPU, ptrGPU, sizeof(Sphere), cudaMemcpyDeviceToHost);
 
     assert(ptrCPU->radius == objCPU.radius);

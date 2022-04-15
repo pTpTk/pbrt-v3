@@ -103,7 +103,7 @@ SpatialLightDistribution::SpatialLightDistribution(const Scene &scene,
     Vector3f diag = b.Diagonal();
     Float bmax = diag[b.MaximumExtent()];
     for (int i = 0; i < 3; ++i) {
-        nVoxels[i] = std::max(1, int(std::round(diag[i] / bmax * maxVoxels)));
+        nVoxels[i] = max(1, int(std::round(diag[i] / bmax * maxVoxels)));
         // In the Lookup() method, we require that 20 or fewer bits be
         // sufficient to represent each coordinate value. It's fairly hard
         // to imagine that this would ever be a problem.
@@ -290,7 +290,7 @@ SpatialLightDistribution::ComputeDistribution(Point3i pi) const {
     for (size_t i = 0; i < lightContrib.size(); ++i) {
         VLOG(2) << "Voxel pi = " << pi << ", light " << i << " contrib = "
                 << lightContrib[i];
-        lightContrib[i] = std::max(lightContrib[i], minContrib);
+        lightContrib[i] = max(lightContrib[i], minContrib);
     }
     LOG(INFO) << "Initialized light distribution in voxel pi= " <<  pi <<
         ", avgContrib = " << avgContrib;

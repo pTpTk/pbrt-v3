@@ -148,7 +148,7 @@ static void workerThreadFunc(int tIndex, std::shared_ptr<Barrier> barrier) {
             // Find the set of loop iterations to run next
             int64_t indexStart = loop.nextIndex;
             int64_t indexEnd =
-                std::min(indexStart + loop.chunkSize, loop.maxIndex);
+                min(indexStart + loop.chunkSize, loop.maxIndex);
 
             // Update _loop_ to reflect iterations this thread will run
             loop.nextIndex = indexEnd;
@@ -209,7 +209,7 @@ void ParallelFor(std::function<void(int64_t)> func, int64_t count,
 
         // Find the set of loop iterations to run next
         int64_t indexStart = loop.nextIndex;
-        int64_t indexEnd = std::min(indexStart + loop.chunkSize, loop.maxIndex);
+        int64_t indexEnd = min(indexStart + loop.chunkSize, loop.maxIndex);
 
         // Update _loop_ to reflect iterations this thread will run
         loop.nextIndex = indexEnd;
@@ -269,7 +269,7 @@ void ParallelFor2D(std::function<void(Point2i)> func, const Point2i &count) {
 
         // Find the set of loop iterations to run next
         int64_t indexStart = loop.nextIndex;
-        int64_t indexEnd = std::min(indexStart + loop.chunkSize, loop.maxIndex);
+        int64_t indexEnd = min(indexStart + loop.chunkSize, loop.maxIndex);
 
         // Update _loop_ to reflect iterations this thread will run
         loop.nextIndex = indexEnd;
@@ -299,7 +299,7 @@ void ParallelFor2D(std::function<void(Point2i)> func, const Point2i &count) {
 }
 
 int NumSystemCores() {
-    return std::max(1u, std::thread::hardware_concurrency());
+    return max(1u, std::thread::hardware_concurrency());
 }
 
 void ParallelInit() {

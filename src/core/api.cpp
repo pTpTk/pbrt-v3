@@ -292,7 +292,7 @@ void TransformCache::Grow() {
         }
     }
 
-    std::swap(hashTable, newTable);
+    SWAP(hashTable, newTable);
 }
 
 // API Static Data
@@ -692,7 +692,7 @@ std::shared_ptr<Sampler> MakeSampler(const std::string &name,
     return std::shared_ptr<Sampler>(sampler);
 }
 
-Filter* MakeFilter(const std::string &name,
+std::unique_ptr<Filter> MakeFilter(const std::string &name,
                                    const ParamSet &paramSet) {
     Filter *filter = nullptr;
     if (name == "box")
@@ -710,14 +710,14 @@ Filter* MakeFilter(const std::string &name,
         exit(1);
     }
     paramSet.ReportUnused();
-    return filter;
+    return std::unique_ptr<Filter>(filter);
 }
 
 Film *MakeFilm(const std::string &name, const ParamSet &paramSet,
-               Filter* filter) {
+               std::unique_ptr<Filter> filter) {
     Film *film = nullptr;
     if (name == "image")
-        film = CreateFilm(paramSet, filter);
+        film = CreateFilm(paramSet, std::move(filter));
     else
         Warning("Film \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();
@@ -1572,8 +1572,8 @@ Integrator *RenderOptions::MakeIntegrator() const {
 }
 
 Camera *RenderOptions::MakeCamera() const {
-    Filter* filter = MakeFilter(FilterName, FilterParams);
-    Film *film = MakeFilm(FilmName, FilmParams, filter);
+    std::unique_ptr<Filter> filter = MakeFilter(FilterName, FilterParams);
+    Film *film = MakeFilm(FilmName, FilmParams, std::move(filter));
     if (!film) {
         Error("Unable to create film.");
         return nullptr;

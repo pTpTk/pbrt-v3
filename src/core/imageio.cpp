@@ -401,8 +401,8 @@ static RGBSpectrum *ReadImagePFM(const std::string &filename, int *xres,
         uint8_t bytes[4];
         for (unsigned int i = 0; i < nFloats; ++i) {
             memcpy(bytes, &data[i], 4);
-            std::swap(bytes[0], bytes[3]);
-            std::swap(bytes[1], bytes[2]);
+            SWAP(bytes[0], bytes[3]);
+            SWAP(bytes[1], bytes[2]);
             memcpy(&data[i], bytes, 4);
         }
     }

@@ -732,7 +732,7 @@ ParamSet parseParams(Next nextToken, Unget ungetToken, MemoryArena &arena,
                     exit(1);
                 }
                 if (item.size == nAlloc) {
-                    nAlloc = std::max<size_t>(2 * item.size, 4);
+                    nAlloc = max<size_t>(2 * item.size, 4);
                     const char **newData = arena.Alloc<const char *>(nAlloc);
                     std::copy(item.stringValues, item.stringValues + item.size,
                               newData);
@@ -751,7 +751,7 @@ ParamSet parseParams(Next nextToken, Unget ungetToken, MemoryArena &arena,
                 }
 
                 if (item.size == nAlloc) {
-                    nAlloc = std::max<size_t>(2 * item.size, 4);
+                    nAlloc = max<size_t>(2 * item.size, 4);
                     double *newData = arena.Alloc<double>(nAlloc);
                     std::copy(item.doubleValues, item.doubleValues + item.size,
                               newData);

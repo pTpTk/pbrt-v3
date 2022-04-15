@@ -341,8 +341,8 @@ void CleanupProfiler();
     do {                                                          \
         var##sum += value;                                        \
         var##count += 1;                                          \
-        var##min = std::min(var##min, decltype(var##min)(value)); \
-        var##max = std::max(var##max, decltype(var##min)(value)); \
+        var##min = min(var##min, decltype(var##min)(value)); \
+        var##max = max(var##max, decltype(var##min)(value)); \
     } while (0)
 
 #define STAT_PERCENT(title, numVar, denomVar)                 \

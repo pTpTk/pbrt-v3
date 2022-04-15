@@ -248,7 +248,7 @@ class CoefficientSpectrum {
     Float MaxComponentValue() const {
         Float m = c[0];
         for (int i = 1; i < nSpectrumSamples; ++i)
-            m = std::max(m, c[i]);
+            m = max(m, c[i]);
         return m;
     }
     bool HasNaNs() const {

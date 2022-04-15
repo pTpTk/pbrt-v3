@@ -60,6 +60,7 @@
 #include <string.h>
 #include <glog/logging.h>
 #include <cuda_runtime.h>
+#include "std.h"
 
 // Platform-specific definitions
 #if defined(_WIN32) || defined(_WIN64)
@@ -90,7 +91,6 @@
 
 // Global Macros
 #define ALLOCA(TYPE, COUNT) (TYPE *) alloca((COUNT) * sizeof(TYPE))
-#define __both__ __device__ __host__
 
 namespace pbrt {
 

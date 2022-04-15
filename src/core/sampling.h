@@ -109,17 +109,17 @@ struct Distribution1D {
 };
 
 Point2f RejectionSampleDisk(RNG &rng);
-Vector3f UniformSampleHemisphere(const Point2f &u);
-Float UniformHemispherePdf();
-Vector3f UniformSampleSphere(const Point2f &u);
-Float UniformSpherePdf();
-Vector3f UniformSampleCone(const Point2f &u, Float thetamax);
-Vector3f UniformSampleCone(const Point2f &u, Float thetamax, const Vector3f &x,
-                           const Vector3f &y, const Vector3f &z);
-Float UniformConePdf(Float thetamax);
-Point2f UniformSampleDisk(const Point2f &u);
-Point2f ConcentricSampleDisk(const Point2f &u);
-Point2f UniformSampleTriangle(const Point2f &u);
+__both__ Vector3f UniformSampleHemisphere(const Point2f &u);
+__both__ Float UniformHemispherePdf();
+__both__ Vector3f UniformSampleSphere(const Point2f &u);
+__both__ Float UniformSpherePdf();
+__both__ Vector3f UniformSampleCone(const Point2f &u, Float thetamax);
+__both__ Vector3f UniformSampleCone(const Point2f &u, Float thetamax, const Vector3f &x,
+                                    const Vector3f &y, const Vector3f &z);
+__both__ Float UniformConePdf(Float thetamax);
+__both__ Point2f UniformSampleDisk(const Point2f &u);
+__both__ Point2f ConcentricSampleDisk(const Point2f &u);
+__both__ Point2f UniformSampleTriangle(const Point2f &u);
 class Distribution2D {
   public:
     // Distribution2D Public Methods
@@ -152,13 +152,13 @@ void Shuffle(T *samp, int count, int nDimensions, RNG &rng) {
     for (int i = 0; i < count; ++i) {
         int other = i + rng.UniformUInt32(count - i);
         for (int j = 0; j < nDimensions; ++j)
-            std::swap(samp[nDimensions * i + j], samp[nDimensions * other + j]);
+            SWAP(samp[nDimensions * i + j], samp[nDimensions * other + j]);
     }
 }
 
 inline Vector3f CosineSampleHemisphere(const Point2f &u) {
     Point2f d = ConcentricSampleDisk(u);
-    Float z = std::sqrt(std::max((Float)0, 1 - d.x * d.x - d.y * d.y));
+    Float z = std::sqrt(max((Float)0, 1 - d.x * d.x - d.y * d.y));
     return Vector3f(d.x, d.y, z);
 }
 
