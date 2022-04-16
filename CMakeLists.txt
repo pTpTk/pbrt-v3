@@ -7,7 +7,11 @@ CMAKE_MINIMUM_REQUIRED ( VERSION 3.1.0 )
 # For sanitizers
 SET (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-PROJECT ( PBRT-V3 )
+if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+  set(CMAKE_CUDA_ARCHITECTURES 61)
+endif()
+
+PROJECT ( PBRT-V3 LANGUAGES CXX CUDA C)
 
 OPTION(PBRT_FLOAT_AS_DOUBLE "Use 64-bit floats" OFF)
 
@@ -66,6 +70,10 @@ ENDIF()
 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
+IF(PROFILE)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+ENDIF()
+
 ###########################################################################
 # Annoying compiler-specific details
 
@@ -77,6 +85,22 @@ ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/usr/local/cuda/lib64 -lcudart")
+set(CUDA_SEPARABLE_COMPILATION ON)
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} 
+-arch=sm_61 
+#-gencode=arch=compute_50,code=sm_50  
+#-gencode=arch=compute_52,code=sm_52  
+#-gencode=arch=compute_60,code=sm_60  
+-gencode=arch=compute_61,code=sm_61" 
+#-gencode=arch=compute_70,code=sm_70  
+#-gencode=arch=compute_75,code=sm_75 
+#-gencode=arch=compute_75,code=compute_75"
+)
+#set_target_properties(tgt PROPERTIES CUDA_ARCHITECTURES "61")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+SET(CMAE_C_COMPILER gcc)
 
   FIND_PROGRAM(XIAR xiar)
   IF(XIAR)
@@ -366,88 +390,101 @@ INCLUDE_DIRECTORIES ( src/ext/ptex/src/ptex )
 ###########################################################################
 # On to pbrt...
 
-SET ( PBRT_CORE_SOURCE
-  src/core/api.cpp
-  src/core/bssrdf.cpp
-  src/core/camera.cpp
-  src/core/efloat.cpp
-  src/core/error.cpp
-  src/core/fileutil.cpp
-  src/core/film.cpp
-  src/core/filter.cpp
-  src/core/floatfile.cpp
-  src/core/geometry.cpp
-  src/core/imageio.cpp
-  src/core/integrator.cpp
-  src/core/interaction.cpp
-  src/core/interpolation.cpp
-  src/core/light.cpp
-  src/core/lightdistrib.cpp
-  src/core/lowdiscrepancy.cpp
-  src/core/material.cpp
-  src/core/medium.cpp
-  src/core/memory.cpp
-  src/core/microfacet.cpp
-  src/core/parallel.cpp
-  src/core/paramset.cpp
-  src/core/parser.cpp
-  src/core/primitive.cpp
-  src/core/progressreporter.cpp
-  src/core/quaternion.cpp
-  src/core/reflection.cpp
-  src/core/sampler.cpp
-  src/core/sampling.cpp
-  src/core/scene.cpp
-  src/core/shape.cpp
-  src/core/sobolmatrices.cpp
-  src/core/spectrum.cpp
-  src/core/stats.cpp
-  src/core/texture.cpp
-  src/core/transform.cpp
-  )
+#SET ( PBRT_CORE_SOURCE
+#  src/core/api.cu
+#  src/core/api.cpp
+#  src/core/bssrdf.cpp
+#  src/core/camera.cpp
+#  src/core/efloat.cpp
+#  src/core/error.cpp
+#  src/core/fileutil.cpp
+#  src/core/film.cpp
+#  src/core/filter.cu
+#  src/core/floatfile.cpp
+#  src/core/geometry.cpp
+#  src/core/imageio.cpp
+#  src/core/integrator.cpp
+#  src/core/interaction.cpp
+#  src/core/interpolation.cpp
+#  src/core/light.cpp
+#  src/core/lightdistrib.cpp
+#  src/core/lowdiscrepancy.cpp
+#  src/core/material.cpp
+#  src/core/medium.cpp
+#  src/core/memory.cpp
+#  src/core/microfacet.cpp
+#  src/core/parallel.cpp
+#  src/core/paramset.cpp
+#  src/core/parser.cpp
+#  src/core/primitive.cpp
+#  src/core/progressreporter.cpp
+#  src/core/quaternion.cpp
+#  src/core/reflection.cpp
+#  src/core/sampler.cpp
+#  src/core/sampling.cpp
+#  src/core/scene.cpp
+#  src/core/shape.cu
+#  src/core/sobolmatrices.cpp
+#  src/core/spectrum.cpp
+#  src/core/stats.cpp
+#  src/core/texture.cpp
+#  src/core/transform.cpp
+#  )
 
-SET ( PBRT_CORE_HEADERS
-  src/core/api.h
-  src/core/bssrdf.h
-  src/core/camera.h
-  src/core/efloat.h
-  src/core/error.h
-  src/core/fileutil.h
-  src/core/film.h
-  src/core/filter.h
-  src/core/floatfile.h
-  src/core/geometry.h
-  src/core/imageio.h
-  src/core/integrator.h
-  src/core/interaction.h
-  src/core/interpolation.h
-  src/core/light.h
-  src/core/lowdiscrepancy.h
-  src/core/material.h
-  src/core/medium.h
-  src/core/memory.h
-  src/core/microfacet.h
-  src/core/mipmap.h
-  src/core/parallel.h
-  src/core/paramset.h
-  src/core/parser.h
-  src/core/pbrt.h
-  src/core/primitive.h
-  src/core/progressreporter.h
-  src/core/quaternion.h
-  src/core/reflection.h
-  src/core/rng.h
-  src/core/sampler.h
-  src/core/sampling.h
-  src/core/scene.h
-  src/core/shape.h
-  src/core/sobolmatrices.h
-  src/core/spectrum.h
-  src/core/stats.h
-  src/core/stringprint.h
-  src/core/texture.h
-  src/core/transform.h
-  )
+FILE ( GLOB PBRT_CORE_CXX_SOURCE
+  src/core/*.cpp
+)
+
+FILE ( GLOB PBRT_CORE_CUDA_SOURCE
+  src/core/*.cu
+)
+
+FILE ( GLOB PBRT_CORE_HEADERS
+  src/core/*.h
+)
+
+#SET ( PBRT_CORE_HEADERS
+#  src/core/api.h
+#  src/core/bssrdf.h
+#  src/core/camera.h
+#  src/core/efloat.h
+#  src/core/error.h
+#  src/core/fileutil.h
+#  src/core/film.h
+#  src/core/filter.h
+#  src/core/floatfile.h
+#  src/core/geometry.h
+#  src/core/imageio.h
+#  src/core/integrator.h
+#  src/core/interaction.h
+#  src/core/interpolation.h
+#  src/core/light.h
+#  src/core/lowdiscrepancy.h
+#  src/core/material.h
+#  src/core/medium.h
+#  src/core/memory.h
+#  src/core/microfacet.h
+#  src/core/mipmap.h
+#  src/core/parallel.h
+#  src/core/paramset.h
+#  src/core/parser.h
+#  src/core/pbrt.h
+#  src/core/primitive.h
+#  src/core/progressreporter.h
+#  src/core/quaternion.h
+#  src/core/reflection.h
+#  src/core/rng.h
+#  src/core/sampler.h
+#  src/core/sampling.h
+#  src/core/scene.h
+#  src/core/shape.h
+#  src/core/sobolmatrices.h
+#  src/core/spectrum.h
+#  src/core/stats.h
+#  src/core/stringprint.h
+#  src/core/texture.h
+#  src/core/transform.h
+#  )
 
 FILE ( GLOB PBRT_SOURCE
   src/ext/*
@@ -485,9 +522,11 @@ SOURCE_GROUP (media REGULAR_EXPRESSION src/media/.*)
 
 ADD_LIBRARY ( pbrt STATIC
   ${PBRT_YACC_LEX_SOURCE}
-  ${PBRT_CORE_SOURCE}
+  ${PBRT_CORE_CXX_SOURCE}
+  ${PBRT_CORE_CUDA_SOURCE}
   ${PBRT_CORE_HEADERS}
   ${PBRT_SOURCE}
+  ${PBRT_CUDA_SOURCE}
   )
 ADD_SANITIZERS ( pbrt )
 
@@ -541,11 +580,11 @@ ADD_SANITIZERS ( cyhair2pbrt )
 
 # Unit test
 
-FILE ( GLOB PBRT_TEST_SOURCE
-  src/tests/*.cpp
-  src/tests/gtest/*.cc
-  )
-
+#FILE ( GLOB PBRT_TEST_SOURCE
+#  src/tests/*.cpp
+#  src/tests/gtest/*.cc
+#  )
+#
 #ADD_EXECUTABLE ( pbrt_test ${PBRT_TEST_SOURCE} )
 #ADD_SANITIZERS ( pbrt_test )
 #TARGET_COMPILE_FEATURES ( pbrt_test PRIVATE ${PBRT_CXX11_FEATURES} )
