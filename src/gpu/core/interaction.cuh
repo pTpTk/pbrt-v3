@@ -1,3 +1,5 @@
+#pragma once
+
 #include "gpu.cuh"
 #include "medium.cuh"
 #include "geometry.cuh"
@@ -89,6 +91,19 @@ class SurfaceInteraction : public Interaction {
     mutable Vector3f dpdx, dpdy;
     mutable Float dudx = 0, dvdx = 0, dudy = 0, dvdy = 0;
     int faceIndex = 0;
+};
+
+class MediumInteraction : public Interaction {
+  public:
+    // MediumInteraction Public Methods
+    MediumInteraction() : phase(nullptr) {}
+    MediumInteraction(const Point3f &p, const Vector3f &wo, Float time,
+                      const Medium *medium, const PhaseFunction *phase)
+        : Interaction(p, wo, time, medium), phase(phase) {}
+    bool IsValid() const { return phase != nullptr; }
+
+    // MediumInteraction Public Data
+    const PhaseFunction *phase;
 };
 
 };

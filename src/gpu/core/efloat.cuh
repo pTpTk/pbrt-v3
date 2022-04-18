@@ -39,8 +39,7 @@
 #define PBRT_CORE_EFLOAT_H
 
 // core/efloat.h*
-#include "pbrt.h"
-#include "stringprint.h"
+#include "gpu.cuh"
 
 namespace pbrt {
 namespace gpu {
@@ -49,9 +48,9 @@ namespace gpu {
 class EFloat {
   public:
     // EFloat Public Methods
-    __both__
+    __device__
     EFloat() {}
-    __both__
+    __device__
     EFloat(float v, float err = 0.f) : v(v) {
         if (err == 0.)
             low = high = v;
@@ -71,13 +70,13 @@ class EFloat {
 #endif  // NDEBUG
     }
 #ifndef NDEBUG
-    __both__
+    __device__
     EFloat(float v, long double lD, float err) : EFloat(v, err) {
         vPrecise = lD;
         Check();
     }
 #endif  // DEBUG
-    __both__
+    __device__
     EFloat operator+(EFloat ef) const {
         EFloat r;
         r.v = v + ef.v;
@@ -91,26 +90,26 @@ class EFloat {
         r.Check();
         return r;
     }
-    __both__
+    __device__
     explicit operator float() const { return v; }
-    __both__
+    __device__
     explicit operator double() const { return v; }
-    __both__
+    __device__
     float GetAbsoluteError() const { return NextFloatUp(max(std::abs(high - v),
                                                                  std::abs(v - low))); }
-    __both__
+    __device__
     float UpperBound() const { return high; }
-    __both__
+    __device__
     float LowerBound() const { return low; }
 #ifndef NDEBUG
-    __both__
+    __device__
     float GetRelativeError() const {
         return std::abs((vPrecise - v) / vPrecise);
     }
-    __both__
+    __device__
     long double PreciseValue() const { return vPrecise; }
 #endif
-    __both__
+    __device__
     EFloat operator-(EFloat ef) const {
         EFloat r;
         r.v = v - ef.v;
@@ -122,7 +121,7 @@ class EFloat {
         r.Check();
         return r;
     }
-    __both__
+    __device__
     EFloat operator*(EFloat ef) const {
         EFloat r;
         r.v = v * ef.v;
@@ -139,7 +138,7 @@ class EFloat {
         r.Check();
         return r;
     }
-    __both__
+    __device__
     EFloat operator/(EFloat ef) const {
         EFloat r;
         r.v = v / ef.v;
@@ -163,7 +162,7 @@ class EFloat {
         r.Check();
         return r;
     }
-    __both__
+    __device__
     EFloat operator-() const {
         EFloat r;
         r.v = -v;
@@ -175,9 +174,9 @@ class EFloat {
         r.Check();
         return r;
     }
-    __both__
+    __device__
     inline bool operator==(EFloat fe) const { return v == fe.v; }
-    __both__
+    __device__
     inline void Check() const {
         if (!isinf(low) && !isnan(low) && !isinf(high) &&
             !isnan(high))
@@ -189,7 +188,7 @@ class EFloat {
         }
 #endif
     }
-    __both__
+    __device__
     EFloat(const EFloat &ef) {
         ef.Check();
         v = ef.v;
@@ -199,7 +198,7 @@ class EFloat {
         vPrecise = ef.vPrecise;
 #endif
     }
-    __both__
+    __device__
     EFloat &operator=(const EFloat &ef) {
         ef.Check();
         if (&ef != this) {
@@ -213,37 +212,28 @@ class EFloat {
         return *this;
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const EFloat &ef) {
-        os << StringPrintf("v=%f (%a) - [%f, %f]",
-                           ef.v, ef.v, ef.low, ef.high);
-#ifndef NDEBUG
-        os << StringPrintf(", precise=%.30Lf", ef.vPrecise);
-#endif // !NDEBUG
-        return os;
-    }
-
   private:
     // EFloat Private Data
     float v, low, high;
 #ifndef NDEBUG
     long double vPrecise;
 #endif  // NDEBUG
-    __both__
+    __device__
     friend inline EFloat sqrt(EFloat fe);
-    __both__
+    __device__
     friend inline EFloat abs(EFloat fe);
-    __both__
+    __device__
     friend inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0,
                                  EFloat *t1);
 };
 
 // EFloat Inline Functions
-__both__ inline EFloat operator*(float f, EFloat fe) { return EFloat(f) * fe; }
-__both__ inline EFloat operator/(float f, EFloat fe) { return EFloat(f) / fe; }
-__both__ inline EFloat operator+(float f, EFloat fe) { return EFloat(f) + fe; }
-__both__ inline EFloat operator-(float f, EFloat fe) { return EFloat(f) - fe; }
+__device__ inline EFloat operator*(float f, EFloat fe) { return EFloat(f) * fe; }
+__device__ inline EFloat operator/(float f, EFloat fe) { return EFloat(f) / fe; }
+__device__ inline EFloat operator+(float f, EFloat fe) { return EFloat(f) + fe; }
+__device__ inline EFloat operator-(float f, EFloat fe) { return EFloat(f) - fe; }
 
-__both__
+__device__
 inline EFloat sqrt(EFloat fe) {
     EFloat r;
     r.v = std::sqrt(fe.v);
@@ -256,7 +246,7 @@ inline EFloat sqrt(EFloat fe) {
     return r;
 }
 
-__both__
+__device__
 inline EFloat abs(EFloat fe) {
     if (fe.low >= 0)
         // The entire interval is greater than zero, so we're all set.
@@ -286,9 +276,9 @@ inline EFloat abs(EFloat fe) {
     }
 }
 
-__both__
+__device__
 inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0, EFloat *t1);
-__both__
+__device__
 inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0, EFloat *t1) {
     // Find quadratic discriminant
     double discrim = (double)B.v * (double)B.v - 4. * (double)A.v * (double)C.v;
@@ -305,7 +295,7 @@ inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0, EFloat *t1) {
         q = -.5 * (B + floatRootDiscrim);
     *t0 = q / A;
     *t1 = C / q;
-    if ((float)*t0 > (float)*t1) SWAP(*t0, *t1);
+    if ((float)*t0 > (float)*t1) std::swap(*t0, *t1);
     return true;
 }
 

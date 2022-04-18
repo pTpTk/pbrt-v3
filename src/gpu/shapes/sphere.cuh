@@ -1,10 +1,28 @@
-#include "sphere.cuh"
+#pragma once
+
+#include "gpu.cuh"
 #include "transform.h"
 #include "efloat.h"
 #include "interaction.cu"
 
 namespace pbrt {
 namespace gpu {
+
+class Sphere {
+  public:
+    __device__ Sphere(const Transform *ObjectToWorld,
+                      const Transform *WorldToObject,
+                      Float radius, Float zMin, Float zMax,
+                      Float thetaMin, Float thetaMax, Float phiMax);
+    __device__ bool Intersect(const Ray &r, Float *tHit,
+                              SurfaceInteraction *isect,
+                              bool testAlphaTexture) const;
+  private:
+    const Transform *ObjectToWorld, *WorldToObject;
+    const Float radius;
+    const Float zMin, zMax;
+    const Float thetaMin, thetaMax, phiMax;
+};
 
 __device__
 Sphere::Sphere(const Transform *ObjectToWorld,

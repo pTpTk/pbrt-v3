@@ -1,3 +1,5 @@
+#pragma once
+
 #include "gpu.cuh"
 #include "shape.cu"
 #include "geometry.h"

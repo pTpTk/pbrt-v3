@@ -1,5 +1,6 @@
 #include "gpu.cuh"
-#include "medium.cu"
+#include "interaction.cuh"
+#include "medium.cuh"
 #include "geometry.cuh"
 
 namespace pbrt {

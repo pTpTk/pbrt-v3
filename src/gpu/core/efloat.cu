@@ -32,7 +32,7 @@
 
 
 // core/efloat.cpp*
-#include "efloat.h"
+#include "efloat.cuh"
 
 namespace pbrt {
 

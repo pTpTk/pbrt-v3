@@ -1,3 +1,5 @@
+#pragma once
+
 #include "gpu.cuh"
 #include "geometry.h"
 #include "interaction.h"

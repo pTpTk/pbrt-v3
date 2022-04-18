@@ -1,17 +1,9 @@
+#pragma once
+
 #include "gpu.cuh"
 
 namespace pbrt {
 namespace gpu {
-
-class Medium {
-  public:
-    // Medium Interface
-    __device__ virtual ~Medium() {}
-    __device__ virtual Spectrum Tr(const Ray &ray, Sampler &sampler) const = 0;
-    __device__ virtual Spectrum Sample(const Ray &ray, Sampler &sampler,
-                            MemoryArena &arena,
-                            MediumInteraction *mi) const = 0;
-};
 
 struct MediumInterface {
     __device__
@@ -25,6 +17,15 @@ struct MediumInterface {
     __device__
     bool IsMediumTransition() const { return inside != outside; }
     const Medium *inside, *outside;
+};
+
+class Medium {
+  public:
+    // Medium Interface
+    __device__ virtual ~Medium() {}
+    __device__ virtual Spectrum Tr(const Ray &ray, Sampler &sampler) const = 0;
+    __device__ virtual Spectrum Sample(const Ray &ray, Sampler &sampler,
+                            MediumInteraction *mi) const = 0;
 };
 
 };
