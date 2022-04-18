@@ -51,19 +51,6 @@
 #include "materials/plastic.h"
 #include "samplers/halton.h"
 #include "shapes/sphere.h"
-#include "textures/bilerp.h"
-#include "textures/checkerboard.h"
-#include "textures/constant.h"
-#include "textures/dots.h"
-#include "textures/fbm.h"
-#include "textures/imagemap.h"
-#include "textures/marble.h"
-#include "textures/mix.h"
-#include "textures/ptex.h"
-#include "textures/scale.h"
-#include "textures/uv.h"
-#include "textures/windy.h"
-#include "textures/wrinkled.h"
 #include "media/grid.h"
 #include "media/homogeneous.h"
 
@@ -427,34 +414,7 @@ std::shared_ptr<Texture<Float>> MakeFloatTexture(const std::string &name,
                                                  const Transform &tex2world,
                                                  const TextureParams &tp) {
     Texture<Float> *tex = nullptr;
-    if (name == "constant")
-        tex = CreateConstantFloatTexture(tex2world, tp);
-    else if (name == "scale")
-        tex = CreateScaleFloatTexture(tex2world, tp);
-    else if (name == "mix")
-        tex = CreateMixFloatTexture(tex2world, tp);
-    else if (name == "bilerp")
-        tex = CreateBilerpFloatTexture(tex2world, tp);
-    else if (name == "imagemap")
-        tex = CreateImageFloatTexture(tex2world, tp);
-    else if (name == "uv")
-        tex = CreateUVFloatTexture(tex2world, tp);
-    else if (name == "checkerboard")
-        tex = CreateCheckerboardFloatTexture(tex2world, tp);
-    else if (name == "dots")
-        tex = CreateDotsFloatTexture(tex2world, tp);
-    else if (name == "fbm")
-        tex = CreateFBmFloatTexture(tex2world, tp);
-    else if (name == "wrinkled")
-        tex = CreateWrinkledFloatTexture(tex2world, tp);
-    else if (name == "marble")
-        tex = CreateMarbleFloatTexture(tex2world, tp);
-    else if (name == "windy")
-        tex = CreateWindyFloatTexture(tex2world, tp);
-    else if (name == "ptex")
-        tex = CreatePtexFloatTexture(tex2world, tp);
-    else
-        Warning("Float texture \"%s\" unknown.", name.c_str());
+    Warning("Float texture \"%s\" unknown.", name.c_str());
     tp.ReportUnused();
     return std::shared_ptr<Texture<Float>>(tex);
 }
@@ -463,34 +423,7 @@ std::shared_ptr<Texture<Spectrum>> MakeSpectrumTexture(
     const std::string &name, const Transform &tex2world,
     const TextureParams &tp) {
     Texture<Spectrum> *tex = nullptr;
-    if (name == "constant")
-        tex = CreateConstantSpectrumTexture(tex2world, tp);
-    else if (name == "scale")
-        tex = CreateScaleSpectrumTexture(tex2world, tp);
-    else if (name == "mix")
-        tex = CreateMixSpectrumTexture(tex2world, tp);
-    else if (name == "bilerp")
-        tex = CreateBilerpSpectrumTexture(tex2world, tp);
-    else if (name == "imagemap")
-        tex = CreateImageSpectrumTexture(tex2world, tp);
-    else if (name == "uv")
-        tex = CreateUVSpectrumTexture(tex2world, tp);
-    else if (name == "checkerboard")
-        tex = CreateCheckerboardSpectrumTexture(tex2world, tp);
-    else if (name == "dots")
-        tex = CreateDotsSpectrumTexture(tex2world, tp);
-    else if (name == "fbm")
-        tex = CreateFBmSpectrumTexture(tex2world, tp);
-    else if (name == "wrinkled")
-        tex = CreateWrinkledSpectrumTexture(tex2world, tp);
-    else if (name == "marble")
-        tex = CreateMarbleSpectrumTexture(tex2world, tp);
-    else if (name == "windy")
-        tex = CreateWindySpectrumTexture(tex2world, tp);
-    else if (name == "ptex")
-        tex = CreatePtexSpectrumTexture(tex2world, tp);
-    else
-        Warning("Spectrum texture \"%s\" unknown.", name.c_str());
+    Warning("Spectrum texture \"%s\" unknown.", name.c_str());
     tp.ReportUnused();
     return std::shared_ptr<Texture<Spectrum>>(tex);
 }
@@ -1399,8 +1332,8 @@ void pbrtWorldEnd() {
     graphicsState = GraphicsState();
     transformCache.Clear();
     currentApiState = APIState::OptionsBlock;
-    ImageTexture<Float, Float>::ClearCache();
-    ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
+    //ImageTexture<Float, Float>::ClearCache();
+    //ImageTexture<RGBSpectrum, Spectrum>::ClearCache();
     renderOptions.reset(new RenderOptions);
 
     if (!PbrtOptions.cat && !PbrtOptions.toPly) {
