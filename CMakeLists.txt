@@ -390,118 +390,79 @@ INCLUDE_DIRECTORIES ( src/ext/ptex/src/ptex )
 ###########################################################################
 # On to pbrt...
 
-#SET ( PBRT_CORE_SOURCE
-#  src/core/api.cu
-#  src/core/api.cpp
-#  src/core/bssrdf.cpp
-#  src/core/camera.cpp
-#  src/core/efloat.cpp
-#  src/core/error.cpp
-#  src/core/fileutil.cpp
-#  src/core/film.cpp
-#  src/core/filter.cu
-#  src/core/floatfile.cpp
-#  src/core/geometry.cpp
-#  src/core/imageio.cpp
-#  src/core/integrator.cpp
-#  src/core/interaction.cpp
-#  src/core/interpolation.cpp
-#  src/core/light.cpp
-#  src/core/lightdistrib.cpp
-#  src/core/lowdiscrepancy.cpp
-#  src/core/material.cpp
-#  src/core/medium.cpp
-#  src/core/memory.cpp
-#  src/core/microfacet.cpp
-#  src/core/parallel.cpp
-#  src/core/paramset.cpp
-#  src/core/parser.cpp
-#  src/core/primitive.cpp
-#  src/core/progressreporter.cpp
-#  src/core/quaternion.cpp
-#  src/core/reflection.cpp
-#  src/core/sampler.cpp
-#  src/core/sampling.cpp
-#  src/core/scene.cpp
-#  src/core/shape.cu
-#  src/core/sobolmatrices.cpp
-#  src/core/spectrum.cpp
-#  src/core/stats.cpp
-#  src/core/texture.cpp
-#  src/core/transform.cpp
-#  )
-
 FILE ( GLOB PBRT_CORE_CXX_SOURCE
-  src/core/*.cpp
+  src/cpu/core/*.cpp
 )
 
 FILE ( GLOB PBRT_CORE_CUDA_SOURCE
-  src/core/*.cu
+  src/gpu/core/*.cu
 )
 
-FILE ( GLOB PBRT_CORE_HEADERS
-  src/core/*.h
+FILE ( GLOB PBRT_CORE_CXX_HEADERS
+  src/cpu/core/*.h
 )
 
-#SET ( PBRT_CORE_HEADERS
-#  src/core/api.h
-#  src/core/bssrdf.h
-#  src/core/camera.h
-#  src/core/efloat.h
-#  src/core/error.h
-#  src/core/fileutil.h
-#  src/core/film.h
-#  src/core/filter.h
-#  src/core/floatfile.h
-#  src/core/geometry.h
-#  src/core/imageio.h
-#  src/core/integrator.h
-#  src/core/interaction.h
-#  src/core/interpolation.h
-#  src/core/light.h
-#  src/core/lowdiscrepancy.h
-#  src/core/material.h
-#  src/core/medium.h
-#  src/core/memory.h
-#  src/core/microfacet.h
-#  src/core/mipmap.h
-#  src/core/parallel.h
-#  src/core/paramset.h
-#  src/core/parser.h
-#  src/core/pbrt.h
-#  src/core/primitive.h
-#  src/core/progressreporter.h
-#  src/core/quaternion.h
-#  src/core/reflection.h
-#  src/core/rng.h
-#  src/core/sampler.h
-#  src/core/sampling.h
-#  src/core/scene.h
-#  src/core/shape.h
-#  src/core/sobolmatrices.h
-#  src/core/spectrum.h
-#  src/core/stats.h
-#  src/core/stringprint.h
-#  src/core/texture.h
-#  src/core/transform.h
-#  )
+FILE ( GLOB PBRT_CORE_CUDA_HEADERS
+  src/gpu/core/*.cuh
+)
 
-FILE ( GLOB PBRT_SOURCE
+FILE ( GLOB PBRT_CXX_SOURCE
   src/ext/*
-  src/accelerators/*
-  src/cameras/*
-  src/filters/*
-  src/integrators/*
-  src/lights/*
-  src/materials/*
-  src/samplers/*
-  src/shapes/*
-  src/textures/*
-  src/media/*
-  )
+
+  src/cpu/accelerators/*h
+  src/cpu/cameras/*h
+  src/cpu/filters/*h
+  src/cpu/integrators/*h
+  src/cpu/lights/*h
+  src/cpu/materials/*h
+  src/cpu/samplers/*h
+  src/cpu/shapes/*h
+  src/cpu/textures/*h
+  src/cpu/media/*h
+  
+  src/cpu/accelerators/*cpp
+  src/cpu/cameras/*cpp
+  src/cpu/filters/*cpp
+  src/cpu/integrators/*cpp
+  src/cpu/lights/*cpp
+  src/cpu/materials/*cpp
+  src/cpu/samplers/*cpp
+  src/cpu/shapes/*cpp
+  src/cpu/textures/*cpp
+  src/cpu/media/*cpp
+)
+
+FILE ( GLOB PBRT_CUDA_SOURCE
+  src/gpu/accelerators/*cuh
+  src/gpu/cameras/*cuh
+  src/gpu/filters/*cuh
+  src/gpu/integrators/*cuh
+  src/gpu/lights/*cuh
+  src/gpu/materials/*cuh
+  src/gpu/samplers/*cuh
+  src/gpu/shapes/*cuh
+  src/gpu/textures/*cuh
+  src/gpu/media/*cuh
+  
+  src/gpu/accelerators/*cu
+  src/gpu/cameras/*cu
+  src/gpu/filters/*cu
+  src/gpu/integrators/*cu
+  src/gpu/lights/*cu
+  src/gpu/materials/*cu
+  src/gpu/samplers/*cu
+  src/gpu/shapes/*cu
+  src/gpu/textures/*cu
+  src/gpu/media/*cu
+)
 
 INCLUDE_DIRECTORIES ( src )
-INCLUDE_DIRECTORIES ( src/core )
+INCLUDE_DIRECTORIES ( src/tools )
+INCLUDE_DIRECTORIES ( src/ext )
+INCLUDE_DIRECTORIES ( src/cpu )
+INCLUDE_DIRECTORIES ( src/gpu )
+INCLUDE_DIRECTORIES ( src/cpu/core )
+INCLUDE_DIRECTORIES ( src/gpu/core )
 
 # Visual Studio source folders
 SOURCE_GROUP (core REGULAR_EXPRESSION src/core/.*)
@@ -524,8 +485,9 @@ ADD_LIBRARY ( pbrt STATIC
   ${PBRT_YACC_LEX_SOURCE}
   ${PBRT_CORE_CXX_SOURCE}
   ${PBRT_CORE_CUDA_SOURCE}
-  ${PBRT_CORE_HEADERS}
-  ${PBRT_SOURCE}
+  ${PBRT_CORE_CXX_HEADERS}
+  ${PBRT_CORE_CUDA_HEADERS}
+  ${PBRT_CXX_SOURCE}
   ${PBRT_CUDA_SOURCE}
   )
 ADD_SANITIZERS ( pbrt )
@@ -558,7 +520,7 @@ SET(ALL_PBRT_LIBS
 )
 
 # Main renderer
-ADD_EXECUTABLE ( pbrt_exe src/main/pbrt.cpp )
+ADD_EXECUTABLE ( pbrt_exe src/cpu/main/pbrt.cpp )
 ADD_SANITIZERS ( pbrt_exe )
 
 SET_TARGET_PROPERTIES ( pbrt_exe PROPERTIES OUTPUT_NAME pbrt )
