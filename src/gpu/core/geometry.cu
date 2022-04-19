@@ -35,7 +35,5 @@
 #include "geometry.cuh"
 
 namespace pbrt {
-namespace gpu {
 
-}
 }  // namespace pbrt
