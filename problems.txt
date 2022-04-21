@@ -1,0 +1,4 @@
+- Transfer everything to GPU
+- Lambda expression in findInterval
+- Memory allocation
+- LightDistrib lookUp atomic hash table
