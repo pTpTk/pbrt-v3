@@ -53,7 +53,7 @@ enum class LightFlags : int {
     Area = 4,
     Infinite = 8
 };
-__both__
+
 inline bool IsDeltaLight(int flags) {
     return flags & (int)LightFlags::DeltaPosition ||
            flags & (int)LightFlags::DeltaDirection;
@@ -105,8 +105,6 @@ class VisibilityTester {
     const Interaction &P1() const { return p1; }
     __both__
     bool Unoccluded(const Scene &scene) const;
-    __both__
-    Spectrum Tr(const Scene &scene, Sampler &sampler) const;
 
   private:
     Interaction p0, p1;

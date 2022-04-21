@@ -32,7 +32,6 @@
 
 // integrators/path.cpp*
 #include "integrators/path.cuh"
-#include "bssrdf.cuh"
 #include "camera.cuh"
 #include "film.cuh"
 #include "interaction.cuh"

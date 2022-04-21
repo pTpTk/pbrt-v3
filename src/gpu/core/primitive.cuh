@@ -102,37 +102,6 @@ class GeometricPrimitive : public Primitive {
     MediumInterface mediumInterface;
 };
 
-// TransformedPrimitive Declarations
-class TransformedPrimitive : public Primitive {
-  public:
-    // TransformedPrimitive Public Methods
-    TransformedPrimitive(Primitive* primitive,
-                         const AnimatedTransform &PrimitiveToWorld);
-    __both__
-    bool Intersect(const Ray &r, SurfaceInteraction *in) const;
-    __both__
-    bool IntersectP(const Ray &r) const;
-    __both__
-    const AreaLight *GetAreaLight() const { return nullptr; }
-    __both__
-    const Material *GetMaterial() const { return nullptr; }
-    __both__
-    void ComputeScatteringFunctions(SurfaceInteraction *isect,
-                                    MemoryArena &arena, TransportMode mode,
-                                    bool allowMultipleLobes) const {
-        assert(false);
-    }
-    __both__
-    Bounds3f WorldBound() const {
-        return PrimitiveToWorld.MotionBounds(primitive->WorldBound());
-    }
-
-  private:
-    // TransformedPrimitive Private Data
-    Primitive* primitive;
-    const AnimatedTransform PrimitiveToWorld;
-};
-
 // Aggregate Declarations
 class Aggregate : public Primitive {
   public:

@@ -41,7 +41,6 @@
 // core/reflection.h*
 #include "pbrt.cuh"
 #include "geometry.cuh"
-#include "microfacet.cuh"
 #include "shape.cuh"
 #include "spectrum.cuh"
 
@@ -262,31 +261,6 @@ inline std::ostream &operator<<(std::ostream &os, const BxDF &bxdf) {
     return os;
 }
 
-class Fresnel {
-  public:
-    // Fresnel Interface
-    virtual ~Fresnel();
-    virtual Spectrum Evaluate(Float cosI) const = 0;
-    virtual std::string ToString() const = 0;
-};
-
-inline std::ostream &operator<<(std::ostream &os, const Fresnel &f) {
-    os << f.ToString();
-    return os;
-}
-
-class FresnelDielectric : public Fresnel {
-  public:
-    // FresnelDielectric Public Methods
-    Spectrum Evaluate(Float cosThetaI) const;
-    __both__
-    FresnelDielectric(Float etaI, Float etaT) : etaI(etaI), etaT(etaT) {}
-    std::string ToString() const;
-
-  private:
-    Float etaI, etaT;
-};
-
 class LambertianReflection : public BxDF {
   public:
     // LambertianReflection Public Methods
@@ -304,32 +278,6 @@ class LambertianReflection : public BxDF {
   private:
     // LambertianReflection Private Data
     const Spectrum R;
-};
-
-class MicrofacetReflection : public BxDF {
-  public:
-    // MicrofacetReflection Public Methods
-    __both__
-    MicrofacetReflection(const Spectrum &R,
-                         MicrofacetDistribution *distribution, Fresnel *fresnel)
-        : BxDF(BxDFType(BSDF_REFLECTION | BSDF_GLOSSY)),
-          R(R),
-          distribution(distribution),
-          fresnel(fresnel) {}
-    __both__
-    Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
-    __both__
-    Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
-                      Float *pdf, BxDFType *sampledType) const;
-    __both__
-    Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
-    std::string ToString() const;
-
-  private:
-    // MicrofacetReflection Private Data
-    const Spectrum R;
-    const MicrofacetDistribution *distribution;
-    const Fresnel *fresnel;
 };
 
 // BSDF Inline Method Definitions

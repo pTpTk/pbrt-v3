@@ -87,23 +87,6 @@ class Sampler {
     size_t array1DOffset, array2DOffset;
 };
 
-class PixelSampler : public Sampler {
-  public:
-    // PixelSampler Public Methods
-    PixelSampler(int64_t samplesPerPixel, int nSampledDimensions);
-    bool StartNextSample();
-    bool SetSampleNumber(int64_t);
-    Float Get1D();
-    Point2f Get2D();
-
-  protected:
-    // PixelSampler Protected Data
-    std::vector<std::vector<Float>> samples1D;
-    std::vector<std::vector<Point2f>> samples2D;
-    int current1DDimension = 0, current2DDimension = 0;
-    RNG rng;
-};
-
 class GlobalSampler : public Sampler {
   public:
     // GlobalSampler Public Methods

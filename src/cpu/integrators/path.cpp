@@ -32,7 +32,6 @@
 
 // integrators/path.cpp*
 #include "integrators/path.h"
-#include "bssrdf.h"
 #include "camera.h"
 #include "film.h"
 #include "interaction.h"
@@ -149,30 +148,6 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
             etaScale *= (Dot(wo, isect.n) > 0) ? (eta * eta) : 1 / (eta * eta);
         }
         ray = isect.SpawnRay(wi);
-
-        // Account for subsurface scattering, if applicable
-        if (isect.bssrdf && (flags & BSDF_TRANSMISSION)) {
-            // Importance sample the BSSRDF
-            SurfaceInteraction pi;
-            Spectrum S = isect.bssrdf->Sample_S(
-                scene, sampler.Get1D(), sampler.Get2D(), arena, &pi, &pdf);
-            DCHECK(!std::isinf(beta.y()));
-            if (S.IsBlack() || pdf == 0) break;
-            beta *= S / pdf;
-
-            // Account for the direct subsurface scattering component
-            L += beta * UniformSampleOneLight(pi, scene, arena, sampler, false,
-                                              lightDistribution->Lookup(pi.p));
-
-            // Account for the indirect subsurface scattering component
-            Spectrum f = pi.bsdf->Sample_f(pi.wo, &wi, sampler.Get2D(), &pdf,
-                                           BSDF_ALL, &flags);
-            if (f.IsBlack() || pdf == 0) break;
-            beta *= f * AbsDot(wi, pi.shading.n) / pdf;
-            DCHECK(!std::isinf(beta.y()));
-            specularBounce = (flags & BSDF_SPECULAR) != 0;
-            ray = pi.SpawnRay(wi);
-        }
 
         // Possibly terminate the path with Russian roulette.
         // Factor out radiance scaling due to refraction in rrBeta.

@@ -67,35 +67,6 @@ void Aggregate::ComputeScatteringFunctions(SurfaceInteraction *isect,
         "called; should have gone to GeometricPrimitive";
 }
 
-// TransformedPrimitive Method Definitions
-TransformedPrimitive::TransformedPrimitive(std::shared_ptr<Primitive> &primitive,
-                                           const AnimatedTransform &PrimitiveToWorld)
-    : primitive(primitive), PrimitiveToWorld(PrimitiveToWorld) {
-    primitiveMemory += sizeof(*this);
-}
-
-bool TransformedPrimitive::Intersect(const Ray &r,
-                                     SurfaceInteraction *isect) const {
-    // Compute _ray_ after transformation by _PrimitiveToWorld_
-    Transform InterpolatedPrimToWorld;
-    PrimitiveToWorld.Interpolate(r.time, &InterpolatedPrimToWorld);
-    Ray ray = Inverse(InterpolatedPrimToWorld)(r);
-    if (!primitive->Intersect(ray, isect)) return false;
-    r.tMax = ray.tMax;
-    // Transform instance's intersection data to world space
-    if (!InterpolatedPrimToWorld.IsIdentity())
-        *isect = InterpolatedPrimToWorld(*isect);
-    CHECK_GE(Dot(isect->n, isect->shading.n), 0);
-    return true;
-}
-
-bool TransformedPrimitive::IntersectP(const Ray &r) const {
-    Transform InterpolatedPrimToWorld;
-    PrimitiveToWorld.Interpolate(r.time, &InterpolatedPrimToWorld);
-    Transform InterpolatedWorldToPrim = Inverse(InterpolatedPrimToWorld);
-    return primitive->IntersectP(InterpolatedWorldToPrim(r));
-}
-
 // GeometricPrimitive Method Definitions
 GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape> &shape,
                                        const std::shared_ptr<Material> &material,

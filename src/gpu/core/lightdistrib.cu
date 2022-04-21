@@ -48,30 +48,8 @@ LightDistribution::~LightDistribution() {}
 
 LightDistribution* CreateLightSampleDistribution(
     const std::string &name, const Scene &scene) {
-    if (name != "spatial")
-        Error(
-            "Light sample distribution type \"%s\" unknown. Using \"spatial\".",
-            name.c_str());
     return new SpatialLightDistribution(scene);
 }
-
-// UniformLightDistribution::UniformLightDistribution(const Scene &scene) {
-//     std::vector<Float> prob(scene.lights.size(), Float(1));
-//     distrib.reset(new Distribution1D(&prob[0], int(prob.size())));
-// }
-
-// __both__
-// const Distribution1D *UniformLightDistribution::Lookup(const Point3f &p) const {
-//     return distrib;
-// }
-
-// PowerLightDistribution::PowerLightDistribution(const Scene &scene)
-//     : distrib(ComputeLightPowerDistribution(scene)) {}
-
-// __both__
-// const Distribution1D *PowerLightDistribution::Lookup(const Point3f &p) const {
-//     return distrib;
-// }
 
 ///////////////////////////////////////////////////////////////////////////
 // SpatialLightDistribution
@@ -118,11 +96,6 @@ SpatialLightDistribution::~SpatialLightDistribution() {
         if (entry.distribution)
             delete entry.distribution;
     }
-}
-
-__both__
-const Distribution1D *SpatialLightDistribution::Lookup(const Point3f &p) const {
-    return nullptr;
 }
 
 // __both__

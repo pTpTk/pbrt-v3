@@ -120,16 +120,10 @@ class SurfaceInteraction;
 class Shape;
 class Primitive;
 class GeometricPrimitive;
-class TransformedPrimitive;
 template <int nSpectrumSamples>
 class CoefficientSpectrum;
 class RGBSpectrum;
-class SampledSpectrum;
-#ifdef PBRT_SAMPLED_SPECTRUM
-  typedef SampledSpectrum Spectrum;
-#else
-  typedef RGBSpectrum Spectrum;
-#endif
+typedef RGBSpectrum Spectrum;
 class Camera;
 struct CameraSample;
 class ProjectiveCamera;
@@ -145,12 +139,7 @@ class Material;
 template <typename T>
 class Texture;
 class Medium;
-class MediumInteraction;
 struct MediumInterface;
-class BSSRDF;
-class SeparableBSSRDF;
-class TabulatedBSSRDF;
-struct BSSRDFTable;
 class Light;
 class VisibilityTester;
 class AreaLight;

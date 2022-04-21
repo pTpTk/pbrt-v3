@@ -98,7 +98,6 @@ class VisibilityTester {
     const Interaction &P0() const { return p0; }
     const Interaction &P1() const { return p1; }
     bool Unoccluded(const Scene &scene) const;
-    Spectrum Tr(const Scene &scene, Sampler &sampler) const;
 
   private:
     Interaction p0, p1;

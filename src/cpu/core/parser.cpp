@@ -662,34 +662,6 @@ static void AddParam(ParamSet &ps, const ParamListItem &item,
             std::unique_ptr<Float[]> floats(new Float[nItems]);
             for (int j = 0; j < nItems; ++j) floats[j] = item.doubleValues[j];
             ps.AddXYZSpectrum(name, std::move(floats), nItems);
-        } else if (type == PARAM_TYPE_BLACKBODY) {
-            if ((nItems % 2) != 0) {
-                Warning(
-                    "Excess value given with blackbody parameter \"%s\". "
-                    "Ignoring extra one.",
-                    item.name.c_str());
-                nItems -= nItems % 2;
-            }
-            std::unique_ptr<Float[]> floats(new Float[nItems]);
-            for (int j = 0; j < nItems; ++j) floats[j] = item.doubleValues[j];
-            ps.AddBlackbodySpectrum(name, std::move(floats), nItems);
-        } else if (type == PARAM_TYPE_SPECTRUM) {
-            if (item.stringValues) {
-                ps.AddSampledSpectrumFiles(name, item.stringValues, nItems);
-            } else {
-                if ((nItems % 2) != 0) {
-                    Warning(
-                        "Non-even number of values given with sampled "
-                        "spectrum "
-                        "parameter \"%s\". Ignoring extra.",
-                        item.name.c_str());
-                    nItems -= nItems % 2;
-                }
-                std::unique_ptr<Float[]> floats(new Float[nItems]);
-                for (int j = 0; j < nItems; ++j)
-                    floats[j] = item.doubleValues[j];
-                ps.AddSampledSpectrum(name, std::move(floats), nItems);
-            }
         } else if (type == PARAM_TYPE_STRING) {
             std::unique_ptr<std::string[]> strings(new std::string[nItems]);
             for (int j = 0; j < nItems; ++j)
@@ -865,41 +837,15 @@ static void parse(std::unique_ptr<Tokenizer> t) {
                 pbrtAttributeBegin();
             else if (tok == "AttributeEnd")
                 pbrtAttributeEnd();
-            else if (tok == "ActiveTransform") {
-                string_view a = nextToken(TokenRequired);
-                if (a == "All")
-                    pbrtActiveTransformAll();
-                else if (a == "EndTime")
-                    pbrtActiveTransformEndTime();
-                else if (a == "StartTime")
-                    pbrtActiveTransformStartTime();
-                else
-                    syntaxError(tok);
-            } else if (tok == "AreaLightSource")
+            else if (tok == "AreaLightSource")
                 basicParamListEntrypoint(SpectrumType::Illuminant,
                                          pbrtAreaLightSource);
-            else if (tok == "Accelerator")
-                basicParamListEntrypoint(SpectrumType::Reflectance,
-                                         pbrtAccelerator);
             else
                 syntaxError(tok);
             break;
 
         case 'C':
-            if (tok == "ConcatTransform") {
-                if (nextToken(TokenRequired) != "[") syntaxError(tok);
-                Float m[16];
-                for (int i = 0; i < 16; ++i)
-                    m[i] = parseNumber(nextToken(TokenRequired));
-                if (nextToken(TokenRequired) != "]") syntaxError(tok);
-                pbrtConcatTransform(m);
-            } else if (tok == "CoordinateSystem") {
-                string_view n = dequoteString(nextToken(TokenRequired));
-                pbrtCoordinateSystem(toString(n));
-            } else if (tok == "CoordSysTransform") {
-                string_view n = dequoteString(nextToken(TokenRequired));
-                pbrtCoordSysTransform(toString(n));
-            } else if (tok == "Camera")
+            if (tok == "Camera")
                 basicParamListEntrypoint(SpectrumType::Reflectance, pbrtCamera);
             else
                 syntaxError(tok);
@@ -939,10 +885,7 @@ static void parse(std::unique_ptr<Tokenizer> t) {
             break;
 
         case 'L':
-            if (tok == "LightSource")
-                basicParamListEntrypoint(SpectrumType::Illuminant,
-                                         pbrtLightSource);
-            else if (tok == "LookAt") {
+            if (tok == "LookAt") {
                 Float v[9];
                 for (int i = 0; i < 9; ++i)
                     v[i] = parseNumber(nextToken(TokenRequired));
@@ -953,75 +896,26 @@ static void parse(std::unique_ptr<Tokenizer> t) {
             break;
 
         case 'M':
-            if (tok == "MakeNamedMaterial")
-                basicParamListEntrypoint(SpectrumType::Reflectance,
-                                         pbrtMakeNamedMaterial);
-            else if (tok == "MakeNamedMedium")
-                basicParamListEntrypoint(SpectrumType::Reflectance,
-                                         pbrtMakeNamedMedium);
-            else if (tok == "Material")
+            if (tok == "Material")
                 basicParamListEntrypoint(SpectrumType::Reflectance,
                                          pbrtMaterial);
-            else if (tok == "MediumInterface") {
-                string_view n = dequoteString(nextToken(TokenRequired));
-                std::string names[2];
-                names[0] = toString(n);
-
-                // Check for optional second parameter
-                string_view second = nextToken(TokenOptional);
-                if (!second.empty()) {
-                    if (isQuotedString(second))
-                        names[1] = toString(dequoteString(second));
-                    else {
-                        ungetToken(second);
-                        names[1] = names[0];
-                    }
-                } else
-                    names[1] = names[0];
-
-                pbrtMediumInterface(names[0], names[1]);
-            } else
-                syntaxError(tok);
-            break;
-
-        case 'N':
-            if (tok == "NamedMaterial") {
-                string_view n = dequoteString(nextToken(TokenRequired));
-                pbrtNamedMaterial(toString(n));
-            } else
-                syntaxError(tok);
-            break;
-
-        case 'O':
-            if (tok == "ObjectBegin") {
-                string_view n = dequoteString(nextToken(TokenRequired));
-                pbrtObjectBegin(toString(n));
-            } else if (tok == "ObjectEnd")
-                pbrtObjectEnd();
-            else if (tok == "ObjectInstance") {
-                string_view n = dequoteString(nextToken(TokenRequired));
-                pbrtObjectInstance(toString(n));
-            } else
-                syntaxError(tok);
-            break;
-
-        case 'P':
-            if (tok == "PixelFilter")
-                basicParamListEntrypoint(SpectrumType::Reflectance,
-                                         pbrtPixelFilter);
             else
                 syntaxError(tok);
             break;
 
+        case 'N':
+                syntaxError(tok);
+            break;
+
+        case 'O':
+                syntaxError(tok);
+            break;
+
+        case 'P':
+                syntaxError(tok);
+            break;
+
         case 'R':
-            if (tok == "ReverseOrientation")
-                pbrtReverseOrientation();
-            else if (tok == "Rotate") {
-                Float v[4];
-                for (int i = 0; i < 4; ++i)
-                    v[i] = parseNumber(nextToken(TokenRequired));
-                pbrtRotate(v[0], v[1], v[2], v[3]);
-            } else
                 syntaxError(tok);
             break;
 
@@ -1031,48 +925,16 @@ static void parse(std::unique_ptr<Tokenizer> t) {
             else if (tok == "Sampler")
                 basicParamListEntrypoint(SpectrumType::Reflectance,
                                          pbrtSampler);
-            else if (tok == "Scale") {
-                Float v[3];
-                for (int i = 0; i < 3; ++i)
-                    v[i] = parseNumber(nextToken(TokenRequired));
-                pbrtScale(v[0], v[1], v[2]);
-            } else
+            else
                 syntaxError(tok);
             break;
 
         case 'T':
-            if (tok == "TransformBegin")
-                pbrtTransformBegin();
-            else if (tok == "TransformEnd")
-                pbrtTransformEnd();
-            else if (tok == "Transform") {
-                if (nextToken(TokenRequired) != "[") syntaxError(tok);
-                Float m[16];
-                for (int i = 0; i < 16; ++i)
-                    m[i] = parseNumber(nextToken(TokenRequired));
-                if (nextToken(TokenRequired) != "]") syntaxError(tok);
-                pbrtTransform(m);
-            } else if (tok == "Translate") {
+            if (tok == "Translate") {
                 Float v[3];
                 for (int i = 0; i < 3; ++i)
                     v[i] = parseNumber(nextToken(TokenRequired));
                 pbrtTranslate(v[0], v[1], v[2]);
-            } else if (tok == "TransformTimes") {
-                Float v[2];
-                for (int i = 0; i < 2; ++i)
-                    v[i] = parseNumber(nextToken(TokenRequired));
-                pbrtTransformTimes(v[0], v[1]);
-            } else if (tok == "Texture") {
-                string_view n = dequoteString(nextToken(TokenRequired));
-                std::string name = toString(n);
-                n = dequoteString(nextToken(TokenRequired));
-                std::string type = toString(n);
-
-                basicParamListEntrypoint(
-                    SpectrumType::Reflectance,
-                    [&](const std::string &texName, const ParamSet &params) {
-                        pbrtTexture(name, type, texName, params);
-                    });
             } else
                 syntaxError(tok);
             break;

@@ -37,7 +37,6 @@
 
 namespace pbrt {
 namespace cpu {
-
 STAT_COUNTER("Intersections/Regular ray intersection tests",
              nIntersectionTests);
 STAT_COUNTER("Intersections/Shadow ray intersection tests", nShadowTests);
@@ -60,8 +59,6 @@ bool Scene::IntersectTr(Ray ray, Sampler &sampler, SurfaceInteraction *isect,
     *Tr = Spectrum(1.f);
     while (true) {
         bool hitSurface = Intersect(ray, isect);
-        // Accumulate beam transmittance for ray segment
-        if (ray.medium) *Tr *= ray.medium->Tr(ray, sampler);
 
         // Initialize next ray segment or terminate transmittance computation
         if (!hitSurface) return false;
@@ -69,6 +66,5 @@ bool Scene::IntersectTr(Ray ray, Sampler &sampler, SurfaceInteraction *isect,
         ray = isect->SpawnRay(ray.d);
     }
 }
-
 }  // namespace cpu
 }  // namespace pbrt

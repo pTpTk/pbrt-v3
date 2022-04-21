@@ -94,17 +94,6 @@ Spectrum FrConductor(Float cosThetaI, const Spectrum &etai,
     return 0.5 * (Rp + Rs);
 }
 
-// BxDF Method Definitions
-Fresnel::~Fresnel() {}
-
-Spectrum FresnelDielectric::Evaluate(Float cosThetaI) const {
-    return FrDielectric(cosThetaI, etaI, etaT);
-}
-
-std::string FresnelDielectric::ToString() const {
-    return StringPrintf("[ FrenselDielectric etaI: %f etaT: %f ]", etaI, etaT);
-}
-
 Spectrum LambertianReflection::f(const Vector3f &wo, const Vector3f &wi) const {
     return R * InvPi;
 }
@@ -112,31 +101,6 @@ Spectrum LambertianReflection::f(const Vector3f &wo, const Vector3f &wi) const {
 std::string LambertianReflection::ToString() const {
     return std::string("[ LambertianReflection R: ") + R.ToString() +
            std::string(" ]");
-}
-
-Spectrum MicrofacetReflection::f(const Vector3f &wo, const Vector3f &wi) const {
-    Float cosThetaO = AbsCosTheta(wo), cosThetaI = AbsCosTheta(wi);
-    Vector3f wh = wi + wo;
-    // Handle degenerate cases for microfacet reflection
-    if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0.);
-    if (wh.x == 0 && wh.y == 0 && wh.z == 0) return Spectrum(0.);
-    wh = Normalize(wh);
-    // For the Fresnel call, make sure that wh is in the same hemisphere
-    // as the surface normal, so that TIR is handled correctly.
-    Spectrum F = fresnel->Evaluate(Dot(wi, Faceforward(wh, Vector3f(0,0,1))));
-    return R * distribution->D(wh) * distribution->G(wo, wi) * F /
-           (4 * cosThetaI * cosThetaO);
-}
-
-std::string MicrofacetReflection::ToString() const {
-    return std::string("[ MicrofacetReflection R: ") + R.ToString() +
-           std::string(" distribution: ") + distribution->ToString() +
-           std::string(" fresnel: ") + fresnel->ToString() + std::string(" ]");
-}
-
-bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
-                                           Float weights[4]) const {
-    return CatmullRomWeights(nMu, mu, cosTheta, offset, weights);
 }
 
 Spectrum BxDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
@@ -152,39 +116,6 @@ Float BxDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
     return SameHemisphere(wo, wi) ? AbsCosTheta(wi) * InvPi : 0;
 }
 
-Spectrum MicrofacetReflection::Sample_f(const Vector3f &wo, Vector3f *wi,
-                                        const Point2f &u, Float *pdf,
-                                        BxDFType *sampledType) const {
-    // Sample microfacet orientation $\wh$ and reflected direction $\wi$
-    if (wo.z == 0) return 0.;
-    Vector3f wh = distribution->Sample_wh(wo, u);
-    if (Dot(wo, wh) < 0) return 0.;   // Should be rare
-    *wi = Reflect(wo, wh);
-    if (!SameHemisphere(wo, *wi)) return Spectrum(0.f);
-
-    // Compute PDF of _wi_ for microfacet reflection
-    *pdf = distribution->Pdf(wo, wh) / (4 * Dot(wo, wh));
-    return f(wo, *wi);
-}
-
-Float MicrofacetReflection::Pdf(const Vector3f &wo, const Vector3f &wi) const {
-    if (!SameHemisphere(wo, wi)) return 0;
-    Vector3f wh = Normalize(wo + wi);
-    return distribution->Pdf(wo, wh) / (4 * Dot(wo, wh));
-}
-
-Spectrum MicrofacetTransmission::Sample_f(const Vector3f &wo, Vector3f *wi,
-                                          const Point2f &u, Float *pdf,
-                                          BxDFType *sampledType) const {
-    if (wo.z == 0) return 0.;
-    Vector3f wh = distribution->Sample_wh(wo, u);
-    if (Dot(wo, wh) < 0) return 0.;  // Should be rare
-
-    Float eta = CosTheta(wo) > 0 ? (etaA / etaB) : (etaB / etaA);
-    if (!Refract(wo, (Normal3f)wh, eta, wi)) return 0;
-    *pdf = Pdf(wo, *wi);
-    return f(wo, *wi);
-}
 
 Spectrum BxDF::rho(const Vector3f &w, int nSamples, const Point2f *u) const {
     Spectrum r(0.);
