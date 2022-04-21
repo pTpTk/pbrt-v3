@@ -96,7 +96,7 @@ class EFloat {
     __both__
     explicit operator double() const { return v; }
     __both__
-    float GetAbsoluteError() const { return NextFloatUp(std::max(std::abs(high - v),
+    float GetAbsoluteError() const { return NextFloatUp(max(std::abs(high - v),
                                                                  std::abs(v - low))); }
     __both__
     float UpperBound() const { return high; }
@@ -133,9 +133,9 @@ class EFloat {
             LowerBound() * ef.LowerBound(), UpperBound() * ef.LowerBound(),
             LowerBound() * ef.UpperBound(), UpperBound() * ef.UpperBound()};
         r.low = NextFloatDown(
-            std::min(std::min(prod[0], prod[1]), std::min(prod[2], prod[3])));
+            min(min(prod[0], prod[1]), min(prod[2], prod[3])));
         r.high = NextFloatUp(
-            std::max(std::max(prod[0], prod[1]), std::max(prod[2], prod[3])));
+            max(max(prod[0], prod[1]), max(prod[2], prod[3])));
         r.Check();
         return r;
     }
@@ -156,9 +156,9 @@ class EFloat {
                 LowerBound() / ef.LowerBound(), UpperBound() / ef.LowerBound(),
                 LowerBound() / ef.UpperBound(), UpperBound() / ef.UpperBound()};
             r.low = NextFloatDown(
-                std::min(std::min(div[0], div[1]), std::min(div[2], div[3])));
+                min(min(div[0], div[1]), min(div[2], div[3])));
             r.high = NextFloatUp(
-                std::max(std::max(div[0], div[1]), std::max(div[2], div[3])));
+                max(max(div[0], div[1]), max(div[2], div[3])));
         }
         r.Check();
         return r;
@@ -179,13 +179,13 @@ class EFloat {
     inline bool operator==(EFloat fe) const { return v == fe.v; }
     __both__
     inline void Check() const {
-        if (!std::isinf(low) && !std::isnan(low) && !std::isinf(high) &&
-            !std::isnan(high))
-            CHECK_LE(low, high);
+        if (!pbrt::gpu::isinf(low) && !pbrt::gpu::isnan(low) && !pbrt::gpu::isinf(high) &&
+            !pbrt::gpu::isnan(high))
+            assert(low <= high);
 #ifndef NDEBUG
-        if (!std::isinf(v) && !std::isnan(v)) {
-            CHECK_LE(LowerBound(), vPrecise);
-            CHECK_LE(vPrecise, UpperBound());
+        if (!pbrt::gpu::isinf(v) && !pbrt::gpu::isnan(v)) {
+            assert(LowerBound() <= vPrecise);
+            assert(vPrecise <= UpperBound());
         }
 #endif
     }
@@ -273,7 +273,7 @@ inline EFloat abs(EFloat fe) {
         r.vPrecise = std::abs(fe.vPrecise);
 #endif
         r.low = 0;
-        r.high = std::max(-fe.low, fe.high);
+        r.high = max(-fe.low, fe.high);
         r.Check();
         return r;
     }
@@ -297,7 +297,7 @@ inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0, EFloat *t1) {
         q = -.5 * (B + floatRootDiscrim);
     *t0 = q / A;
     *t1 = C / q;
-    if ((float)*t0 > (float)*t1) std::swap(*t0, *t1);
+    if ((float)*t0 > (float)*t1) pbrt::gpu::Swap(*t0, *t1);
     return true;
 }
 

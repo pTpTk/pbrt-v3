@@ -51,7 +51,7 @@ namespace gpu {
 class Scene {
   public:
     // Scene Public Methods
-    Scene(std::shared_ptr<Primitive> aggregate,
+    Scene(Primitive* aggregate,
           const std::vector<std::shared_ptr<Light>> &lights)
         : lights(lights), aggregate(aggregate) {
         // Scene Constructor Implementation
@@ -62,9 +62,13 @@ class Scene {
                 infiniteLights.push_back(light);
         }
     }
+    __both__
     const Bounds3f &WorldBound() const { return worldBound; }
+    __both__
     bool Intersect(const Ray &ray, SurfaceInteraction *isect) const;
+    __both__
     bool IntersectP(const Ray &ray) const;
+    __both__
     bool IntersectTr(Ray ray, Sampler &sampler, SurfaceInteraction *isect,
                      Spectrum *transmittance) const;
 
@@ -76,7 +80,7 @@ class Scene {
 
   private:
     // Scene Private Data
-    std::shared_ptr<Primitive> aggregate;
+    Primitive* aggregate;
     Bounds3f worldBound;
 };
 

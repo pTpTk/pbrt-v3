@@ -53,11 +53,17 @@ class Primitive {
   public:
     // Primitive Interface
     virtual ~Primitive();
+    __both__
     virtual Bounds3f WorldBound() const = 0;
+    __both__
     virtual bool Intersect(const Ray &r, SurfaceInteraction *) const = 0;
+    __both__
     virtual bool IntersectP(const Ray &r) const = 0;
+    __both__
     virtual const AreaLight *GetAreaLight() const = 0;
+    __both__
     virtual const Material *GetMaterial() const = 0;
+    __both__
     virtual void ComputeScatteringFunctions(SurfaceInteraction *isect,
                                             MemoryArena &arena,
                                             TransportMode mode,
@@ -68,24 +74,31 @@ class Primitive {
 class GeometricPrimitive : public Primitive {
   public:
     // GeometricPrimitive Public Methods
+    __both__
     virtual Bounds3f WorldBound() const;
+    __both__
     virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const;
+    __both__
     virtual bool IntersectP(const Ray &r) const;
-    GeometricPrimitive(const std::shared_ptr<Shape> &shape,
-                       const std::shared_ptr<Material> &material,
-                       const std::shared_ptr<AreaLight> &areaLight,
+    __both__
+    GeometricPrimitive(const Shape* shape,
+                       const Material* material,
+                       const AreaLight* areaLight,
                        const MediumInterface &mediumInterface);
+    __both__
     const AreaLight *GetAreaLight() const;
+    __both__
     const Material *GetMaterial() const;
+    __both__
     void ComputeScatteringFunctions(SurfaceInteraction *isect,
                                     MemoryArena &arena, TransportMode mode,
                                     bool allowMultipleLobes) const;
 
   private:
     // GeometricPrimitive Private Data
-    std::shared_ptr<Shape> shape;
-    std::shared_ptr<Material> material;
-    std::shared_ptr<AreaLight> areaLight;
+    const Shape* shape;
+    const Material* material;
+    const AreaLight* areaLight;
     MediumInterface mediumInterface;
 };
 
@@ -93,24 +106,30 @@ class GeometricPrimitive : public Primitive {
 class TransformedPrimitive : public Primitive {
   public:
     // TransformedPrimitive Public Methods
-    TransformedPrimitive(std::shared_ptr<Primitive> &primitive,
+    TransformedPrimitive(Primitive* primitive,
                          const AnimatedTransform &PrimitiveToWorld);
+    __both__
     bool Intersect(const Ray &r, SurfaceInteraction *in) const;
+    __both__
     bool IntersectP(const Ray &r) const;
+    __both__
     const AreaLight *GetAreaLight() const { return nullptr; }
+    __both__
     const Material *GetMaterial() const { return nullptr; }
+    __both__
     void ComputeScatteringFunctions(SurfaceInteraction *isect,
                                     MemoryArena &arena, TransportMode mode,
                                     bool allowMultipleLobes) const {
         assert(false);
     }
+    __both__
     Bounds3f WorldBound() const {
         return PrimitiveToWorld.MotionBounds(primitive->WorldBound());
     }
 
   private:
     // TransformedPrimitive Private Data
-    std::shared_ptr<Primitive> primitive;
+    Primitive* primitive;
     const AnimatedTransform PrimitiveToWorld;
 };
 
@@ -118,8 +137,11 @@ class TransformedPrimitive : public Primitive {
 class Aggregate : public Primitive {
   public:
     // Aggregate Public Methods
+    __both__
     const AreaLight *GetAreaLight() const;
+    __both__
     const Material *GetMaterial() const;
+    __both__
     void ComputeScatteringFunctions(SurfaceInteraction *isect,
                                     MemoryArena &arena, TransportMode mode,
                                     bool allowMultipleLobes) const;

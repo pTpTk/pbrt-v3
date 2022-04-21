@@ -55,11 +55,15 @@ class Shape {
     Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
           bool reverseOrientation);
     virtual ~Shape();
+    __both__
     virtual Bounds3f ObjectBound() const = 0;
+    __both__
     virtual Bounds3f WorldBound() const;
+    __both__
     virtual bool Intersect(const Ray &ray, Float *tHit,
                            SurfaceInteraction *isect,
                            bool testAlphaTexture = true) const = 0;
+    __both__
     virtual bool IntersectP(const Ray &ray,
                             bool testAlphaTexture = true) const {
         return Intersect(ray, nullptr, nullptr, testAlphaTexture);

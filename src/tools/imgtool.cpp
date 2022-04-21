@@ -20,6 +20,7 @@ extern "C" {
 #include <glog/logging.h>
 
 using namespace pbrt;
+using namespace pbrt::cpu;
 
 static void usage(const char *msg = nullptr, ...) {
     if (msg) {

@@ -38,23 +38,24 @@
 namespace pbrt {
 namespace gpu {
 
-STAT_COUNTER("Intersections/Regular ray intersection tests",
-             nIntersectionTests);
+// STAT_COUNTER("Intersections/Regular ray intersection tests",
+//              nIntersectionTests);
 STAT_COUNTER("Intersections/Shadow ray intersection tests", nShadowTests);
 
 // Scene Method Definitions
+__both__
 bool Scene::Intersect(const Ray &ray, SurfaceInteraction *isect) const {
-    ++nIntersectionTests;
-    DCHECK_NE(ray.d, Vector3f(0,0,0));
+    // ++nIntersectionTests;
+    assert(ray.d != Vector3f(0,0,0));
     return aggregate->Intersect(ray, isect);
 }
-
+__both__
 bool Scene::IntersectP(const Ray &ray) const {
-    ++nShadowTests;
-    DCHECK_NE(ray.d, Vector3f(0,0,0));
+    // ++nShadowTests;
+    assert(ray.d != Vector3f(0,0,0));
     return aggregate->IntersectP(ray);
 }
-
+__both__
 bool Scene::IntersectTr(Ray ray, Sampler &sampler, SurfaceInteraction *isect,
                         Spectrum *Tr) const {
     *Tr = Spectrum(1.f);

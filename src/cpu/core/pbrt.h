@@ -217,31 +217,31 @@ PBRT_CONSTEXPR Float Sqrt2 = 1.41421356237309504880;
 
 
 // Global Inline Functions
-uint32_t FloatToBits(float f) {
+inline uint32_t FloatToBits(float f) {
     uint32_t ui;
     memcpy(&ui, &f, sizeof(float));
     return ui;
 }
 
-float BitsToFloat(uint32_t ui) {
+inline float BitsToFloat(uint32_t ui) {
     float f;
     memcpy(&f, &ui, sizeof(uint32_t));
     return f;
 }
 
-uint64_t FloatToBits(double f) {
+inline uint64_t FloatToBits(double f) {
     uint64_t ui;
     memcpy(&ui, &f, sizeof(double));
     return ui;
 }
 
-double BitsToFloat(uint64_t ui) {
+inline double BitsToFloat(uint64_t ui) {
     double f;
     memcpy(&f, &ui, sizeof(uint64_t));
     return f;
 }
 
-float NextFloatUp(float v) {
+inline float NextFloatUp(float v) {
     // Handle infinity and negative zero for _NextFloatUp()_
     if (isinf(v) && v > 0.) return v;
     if (v == -0.f) v = 0.f;
@@ -255,7 +255,7 @@ float NextFloatUp(float v) {
     return BitsToFloat(ui);
 }
 
-float NextFloatDown(float v) {
+inline float NextFloatDown(float v) {
     // Handle infinity and positive zero for _NextFloatDown()_
     if (isinf(v) && v < 0.) return v;
     if (v == 0.f) v = -0.f;
@@ -267,7 +267,7 @@ float NextFloatDown(float v) {
     return BitsToFloat(ui);
 }
 
-double NextFloatUp(double v, int delta = 1) {
+inline double NextFloatUp(double v, int delta = 1) {
     if (isinf(v) && v > 0.) return v;
     if (v == -0.f) v = 0.f;
     uint64_t ui = FloatToBits(v);
@@ -278,7 +278,7 @@ double NextFloatUp(double v, int delta = 1) {
     return BitsToFloat(ui);
 }
 
-double NextFloatDown(double v, int delta = 1) {
+inline double NextFloatDown(double v, int delta = 1) {
     if (isinf(v) && v < 0.) return v;
     if (v == 0.f) v = -0.f;
     uint64_t ui = FloatToBits(v);
@@ -289,22 +289,22 @@ double NextFloatDown(double v, int delta = 1) {
     return BitsToFloat(ui);
 }
 
-Float gamma(int n) {
+inline Float gamma(int n) {
     return (n * MachineEpsilon) / (1 - n * MachineEpsilon);
 }
 
-Float GammaCorrect(Float value) {
+inline Float GammaCorrect(Float value) {
     if (value <= 0.0031308f) return 12.92f * value;
     return 1.055f * std::pow(value, (Float)(1.f / 2.4f)) - 0.055f;
 }
 
-Float InverseGammaCorrect(Float value) {
+inline Float InverseGammaCorrect(Float value) {
     if (value <= 0.04045f) return value * 1.f / 12.92f;
     return std::pow((value + 0.055f) * 1.f / 1.055f, (Float)2.4f);
 }
 
 template <typename T, typename U, typename V>
-T Clamp(T val, U low, V high) {
+inline T Clamp(T val, U low, V high) {
     if (val < low)
         return low;
     else if (val > high)
@@ -314,26 +314,26 @@ T Clamp(T val, U low, V high) {
 }
 
 template <typename T>
-T Mod(T a, T b) {
+inline T Mod(T a, T b) {
     T result = a - (a / b) * b;
     return (T)((result < 0) ? result + b : result);
 }
 
 template <>
-Float Mod(Float a, Float b) {
+inline Float Mod(Float a, Float b) {
     return std::fmod(a, b);
 }
 
-Float Radians(Float deg) { return (Pi / 180) * deg; }
+inline Float Radians(Float deg) { return (Pi / 180) * deg; }
 
-Float Degrees(Float rad) { return (180 / Pi) * rad; }
+inline Float Degrees(Float rad) { return (180 / Pi) * rad; }
 
-Float Log2(Float x) {
+inline Float Log2(Float x) {
     const Float invLog2 = 1.442695040888963387004650940071;
     return std::log(x) * invLog2;
 }
 
-int Log2Int(uint32_t v) {
+inline int Log2Int(uint32_t v) {
 #if defined(PBRT_IS_MSVC)
     unsigned long lz = 0;
     if (_BitScanReverse(&lz, v)) return lz;
@@ -343,9 +343,9 @@ int Log2Int(uint32_t v) {
 #endif
 }
 
-int Log2Int(int32_t v) { return Log2Int((uint32_t)v); }
+inline int Log2Int(int32_t v) { return Log2Int((uint32_t)v); }
 
-int Log2Int(uint64_t v) {
+inline int Log2Int(uint64_t v) {
 #if defined(PBRT_IS_MSVC)
     unsigned long lz = 0;
 #if defined(_WIN64)
@@ -362,14 +362,14 @@ int Log2Int(uint64_t v) {
 #endif
 }
 
-int Log2Int(int64_t v) { return Log2Int((uint64_t)v); }
+inline int Log2Int(int64_t v) { return Log2Int((uint64_t)v); }
 
 template <typename T>
 PBRT_CONSTEXPR bool IsPowerOf2(T v) {
     return v && !(v & (v - 1));
 }
 
-int32_t RoundUpPow2(int32_t v) {
+inline int32_t RoundUpPow2(int32_t v) {
     v--;
     v |= v >> 1;
     v |= v >> 2;
@@ -379,7 +379,7 @@ int32_t RoundUpPow2(int32_t v) {
     return v + 1;
 }
 
-int64_t RoundUpPow2(int64_t v) {
+inline int64_t RoundUpPow2(int64_t v) {
     v--;
     v |= v >> 1;
     v |= v >> 2;
@@ -390,7 +390,7 @@ int64_t RoundUpPow2(int64_t v) {
     return v + 1;
 }
 
-int CountTrailingZeros(uint32_t v) {
+inline int CountTrailingZeros(uint32_t v) {
 #if defined(PBRT_IS_MSVC)
     unsigned long index;
     if (_BitScanForward(&index, v))
@@ -403,7 +403,7 @@ int CountTrailingZeros(uint32_t v) {
 }
 
 template <typename Predicate>
-int FindInterval(int size, const Predicate &pred) {
+inline int FindInterval(int size, const Predicate &pred) {
     int first = 0, len = size;
     while (len > 0) {
         int half = len >> 1, middle = first + half;
@@ -417,9 +417,9 @@ int FindInterval(int size, const Predicate &pred) {
     return Clamp(first - 1, 0, size - 2);
 }
 
-Float Lerp(Float t, Float v1, Float v2) { return (1 - t) * v1 + t * v2; }
+inline Float Lerp(Float t, Float v1, Float v2) { return (1 - t) * v1 + t * v2; }
 
-bool Quadratic(Float a, Float b, Float c, Float *t0, Float *t1) {
+inline bool Quadratic(Float a, Float b, Float c, Float *t0, Float *t1) {
     // Find quadratic discriminant
     double discrim = (double)b * (double)b - 4 * (double)a * (double)c;
     if (discrim < 0) return false;
@@ -437,7 +437,7 @@ bool Quadratic(Float a, Float b, Float c, Float *t0, Float *t1) {
     return true;
 }
 
-Float ErfInv(Float x) {
+inline Float ErfInv(Float x) {
     Float w, p;
     x = Clamp(x, -.99999f, .99999f);
     w = -std::log((1 - x) * (1 + x));
@@ -467,7 +467,7 @@ Float ErfInv(Float x) {
     return p * x;
 }
 
-Float Erf(Float x) {
+inline Float Erf(Float x) {
     // constants
     Float a1 = 0.254829592f;
     Float a2 = -0.284496736f;

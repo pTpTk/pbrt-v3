@@ -721,8 +721,8 @@ class Bounds2 {
     // Bounds2 Public Methods
     __both__
     Bounds2() {
-        T minNum = std::numeric_limits<T>::lowest();
-        T maxNum = std::numeric_limits<T>::max();
+        T minNum = numeric_limits<T>::lowest();
+        T maxNum = numeric_limits<T>::max();
         pMin = Point2<T>(maxNum, maxNum);
         pMax = Point2<T>(minNum, minNum);
     }
@@ -730,8 +730,8 @@ class Bounds2 {
     explicit Bounds2(const Point2<T> &p) : pMin(p), pMax(p) {}
     __both__
     Bounds2(const Point2<T> &p1, const Point2<T> &p2) {
-        pMin = Point2<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y));
-        pMax = Point2<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y));
+        pMin = Point2<T>(min(p1.x, p2.x), min(p1.y, p2.y));
+        pMax = Point2<T>(max(p1.x, p2.x), max(p1.y, p2.y));
     }
     template <typename U>
     __both__
@@ -799,8 +799,8 @@ class Bounds3 {
     // Bounds3 Public Methods
     __both__
     Bounds3() {
-        T minNum = std::numeric_limits<T>::lowest();
-        T maxNum = std::numeric_limits<T>::max();
+        T minNum = numeric_limits<T>::lowest();
+        T maxNum = numeric_limits<T>::max();
         pMin = Point3<T>(maxNum, maxNum, maxNum);
         pMax = Point3<T>(minNum, minNum, minNum);
     }
@@ -808,10 +808,10 @@ class Bounds3 {
     explicit Bounds3(const Point3<T> &p) : pMin(p), pMax(p) {}
     __both__
     Bounds3(const Point3<T> &p1, const Point3<T> &p2)
-        : pMin(std::min(p1.x, p2.x), std::min(p1.y, p2.y),
-               std::min(p1.z, p2.z)),
-          pMax(std::max(p1.x, p2.x), std::max(p1.y, p2.y),
-               std::max(p1.z, p2.z)) {}
+        : pMin(min(p1.x, p2.x), min(p1.y, p2.y),
+               min(p1.z, p2.z)),
+          pMax(max(p1.x, p2.x), max(p1.y, p2.y),
+               max(p1.z, p2.z)) {}
     __both__
     const Point3<T> &operator[](int i) const;
     __both__
@@ -1061,13 +1061,13 @@ inline Vector3<T> Normalize(const Vector3<T> &v) {
 template <typename T>
 __both__
 T MinComponent(const Vector3<T> &v) {
-    return std::min(v.x, std::min(v.y, v.z));
+    return min(v.x, min(v.y, v.z));
 }
 
 template <typename T>
 __both__
 T MaxComponent(const Vector3<T> &v) {
-    return std::max(v.x, std::max(v.y, v.z));
+    return max(v.x, max(v.y, v.z));
 }
 
 template <typename T>
@@ -1079,15 +1079,15 @@ int MaxDimension(const Vector3<T> &v) {
 template <typename T>
 __both__
 Vector3<T> Min(const Vector3<T> &p1, const Vector3<T> &p2) {
-    return Vector3<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y),
-                      std::min(p1.z, p2.z));
+    return Vector3<T>(min(p1.x, p2.x), min(p1.y, p2.y),
+                      min(p1.z, p2.z));
 }
 
 template <typename T>
 __both__
 Vector3<T> Max(const Vector3<T> &p1, const Vector3<T> &p2) {
-    return Vector3<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y),
-                      std::max(p1.z, p2.z));
+    return Vector3<T>(max(p1.x, p2.x), max(p1.y, p2.y),
+                      max(p1.z, p2.z));
 }
 
 template <typename T>
@@ -1179,15 +1179,15 @@ Point3<T> Lerp(Float t, const Point3<T> &p0, const Point3<T> &p1) {
 template <typename T>
 __both__
 Point3<T> Min(const Point3<T> &p1, const Point3<T> &p2) {
-    return Point3<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y),
-                     std::min(p1.z, p2.z));
+    return Point3<T>(min(p1.x, p2.x), min(p1.y, p2.y),
+                     min(p1.z, p2.z));
 }
 
 template <typename T>
 __both__
 Point3<T> Max(const Point3<T> &p1, const Point3<T> &p2) {
-    return Point3<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y),
-                     std::max(p1.z, p2.z));
+    return Point3<T>(max(p1.x, p2.x), max(p1.y, p2.y),
+                     max(p1.z, p2.z));
 }
 
 template <typename T>
@@ -1248,13 +1248,13 @@ Point2<T> Lerp(Float t, const Point2<T> &v0, const Point2<T> &v1) {
 template <typename T>
 __both__
 Point2<T> Min(const Point2<T> &pa, const Point2<T> &pb) {
-    return Point2<T>(std::min(pa.x, pb.x), std::min(pa.y, pb.y));
+    return Point2<T>(min(pa.x, pb.x), min(pa.y, pb.y));
 }
 
 template <typename T>
 __both__
 Point2<T> Max(const Point2<T> &pa, const Point2<T> &pb) {
-    return Point2<T>(std::max(pa.x, pb.x), std::max(pa.y, pb.y));
+    return Point2<T>(max(pa.x, pb.x), max(pa.y, pb.y));
 }
 
 template <typename T>
@@ -1434,9 +1434,9 @@ inline Bounds3<T> Expand(const Bounds3<T> &b, U delta) {
 template <typename T, typename U>
 __both__
 inline Float DistanceSquared(const Point3<T> &p, const Bounds3<U> &b) {
-    Float dx = std::max({Float(0), b.pMin.x - p.x, p.x - b.pMax.x});
-    Float dy = std::max({Float(0), b.pMin.y - p.y, p.y - b.pMax.y});
-    Float dz = std::max({Float(0), b.pMin.z - p.z, p.z - b.pMax.z});
+    Float dx = max({Float(0), b.pMin.x - p.x, p.x - b.pMax.x});
+    Float dy = max({Float(0), b.pMin.y - p.y, p.y - b.pMax.y});
+    Float dz = max({Float(0), b.pMin.z - p.z, p.z - b.pMax.z});
     return dx * dx + dy * dy + dz * dz;
 }
 
@@ -1534,7 +1534,7 @@ inline bool Bounds3<T>::IntersectP(const gpu::Ray &ray, Float *hitt0,
         Float tFar = (pMax[i] - ray.o[i]) * invRayDir;
 
         // Update parametric interval from slab intersection $t$ values
-        if (tNear > tFar) std::swap(tNear, tFar);
+        if (tNear > tFar) pbrt::gpu::Swap(tNear, tFar);
 
         // Update _tFar_ to ensure robust ray--bounds intersection
         tFar *= 1 + 2 * gamma(3);

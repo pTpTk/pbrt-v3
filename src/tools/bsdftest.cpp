@@ -12,6 +12,7 @@
 #include "shapes/disk.h"
 
 using namespace pbrt;
+using namespace pbrt::cpu;
 
 static MemoryArena arena;
 static RNG rng;

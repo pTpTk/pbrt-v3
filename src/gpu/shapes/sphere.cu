@@ -42,14 +42,15 @@ namespace pbrt {
 namespace gpu {
 
 // Sphere Method Definitions
+__both__
 Bounds3f Sphere::ObjectBound() const {
     return Bounds3f(Point3f(-radius, -radius, zMin),
                     Point3f(radius, radius, zMax));
 }
-
+__both__
 bool Sphere::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
                        bool testAlphaTexture) const {
-    ProfilePhase p(Prof::ShapeIntersect);
+    // ProfilePhase p(Prof::ShapeIntersect);
     Float phi;
     Point3f pHit;
     // Transform _Ray_ to object space
@@ -155,7 +156,7 @@ bool Sphere::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     *tHit = (Float)tShapeHit;
     return true;
 }
-
+__both__
 bool Sphere::IntersectP(const Ray &r, bool testAlphaTexture) const {
     ProfilePhase p(Prof::ShapeIntersectP);
     Float phi;
@@ -248,7 +249,7 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
             wi = Normalize(wi);
             *pdf *= DistanceSquared(ref.p, intr.p) / AbsDot(intr.n, -wi);
         }
-        if (std::isinf(*pdf)) *pdf = 0.f;
+        if (pbrt::gpu::isinf(*pdf)) *pdf = 0.f;
         return intr;
     }
 
@@ -265,7 +266,7 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
     Float sinThetaMax = radius * invDc;
     Float sinThetaMax2 = sinThetaMax * sinThetaMax;
     Float invSinThetaMax = 1 / sinThetaMax;
-    Float cosThetaMax = std::sqrt(std::max((Float)0.f, 1 - sinThetaMax2));
+    Float cosThetaMax = std::sqrt(max((Float)0.f, 1 - sinThetaMax2));
 
     Float cosTheta  = (cosThetaMax - 1) * u[0] + 1;
     Float sinTheta2 = 1 - cosTheta * cosTheta;
@@ -279,8 +280,8 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
 
     // Compute angle $\alpha$ from center of sphere to sampled point on surface
     Float cosAlpha = sinTheta2 * invSinThetaMax +
-        cosTheta * std::sqrt(std::max((Float)0.f, 1.f - sinTheta2 * invSinThetaMax * invSinThetaMax));
-    Float sinAlpha = std::sqrt(std::max((Float)0.f, 1.f - cosAlpha*cosAlpha));
+        cosTheta * std::sqrt(max((Float)0.f, 1.f - sinTheta2 * invSinThetaMax * invSinThetaMax));
+    Float sinAlpha = std::sqrt(max((Float)0.f, 1.f - cosAlpha*cosAlpha));
     Float phi = u[1] * 2 * Pi;
 
     // Compute surface normal and sampled point on sphere
@@ -311,7 +312,7 @@ Float Sphere::Pdf(const Interaction &ref, const Vector3f &wi) const {
 
     // Compute general sphere PDF
     Float sinThetaMax2 = radius * radius / DistanceSquared(ref.p, pCenter);
-    Float cosThetaMax = std::sqrt(std::max((Float)0, 1 - sinThetaMax2));
+    Float cosThetaMax = std::sqrt(max((Float)0, 1 - sinThetaMax2));
     return UniformConePdf(cosThetaMax);
 }
 
@@ -320,7 +321,7 @@ Float Sphere::SolidAngle(const Point3f &p, int nSamples) const {
     if (DistanceSquared(p, pCenter) <= radius * radius)
         return 4 * Pi;
     Float sinTheta2 = radius * radius / DistanceSquared(p, pCenter);
-    Float cosTheta = std::sqrt(std::max((Float)0, 1 - sinTheta2));
+    Float cosTheta = std::sqrt(max((Float)0, 1 - sinTheta2));
     return (2 * Pi * (1 - cosTheta));
 }
 

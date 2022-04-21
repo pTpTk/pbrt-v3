@@ -52,7 +52,9 @@ class PhaseFunction {
   public:
     // PhaseFunction Interface
     virtual ~PhaseFunction();
+    __both__
     virtual Float p(const Vector3f &wo, const Vector3f &wi) const = 0;
+    __both__
     virtual Float Sample_p(const Vector3f &wo, Vector3f *wi,
                            const Point2f &u) const = 0;
     virtual std::string ToString() const = 0;
@@ -67,6 +69,7 @@ bool GetMediumScatteringProperties(const std::string &name, Spectrum *sigma_a,
                                    Spectrum *sigma_s);
 
 // Media Inline Functions
+__both__
 inline Float PhaseHG(Float cosTheta, Float g) {
     Float denom = 1 + g * g + 2 * g * cosTheta;
     return Inv4Pi * (1 - g * g) / (denom * std::sqrt(denom));
@@ -88,7 +91,9 @@ class HenyeyGreenstein : public PhaseFunction {
   public:
     // HenyeyGreenstein Public Methods
     HenyeyGreenstein(Float g) : g(g) {}
+    __both__
     Float p(const Vector3f &wo, const Vector3f &wi) const;
+    __both__
     Float Sample_p(const Vector3f &wo, Vector3f *wi,
                    const Point2f &sample) const;
     std::string ToString() const {
@@ -101,11 +106,15 @@ class HenyeyGreenstein : public PhaseFunction {
 
 // MediumInterface Declarations
 struct MediumInterface {
+    __both__
     MediumInterface() : inside(nullptr), outside(nullptr) {}
     // MediumInterface Public Methods
+    __both__
     MediumInterface(const Medium *medium) : inside(medium), outside(medium) {}
+    __both__
     MediumInterface(const Medium *inside, const Medium *outside)
         : inside(inside), outside(outside) {}
+    __both__
     bool IsMediumTransition() const { return inside != outside; }
     const Medium *inside, *outside;
 };

@@ -66,7 +66,7 @@ __both__
 Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
                             Sampler &sampler, MemoryArena &arena,
                             int depth) const {
-    ProfilePhase p(Prof::SamplerIntegratorLi);
+    //ProfilePhase p(Prof::SamplerIntegratorLi);
     Spectrum L(0.f), beta(1.f);
     RayDifferential ray(r);
     bool specularBounce = false;
@@ -113,11 +113,9 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
         // (But skip this for perfectly specular BSDFs.)
         if (isect.bsdf->NumComponents(BxDFType(BSDF_ALL & ~BSDF_SPECULAR)) >
             0) {
-            ++totalPaths;
             Spectrum Ld = beta * UniformSampleOneLight(isect, scene, arena,
                                                        sampler, false, distrib);
-            if (Ld.IsBlack()) ++zeroRadiancePaths;
-            CHECK_GE(Ld.y(), 0.f);
+            assert(Ld.y() => 0.f);
             L += Ld;
         }
 
@@ -129,8 +127,8 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
                                           BSDF_ALL, &flags);
         if (f.IsBlack() || pdf == 0.f) break;
         beta *= f * AbsDot(wi, isect.shading.n) / pdf;
-        CHECK_GE(beta.y(), 0.f);
-        DCHECK(!std::isinf(beta.y()));
+        assert(beta.y() => 0.f);
+        assert(!isinf(beta.y()));
         specularBounce = (flags & BSDF_SPECULAR) != 0;
         if ((flags & BSDF_SPECULAR) && (flags & BSDF_TRANSMISSION)) {
             Float eta = isect.bsdf->eta;
@@ -141,41 +139,17 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
         }
         ray = isect.SpawnRay(wi);
 
-        // Account for subsurface scattering, if applicable
-        if (isect.bssrdf && (flags & BSDF_TRANSMISSION)) {
-            // Importance sample the BSSRDF
-            SurfaceInteraction pi;
-            Spectrum S = isect.bssrdf->Sample_S(
-                scene, sampler.Get1D(), sampler.Get2D(), arena, &pi, &pdf);
-            DCHECK(!std::isinf(beta.y()));
-            if (S.IsBlack() || pdf == 0) break;
-            beta *= S / pdf;
-
-            // Account for the direct subsurface scattering component
-            L += beta * UniformSampleOneLight(pi, scene, arena, sampler, false,
-                                              lightDistribution->Lookup(pi.p));
-
-            // Account for the indirect subsurface scattering component
-            Spectrum f = pi.bsdf->Sample_f(pi.wo, &wi, sampler.Get2D(), &pdf,
-                                           BSDF_ALL, &flags);
-            if (f.IsBlack() || pdf == 0) break;
-            beta *= f * AbsDot(wi, pi.shading.n) / pdf;
-            DCHECK(!std::isinf(beta.y()));
-            specularBounce = (flags & BSDF_SPECULAR) != 0;
-            ray = pi.SpawnRay(wi);
-        }
-
         // Possibly terminate the path with Russian roulette.
         // Factor out radiance scaling due to refraction in rrBeta.
         Spectrum rrBeta = beta * etaScale;
         if (rrBeta.MaxComponentValue() < rrThreshold && bounces > 3) {
-            Float q = std::max((Float).05, 1 - rrBeta.MaxComponentValue());
+            Float q = max((Float).05, 1 - rrBeta.MaxComponentValue());
             if (sampler.Get1D() < q) break;
             beta /= 1 - q;
-            DCHECK(!std::isinf(beta.y()));
+            assert(!isinf(beta.y()));
         }
     }
-    ReportValue(pathLength, bounces);
+    // ReportValue(pathLength, bounces);
     return L;
 }
 

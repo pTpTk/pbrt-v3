@@ -1,0 +1,19 @@
+#!/bin/bash
+
+files=($(ls -R . | grep ".cpp"))
+
+for f in "${files[@]}"
+do
+    cmd="mv $f ${f/.cpp/.cu}"
+    echo $cmd
+    eval $cmd
+done
+
+files=($(ls . | grep ".cuh"))
+
+for f in "${files[@]}"
+do
+    cmd="mv $f ${f/.h/.cuh}"
+    echo $cmd
+    eval $cmd
+done

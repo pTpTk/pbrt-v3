@@ -52,6 +52,7 @@ Shape::Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
     ++nShapesCreated;
 }
 
+__both__
 Bounds3f Shape::WorldBound() const { return (*ObjectToWorld)(ObjectBound()); }
 
 Interaction Shape::Sample(const Interaction &ref, const Point2f &u,
@@ -65,7 +66,7 @@ Interaction Shape::Sample(const Interaction &ref, const Point2f &u,
         // Convert from area measure, as returned by the Sample() call
         // above, to solid angle measure.
         *pdf *= DistanceSquared(ref.p, intr.p) / AbsDot(intr.n, -wi);
-        if (std::isinf(*pdf)) *pdf = 0.f;
+        if (pbrt::gpu::isinf(*pdf)) *pdf = 0.f;
     }
     return intr;
 }
@@ -83,7 +84,7 @@ Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
     // Convert light sample weight to solid angle measure
     Float pdf = DistanceSquared(ref.p, isectLight.p) /
                 (AbsDot(isectLight.n, -wi) * Area());
-    if (std::isinf(pdf)) pdf = 0.f;
+    if (pbrt::gpu::isinf(pdf)) pdf = 0.f;
     return pdf;
 }
 

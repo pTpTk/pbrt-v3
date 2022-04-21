@@ -90,7 +90,7 @@ void SurfaceInteraction::SetShadingGeometry(const Vector3f &dpdus,
     shading.dndu = dndus;
     shading.dndv = dndvs;
 }
-
+__both__
 void SurfaceInteraction::ComputeScatteringFunctions(const RayDifferential &ray,
                                                     MemoryArena &arena,
                                                     bool allowMultipleLobes,
@@ -99,7 +99,7 @@ void SurfaceInteraction::ComputeScatteringFunctions(const RayDifferential &ray,
     primitive->ComputeScatteringFunctions(this, arena, mode,
                                           allowMultipleLobes);
 }
-
+__both__
 void SurfaceInteraction::ComputeDifferentials(
     const RayDifferential &ray) const {
     if (ray.hasDifferentials) {
@@ -109,11 +109,11 @@ void SurfaceInteraction::ComputeDifferentials(
         Float d = Dot(n, Vector3f(p.x, p.y, p.z));
         Float tx =
             -(Dot(n, Vector3f(ray.rxOrigin)) - d) / Dot(n, ray.rxDirection);
-        if (std::isinf(tx) || std::isnan(tx)) goto fail;
+        if (pbrt::gpu::isinf(tx) || pbrt::gpu::isnan(tx)) goto fail;
         Point3f px = ray.rxOrigin + tx * ray.rxDirection;
         Float ty =
             -(Dot(n, Vector3f(ray.ryOrigin)) - d) / Dot(n, ray.ryDirection);
-        if (std::isinf(ty) || std::isnan(ty)) goto fail;
+        if (pbrt::gpu::isinf(ty) || pbrt::gpu::isnan(ty)) goto fail;
         Point3f py = ray.ryOrigin + ty * ray.ryDirection;
         dpdx = px - p;
         dpdy = py - p;

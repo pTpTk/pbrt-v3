@@ -59,8 +59,8 @@ void SortSpectrumSamples(Float *lambda, Float *vals, int n) {
 
 Float AverageSpectrumSamples(const Float *lambda, const Float *vals, int n,
                              Float lambdaStart, Float lambdaEnd) {
-    for (int i = 0; i < n - 1; ++i) CHECK_GT(lambda[i + 1], lambda[i]);
-    CHECK_LT(lambdaStart, lambdaEnd);
+    for (int i = 0; i < n - 1; ++i) assert(lambda[i + 1] > lambda[i]);
+    assert(lambdaStart < lambdaEnd);
     // Handle cases with out-of-bounds range or single sample only
     if (lambdaEnd <= lambda[0]) return vals[0];
     if (lambdaStart >= lambda[n - 1]) return vals[n - 1];
@@ -74,7 +74,7 @@ Float AverageSpectrumSamples(const Float *lambda, const Float *vals, int n,
     // Advance to first relevant wavelength segment
     int i = 0;
     while (lambdaStart > lambda[i + 1]) ++i;
-    CHECK_LT(i + 1, n);
+    assert(i + 1 < n);
 
     // Loop over wavelength sample segments and add contributions
     auto interp = [lambda, vals](Float w, int i) {
@@ -82,108 +82,108 @@ Float AverageSpectrumSamples(const Float *lambda, const Float *vals, int n,
                     vals[i + 1]);
     };
     for (; i + 1 < n && lambdaEnd >= lambda[i]; ++i) {
-        Float segLambdaStart = std::max(lambdaStart, lambda[i]);
-        Float segLambdaEnd = std::min(lambdaEnd, lambda[i + 1]);
+        Float segLambdaStart = max(lambdaStart, lambda[i]);
+        Float segLambdaEnd = min(lambdaEnd, lambda[i + 1]);
         sum += 0.5 * (interp(segLambdaStart, i) + interp(segLambdaEnd, i)) *
                (segLambdaEnd - segLambdaStart);
     }
     return sum / (lambdaEnd - lambdaStart);
 }
 
-RGBSpectrum SampledSpectrum::ToRGBSpectrum() const {
-    Float rgb[3];
-    ToRGB(rgb);
-    return RGBSpectrum::FromRGB(rgb);
-}
+// RGBSpectrum SampledSpectrum::ToRGBSpectrum() const {
+//     Float rgb[3];
+//     ToRGB(rgb);
+//     return RGBSpectrum::FromRGB(rgb);
+// }
 
-SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
-                                         SpectrumType type) {
-    SampledSpectrum r;
-    if (type == SpectrumType::Reflectance) {
-        // Convert reflectance spectrum to RGB
-        if (rgb[0] <= rgb[1] && rgb[0] <= rgb[2]) {
-            // Compute reflectance _SampledSpectrum_ with _rgb[0]_ as minimum
-            r += rgb[0] * rgbRefl2SpectWhite;
-            if (rgb[1] <= rgb[2]) {
-                r += (rgb[1] - rgb[0]) * rgbRefl2SpectCyan;
-                r += (rgb[2] - rgb[1]) * rgbRefl2SpectBlue;
-            } else {
-                r += (rgb[2] - rgb[0]) * rgbRefl2SpectCyan;
-                r += (rgb[1] - rgb[2]) * rgbRefl2SpectGreen;
-            }
-        } else if (rgb[1] <= rgb[0] && rgb[1] <= rgb[2]) {
-            // Compute reflectance _SampledSpectrum_ with _rgb[1]_ as minimum
-            r += rgb[1] * rgbRefl2SpectWhite;
-            if (rgb[0] <= rgb[2]) {
-                r += (rgb[0] - rgb[1]) * rgbRefl2SpectMagenta;
-                r += (rgb[2] - rgb[0]) * rgbRefl2SpectBlue;
-            } else {
-                r += (rgb[2] - rgb[1]) * rgbRefl2SpectMagenta;
-                r += (rgb[0] - rgb[2]) * rgbRefl2SpectRed;
-            }
-        } else {
-            // Compute reflectance _SampledSpectrum_ with _rgb[2]_ as minimum
-            r += rgb[2] * rgbRefl2SpectWhite;
-            if (rgb[0] <= rgb[1]) {
-                r += (rgb[0] - rgb[2]) * rgbRefl2SpectYellow;
-                r += (rgb[1] - rgb[0]) * rgbRefl2SpectGreen;
-            } else {
-                r += (rgb[1] - rgb[2]) * rgbRefl2SpectYellow;
-                r += (rgb[0] - rgb[1]) * rgbRefl2SpectRed;
-            }
-        }
-        r *= .94;
-    } else {
-        // Convert illuminant spectrum to RGB
-        if (rgb[0] <= rgb[1] && rgb[0] <= rgb[2]) {
-            // Compute illuminant _SampledSpectrum_ with _rgb[0]_ as minimum
-            r += rgb[0] * rgbIllum2SpectWhite;
-            if (rgb[1] <= rgb[2]) {
-                r += (rgb[1] - rgb[0]) * rgbIllum2SpectCyan;
-                r += (rgb[2] - rgb[1]) * rgbIllum2SpectBlue;
-            } else {
-                r += (rgb[2] - rgb[0]) * rgbIllum2SpectCyan;
-                r += (rgb[1] - rgb[2]) * rgbIllum2SpectGreen;
-            }
-        } else if (rgb[1] <= rgb[0] && rgb[1] <= rgb[2]) {
-            // Compute illuminant _SampledSpectrum_ with _rgb[1]_ as minimum
-            r += rgb[1] * rgbIllum2SpectWhite;
-            if (rgb[0] <= rgb[2]) {
-                r += (rgb[0] - rgb[1]) * rgbIllum2SpectMagenta;
-                r += (rgb[2] - rgb[0]) * rgbIllum2SpectBlue;
-            } else {
-                r += (rgb[2] - rgb[1]) * rgbIllum2SpectMagenta;
-                r += (rgb[0] - rgb[2]) * rgbIllum2SpectRed;
-            }
-        } else {
-            // Compute illuminant _SampledSpectrum_ with _rgb[2]_ as minimum
-            r += rgb[2] * rgbIllum2SpectWhite;
-            if (rgb[0] <= rgb[1]) {
-                r += (rgb[0] - rgb[2]) * rgbIllum2SpectYellow;
-                r += (rgb[1] - rgb[0]) * rgbIllum2SpectGreen;
-            } else {
-                r += (rgb[1] - rgb[2]) * rgbIllum2SpectYellow;
-                r += (rgb[0] - rgb[1]) * rgbIllum2SpectRed;
-            }
-        }
-        r *= .86445f;
-    }
-    return r.Clamp();
-}
+// SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
+//                                          SpectrumType type) {
+//     SampledSpectrum r;
+//     if (type == SpectrumType::Reflectance) {
+//         // Convert reflectance spectrum to RGB
+//         if (rgb[0] <= rgb[1] && rgb[0] <= rgb[2]) {
+//             // Compute reflectance _SampledSpectrum_ with _rgb[0]_ as minimum
+//             r += rgb[0] * rgbRefl2SpectWhite;
+//             if (rgb[1] <= rgb[2]) {
+//                 r += (rgb[1] - rgb[0]) * rgbRefl2SpectCyan;
+//                 r += (rgb[2] - rgb[1]) * rgbRefl2SpectBlue;
+//             } else {
+//                 r += (rgb[2] - rgb[0]) * rgbRefl2SpectCyan;
+//                 r += (rgb[1] - rgb[2]) * rgbRefl2SpectGreen;
+//             }
+//         } else if (rgb[1] <= rgb[0] && rgb[1] <= rgb[2]) {
+//             // Compute reflectance _SampledSpectrum_ with _rgb[1]_ as minimum
+//             r += rgb[1] * rgbRefl2SpectWhite;
+//             if (rgb[0] <= rgb[2]) {
+//                 r += (rgb[0] - rgb[1]) * rgbRefl2SpectMagenta;
+//                 r += (rgb[2] - rgb[0]) * rgbRefl2SpectBlue;
+//             } else {
+//                 r += (rgb[2] - rgb[1]) * rgbRefl2SpectMagenta;
+//                 r += (rgb[0] - rgb[2]) * rgbRefl2SpectRed;
+//             }
+//         } else {
+//             // Compute reflectance _SampledSpectrum_ with _rgb[2]_ as minimum
+//             r += rgb[2] * rgbRefl2SpectWhite;
+//             if (rgb[0] <= rgb[1]) {
+//                 r += (rgb[0] - rgb[2]) * rgbRefl2SpectYellow;
+//                 r += (rgb[1] - rgb[0]) * rgbRefl2SpectGreen;
+//             } else {
+//                 r += (rgb[1] - rgb[2]) * rgbRefl2SpectYellow;
+//                 r += (rgb[0] - rgb[1]) * rgbRefl2SpectRed;
+//             }
+//         }
+//         r *= .94;
+//     } else {
+//         // Convert illuminant spectrum to RGB
+//         if (rgb[0] <= rgb[1] && rgb[0] <= rgb[2]) {
+//             // Compute illuminant _SampledSpectrum_ with _rgb[0]_ as minimum
+//             r += rgb[0] * rgbIllum2SpectWhite;
+//             if (rgb[1] <= rgb[2]) {
+//                 r += (rgb[1] - rgb[0]) * rgbIllum2SpectCyan;
+//                 r += (rgb[2] - rgb[1]) * rgbIllum2SpectBlue;
+//             } else {
+//                 r += (rgb[2] - rgb[0]) * rgbIllum2SpectCyan;
+//                 r += (rgb[1] - rgb[2]) * rgbIllum2SpectGreen;
+//             }
+//         } else if (rgb[1] <= rgb[0] && rgb[1] <= rgb[2]) {
+//             // Compute illuminant _SampledSpectrum_ with _rgb[1]_ as minimum
+//             r += rgb[1] * rgbIllum2SpectWhite;
+//             if (rgb[0] <= rgb[2]) {
+//                 r += (rgb[0] - rgb[1]) * rgbIllum2SpectMagenta;
+//                 r += (rgb[2] - rgb[0]) * rgbIllum2SpectBlue;
+//             } else {
+//                 r += (rgb[2] - rgb[1]) * rgbIllum2SpectMagenta;
+//                 r += (rgb[0] - rgb[2]) * rgbIllum2SpectRed;
+//             }
+//         } else {
+//             // Compute illuminant _SampledSpectrum_ with _rgb[2]_ as minimum
+//             r += rgb[2] * rgbIllum2SpectWhite;
+//             if (rgb[0] <= rgb[1]) {
+//                 r += (rgb[0] - rgb[2]) * rgbIllum2SpectYellow;
+//                 r += (rgb[1] - rgb[0]) * rgbIllum2SpectGreen;
+//             } else {
+//                 r += (rgb[1] - rgb[2]) * rgbIllum2SpectYellow;
+//                 r += (rgb[0] - rgb[1]) * rgbIllum2SpectRed;
+//             }
+//         }
+//         r *= .86445f;
+//     }
+//     return r.Clamp();
+// }
 
-SampledSpectrum::SampledSpectrum(const RGBSpectrum &r, SpectrumType t) {
-    Float rgb[3];
-    r.ToRGB(rgb);
-    *this = SampledSpectrum::FromRGB(rgb, t);
-}
+// SampledSpectrum::SampledSpectrum(const RGBSpectrum &r, SpectrumType t) {
+//     Float rgb[3];
+//     r.ToRGB(rgb);
+//     *this = SampledSpectrum::FromRGB(rgb, t);
+// }
 
 Float InterpolateSpectrumSamples(const Float *lambda, const Float *vals, int n,
                                  Float l) {
-    for (int i = 0; i < n - 1; ++i) CHECK_GT(lambda[i + 1], lambda[i]);
+    for (int i = 0; i < n - 1; ++i) assert(lambda[i + 1] > lambda[i]);
     if (l <= lambda[0]) return vals[0];
     if (l >= lambda[n - 1]) return vals[n - 1];
     int offset = FindInterval(n, [&](int index) { return lambda[index] <= l; });
-    CHECK(l >= lambda[offset] && l <= lambda[offset + 1]);
+    assert(l >= lambda[offset] && l <= lambda[offset + 1]);
     Float t = (l - lambda[offset]) / (lambda[offset + 1] - lambda[offset]);
     return Lerp(t, vals[offset], vals[offset + 1]);
 }
@@ -951,7 +951,7 @@ void Blackbody(const Float *lambda, int n, Float T, Float *Le) {
         Float lambda5 = (l * l) * (l * l) * l;
         Le[i] = (2 * h * c * c) /
                 (lambda5 * (std::exp((h * c) / (l * kb * T)) - 1));
-        CHECK(!std::isnan(Le[i]));
+        assert(!pbrt::gpu::isnan(Le[i]));
     }
 }
 
@@ -964,24 +964,24 @@ void BlackbodyNormalized(const Float *lambda, int n, Float T, Float *Le) {
     for (int i = 0; i < n; ++i) Le[i] /= maxL;
 }
 
-// Spectral Data Definitions
-SampledSpectrum SampledSpectrum::X;
-SampledSpectrum SampledSpectrum::Y;
-SampledSpectrum SampledSpectrum::Z;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectWhite;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectCyan;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectMagenta;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectYellow;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectRed;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectGreen;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectBlue;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectWhite;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectCyan;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectMagenta;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectYellow;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectRed;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectGreen;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectBlue;
+// // Spectral Data Definitions
+// SampledSpectrum SampledSpectrum::X;
+// SampledSpectrum SampledSpectrum::Y;
+// SampledSpectrum SampledSpectrum::Z;
+// SampledSpectrum SampledSpectrum::rgbRefl2SpectWhite;
+// SampledSpectrum SampledSpectrum::rgbRefl2SpectCyan;
+// SampledSpectrum SampledSpectrum::rgbRefl2SpectMagenta;
+// SampledSpectrum SampledSpectrum::rgbRefl2SpectYellow;
+// SampledSpectrum SampledSpectrum::rgbRefl2SpectRed;
+// SampledSpectrum SampledSpectrum::rgbRefl2SpectGreen;
+// SampledSpectrum SampledSpectrum::rgbRefl2SpectBlue;
+// SampledSpectrum SampledSpectrum::rgbIllum2SpectWhite;
+// SampledSpectrum SampledSpectrum::rgbIllum2SpectCyan;
+// SampledSpectrum SampledSpectrum::rgbIllum2SpectMagenta;
+// SampledSpectrum SampledSpectrum::rgbIllum2SpectYellow;
+// SampledSpectrum SampledSpectrum::rgbIllum2SpectRed;
+// SampledSpectrum SampledSpectrum::rgbIllum2SpectGreen;
+// SampledSpectrum SampledSpectrum::rgbIllum2SpectBlue;
 const Float RGB2SpectLambda[nRGB2SpectSamples] = {
     380.000000, 390.967743, 401.935486, 412.903229, 423.870972, 434.838715,
     445.806458, 456.774200, 467.741943, 478.709686, 489.677429, 500.645172,
@@ -1187,9 +1187,9 @@ const Float RGBIllum2SpectBlue[nRGB2SpectSamples] = {
 void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
                             Float lambdaMin, Float lambdaMax, int nOut,
                             Float *vOut) {
-    CHECK_GE(nOut, 2);
-    for (int i = 0; i < nIn - 1; ++i) CHECK_GT(lambdaIn[i + 1], lambdaIn[i]);
-    CHECK_LT(lambdaMin, lambdaMax);
+    assert(nOut => 2);
+    for (int i = 0; i < nIn - 1; ++i) assert(lambdaIn[i + 1] > lambdaIn[i]);
+    assert(lambdaMin < lambdaMax);
 
     // Spacing between samples in the output distribution.
     Float delta = (lambdaMax - lambdaMin) / (nOut - 1);
@@ -1215,12 +1215,12 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
     // since we only access these virtual samples if the destination range
     // is wider than the source range.)
     auto lambdaInClamped = [&](int index) {
-        CHECK(index >= -1 && index <= nIn);
+        assert(index >= -1 && index <= nIn);
         if (index == -1) {
-            CHECK_LT(lambdaMin - delta, lambdaIn[0]);
+            assert(lambdaMin - delta < lambdaIn[0]);
             return lambdaMin - delta;
         } else if (index == nIn) {
-            CHECK_GT(lambdaMax + delta, lambdaIn[nIn - 1]);
+            assert(lambdaMax + delta > lambdaIn[nIn - 1]);
             return lambdaMax + delta;
         }
         return lambdaIn[index];
@@ -1229,7 +1229,7 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
     // Due to the piecewise-constant assumption, the SPD values outside the
     // specified range are given by the valid endpoints.
     auto vInClamped = [&](int index) {
-        CHECK(index >= -1 && index <= nIn);
+        assert(index >= -1 && index <= nIn);
         return vIn[Clamp(index, 0, nIn - 1)];
     };
 
@@ -1258,7 +1258,7 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
         else {
             start = FindInterval(
                 nIn, [&](int i) { return lambdaIn[i] <= lambda - delta; });
-            CHECK(start >= 0 && start < nIn);
+            assert(start >= 0 && start < nIn);
         }
 
         if (lambda + delta > lambdaIn[nIn - 1])
@@ -1284,7 +1284,7 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
             // lambda.
             Float t = (lambda - lambdaInClamped(start)) /
                       (lambdaInClamped(end) - lambdaInClamped(start));
-            CHECK(t >= 0 && t <= 1);
+            assert(t >= 0 && t <= 1);
             return Lerp(t, vInClamped(start), vInClamped(end));
         } else {
             // Upsampling: use a box filter and average all values in the
