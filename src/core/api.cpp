@@ -44,15 +44,11 @@
 #include "accelerators/bvh.h"
 #include "cameras/perspective.h"
 #include "filters/box.h"
-#include "integrators/directlighting.h"
 #include "integrators/path.h"
 #include "lights/diffuse.h"
 #include "materials/matte.h"
-#include "materials/plastic.h"
 #include "samplers/halton.h"
 #include "shapes/sphere.h"
-#include "media/grid.h"
-#include "media/homogeneous.h"
 
 #include <map>
 #include <stdio.h>
@@ -388,8 +384,6 @@ std::shared_ptr<Material> MakeMaterial(const std::string &name,
         return nullptr;
     else if (name == "matte")
         material = CreateMatteMaterial(mp);
-    else if (name == "plastic")
-        material = CreatePlasticMaterial(mp);
     else {
         Warning("Material \"%s\" unknown. Using \"matte\".", name.c_str());
         material = CreateMatteMaterial(mp);
@@ -408,82 +402,6 @@ std::shared_ptr<Material> MakeMaterial(const std::string &name,
     if (!material) Error("Unable to create material \"%s\"", name.c_str());
     else ++nMaterialsCreated;
     return std::shared_ptr<Material>(material);
-}
-
-std::shared_ptr<Texture<Float>> MakeFloatTexture(const std::string &name,
-                                                 const Transform &tex2world,
-                                                 const TextureParams &tp) {
-    Texture<Float> *tex = nullptr;
-    Warning("Float texture \"%s\" unknown.", name.c_str());
-    tp.ReportUnused();
-    return std::shared_ptr<Texture<Float>>(tex);
-}
-
-std::shared_ptr<Texture<Spectrum>> MakeSpectrumTexture(
-    const std::string &name, const Transform &tex2world,
-    const TextureParams &tp) {
-    Texture<Spectrum> *tex = nullptr;
-    Warning("Spectrum texture \"%s\" unknown.", name.c_str());
-    tp.ReportUnused();
-    return std::shared_ptr<Texture<Spectrum>>(tex);
-}
-
-std::shared_ptr<Medium> MakeMedium(const std::string &name,
-                                   const ParamSet &paramSet,
-                                   const Transform &medium2world) {
-    Float sig_a_rgb[3] = {.0011f, .0024f, .014f},
-          sig_s_rgb[3] = {2.55f, 3.21f, 3.77f};
-    Spectrum sig_a = Spectrum::FromRGB(sig_a_rgb),
-             sig_s = Spectrum::FromRGB(sig_s_rgb);
-    std::string preset = paramSet.FindOneString("preset", "");
-    bool found = GetMediumScatteringProperties(preset, &sig_a, &sig_s);
-    if (preset != "" && !found)
-        Warning("Material preset \"%s\" not found.  Using defaults.",
-                preset.c_str());
-    Float scale = paramSet.FindOneFloat("scale", 1.f);
-    Float g = paramSet.FindOneFloat("g", 0.0f);
-    sig_a = paramSet.FindOneSpectrum("sigma_a", sig_a) * scale;
-    sig_s = paramSet.FindOneSpectrum("sigma_s", sig_s) * scale;
-    Medium *m = NULL;
-    if (name == "homogeneous") {
-        m = new HomogeneousMedium(sig_a, sig_s, g);
-    } else if (name == "heterogeneous") {
-        int nitems;
-        const Float *data = paramSet.FindFloat("density", &nitems);
-        if (!data) {
-            Error("No \"density\" values provided for heterogeneous medium?");
-            return NULL;
-        }
-        int nx = paramSet.FindOneInt("nx", 1);
-        int ny = paramSet.FindOneInt("ny", 1);
-        int nz = paramSet.FindOneInt("nz", 1);
-        Point3f p0 = paramSet.FindOnePoint3f("p0", Point3f(0.f, 0.f, 0.f));
-        Point3f p1 = paramSet.FindOnePoint3f("p1", Point3f(1.f, 1.f, 1.f));
-        if (nitems != nx * ny * nz) {
-            Error(
-                "GridDensityMedium has %d density values; expected nx*ny*nz = "
-                "%d",
-                nitems, nx * ny * nz);
-            return NULL;
-        }
-        Transform data2Medium = Translate(Vector3f(p0)) *
-                                Scale(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
-        m = new GridDensityMedium(sig_a, sig_s, g, nx, ny, nz,
-                                  medium2world * data2Medium, data);
-    } else
-        Warning("Medium \"%s\" unknown.", name.c_str());
-    paramSet.ReportUnused();
-    return std::shared_ptr<Medium>(m);
-}
-
-std::shared_ptr<Light> MakeLight(const std::string &name,
-                                 const ParamSet &paramSet,
-                                 const Transform &light2world,
-                                 const MediumInterface &mediumInterface) {
-    std::shared_ptr<Light> light;
-    Warning("Light \"%s\" unknown.", name.c_str());
-    paramSet.ReportUnused();
-    return light;
 }
 
 std::shared_ptr<AreaLight> MakeAreaLight(const std::string &name,
@@ -584,7 +502,6 @@ void pbrtInit(const Options &opt) {
     catIndentCount = 0;
 
     // General \pbrt Initialization
-    SampledSpectrum::Init();
     ParallelInit();  // Threads must be launched before the profiler is
                      // initialized.
     InitProfiler();
@@ -617,52 +534,6 @@ void pbrtTranslate(Float dx, Float dy, Float dz) {
                dz);
 }
 
-void pbrtTransform(Float tr[16]) {
-    VERIFY_INITIALIZED("Transform");
-    FOR_ACTIVE_TRANSFORMS(
-        curTransform[i] = Transform(Matrix4x4(
-            tr[0], tr[4], tr[8], tr[12], tr[1], tr[5], tr[9], tr[13], tr[2],
-            tr[6], tr[10], tr[14], tr[3], tr[7], tr[11], tr[15]));)
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sTransform [ ", catIndentCount, "");
-        for (int i = 0; i < 16; ++i) printf("%.9g ", tr[i]);
-        printf(" ]\n");
-    }
-}
-
-void pbrtConcatTransform(Float tr[16]) {
-    VERIFY_INITIALIZED("ConcatTransform");
-    FOR_ACTIVE_TRANSFORMS(
-        curTransform[i] =
-            curTransform[i] *
-            Transform(Matrix4x4(tr[0], tr[4], tr[8], tr[12], tr[1], tr[5],
-                                tr[9], tr[13], tr[2], tr[6], tr[10], tr[14],
-                                tr[3], tr[7], tr[11], tr[15]));)
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sConcatTransform [ ", catIndentCount, "");
-        for (int i = 0; i < 16; ++i) printf("%.9g ", tr[i]);
-        printf(" ]\n");
-    }
-}
-
-void pbrtRotate(Float angle, Float dx, Float dy, Float dz) {
-    VERIFY_INITIALIZED("Rotate");
-    FOR_ACTIVE_TRANSFORMS(curTransform[i] =
-                              curTransform[i] *
-                              Rotate(angle, Vector3f(dx, dy, dz));)
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sRotate %.9g %.9g %.9g %.9g\n", catIndentCount, "", angle,
-               dx, dy, dz);
-}
-
-void pbrtScale(Float sx, Float sy, Float sz) {
-    VERIFY_INITIALIZED("Scale");
-    FOR_ACTIVE_TRANSFORMS(curTransform[i] =
-                              curTransform[i] * Scale(sx, sy, sz);)
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sScale %.9g %.9g %.9g\n", catIndentCount, "", sx, sy, sz);
-}
-
 void pbrtLookAt(Float ex, Float ey, Float ez, Float lx, Float ly, Float lz,
                 Float ux, Float uy, Float uz) {
     VERIFY_INITIALIZED("LookAt");
@@ -675,63 +546,6 @@ void pbrtLookAt(Float ex, Float ey, Float ez, Float lx, Float ly, Float lz,
             "%*s%.9g %.9g %.9g\n",
             catIndentCount, "", ex, ey, ez, catIndentCount + 8, "", lx, ly, lz,
             catIndentCount + 8, "", ux, uy, uz);
-}
-
-void pbrtCoordinateSystem(const std::string &name) {
-    VERIFY_INITIALIZED("CoordinateSystem");
-    namedCoordinateSystems[name] = curTransform;
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sCoordinateSystem \"%s\"\n", catIndentCount, "",
-               name.c_str());
-}
-
-void pbrtCoordSysTransform(const std::string &name) {
-    VERIFY_INITIALIZED("CoordSysTransform");
-    if (namedCoordinateSystems.find(name) != namedCoordinateSystems.end())
-        curTransform = namedCoordinateSystems[name];
-    else
-        Warning("Couldn't find named coordinate system \"%s\"", name.c_str());
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sCoordSysTransform \"%s\"\n", catIndentCount, "",
-               name.c_str());
-}
-
-void pbrtActiveTransformAll() {
-    activeTransformBits = AllTransformsBits;
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sActiveTransform All\n", catIndentCount, "");
-}
-
-void pbrtActiveTransformEndTime() {
-    activeTransformBits = EndTransformBits;
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sActiveTransform EndTime\n", catIndentCount, "");
-}
-
-void pbrtActiveTransformStartTime() {
-    activeTransformBits = StartTransformBits;
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sActiveTransform StartTime\n", catIndentCount, "");
-}
-
-void pbrtTransformTimes(Float start, Float end) {
-    VERIFY_OPTIONS("TransformTimes");
-    renderOptions->transformStartTime = start;
-    renderOptions->transformEndTime = end;
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sTransformTimes %.9g %.9g\n", catIndentCount, "", start,
-               end);
-}
-
-void pbrtPixelFilter(const std::string &name, const ParamSet &params) {
-    VERIFY_OPTIONS("PixelFilter");
-    renderOptions->FilterName = name;
-    renderOptions->FilterParams = params;
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sPixelFilter \"%s\" ", catIndentCount, "", name.c_str());
-        params.Print(catIndentCount);
-        printf("\n");
-    }
 }
 
 void pbrtFilm(const std::string &type, const ParamSet &params) {
@@ -751,17 +565,6 @@ void pbrtSampler(const std::string &name, const ParamSet &params) {
     renderOptions->SamplerParams = params;
     if (PbrtOptions.cat || PbrtOptions.toPly) {
         printf("%*sSampler \"%s\" ", catIndentCount, "", name.c_str());
-        params.Print(catIndentCount);
-        printf("\n");
-    }
-}
-
-void pbrtAccelerator(const std::string &name, const ParamSet &params) {
-    VERIFY_OPTIONS("Accelerator");
-    renderOptions->AcceleratorName = name;
-    renderOptions->AcceleratorParams = params;
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sAccelerator \"%s\" ", catIndentCount, "", name.c_str());
         params.Print(catIndentCount);
         printf("\n");
     }
@@ -789,35 +592,6 @@ void pbrtCamera(const std::string &name, const ParamSet &params) {
         params.Print(catIndentCount);
         printf("\n");
     }
-}
-
-void pbrtMakeNamedMedium(const std::string &name, const ParamSet &params) {
-    VERIFY_INITIALIZED("MakeNamedMedium");
-    WARN_IF_ANIMATED_TRANSFORM("MakeNamedMedium");
-    std::string type = params.FindOneString("type", "");
-    if (type == "")
-        Error("No parameter string \"type\" found in MakeNamedMedium");
-    else {
-        std::shared_ptr<Medium> medium =
-            MakeMedium(type, params, curTransform[0]);
-        if (medium) renderOptions->namedMedia[name] = medium;
-    }
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sMakeNamedMedium \"%s\" ", catIndentCount, "", name.c_str());
-        params.Print(catIndentCount);
-        printf("\n");
-    }
-}
-
-void pbrtMediumInterface(const std::string &insideName,
-                         const std::string &outsideName) {
-    VERIFY_INITIALIZED("MediumInterface");
-    graphicsState.currentInsideMedium = insideName;
-    graphicsState.currentOutsideMedium = outsideName;
-    renderOptions->haveScatteringMedia = true;
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sMediumInterface \"%s\" \"%s\"\n", catIndentCount, "",
-               insideName.c_str(), outsideName.c_str());
 }
 
 void pbrtWorldBegin() {
@@ -863,85 +637,6 @@ void pbrtAttributeEnd() {
     }
 }
 
-void pbrtTransformBegin() {
-    VERIFY_WORLD("TransformBegin");
-    pushedTransforms.push_back(curTransform);
-    pushedActiveTransformBits.push_back(activeTransformBits);
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sTransformBegin\n", catIndentCount, "");
-        catIndentCount += 4;
-    }
-}
-
-void pbrtTransformEnd() {
-    VERIFY_WORLD("TransformEnd");
-    if (!pushedTransforms.size()) {
-        Error(
-            "Unmatched pbrtTransformEnd() encountered. "
-            "Ignoring it.");
-        return;
-    }
-    curTransform = pushedTransforms.back();
-    pushedTransforms.pop_back();
-    activeTransformBits = pushedActiveTransformBits.back();
-    pushedActiveTransformBits.pop_back();
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        catIndentCount -= 4;
-        printf("%*sTransformEnd\n", catIndentCount, "");
-    }
-}
-
-void pbrtTexture(const std::string &name, const std::string &type,
-                 const std::string &texname, const ParamSet &params) {
-    VERIFY_WORLD("Texture");
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sTexture \"%s\" \"%s\" \"%s\" ", catIndentCount, "",
-               name.c_str(), type.c_str(), texname.c_str());
-        params.Print(catIndentCount);
-        printf("\n");
-        return;
-    }
-
-    TextureParams tp(params, params, *graphicsState.floatTextures,
-                     *graphicsState.spectrumTextures);
-    if (type == "float") {
-        // Create _Float_ texture and store in _floatTextures_
-        if (graphicsState.floatTextures->find(name) !=
-            graphicsState.floatTextures->end())
-            Warning("Texture \"%s\" being redefined", name.c_str());
-        WARN_IF_ANIMATED_TRANSFORM("Texture");
-        std::shared_ptr<Texture<Float>> ft =
-            MakeFloatTexture(texname, curTransform[0], tp);
-        if (ft) {
-            // TODO: move this to be a GraphicsState method, also don't
-            // provide direct floatTextures access?
-            if (graphicsState.floatTexturesShared) {
-                graphicsState.floatTextures =
-                    std::make_shared<GraphicsState::FloatTextureMap>(*graphicsState.floatTextures);
-                graphicsState.floatTexturesShared = false;
-            }
-            (*graphicsState.floatTextures)[name] = ft;
-        }
-    } else if (type == "color" || type == "spectrum") {
-        // Create _color_ texture and store in _spectrumTextures_
-        if (graphicsState.spectrumTextures->find(name) !=
-            graphicsState.spectrumTextures->end())
-            Warning("Texture \"%s\" being redefined", name.c_str());
-        WARN_IF_ANIMATED_TRANSFORM("Texture");
-        std::shared_ptr<Texture<Spectrum>> st =
-            MakeSpectrumTexture(texname, curTransform[0], tp);
-        if (st) {
-            if (graphicsState.spectrumTexturesShared) {
-                graphicsState.spectrumTextures =
-                    std::make_shared<GraphicsState::SpectrumTextureMap>(*graphicsState.spectrumTextures);
-                graphicsState.spectrumTexturesShared = false;
-            }
-            (*graphicsState.spectrumTextures)[name] = st;
-        }
-    } else
-        Error("Texture type \"%s\" unknown.", type.c_str());
-}
-
 void pbrtMaterial(const std::string &name, const ParamSet &params) {
     VERIFY_WORLD("Material");
     ParamSet emptyParams;
@@ -953,68 +648,6 @@ void pbrtMaterial(const std::string &name, const ParamSet &params) {
 
     if (PbrtOptions.cat || PbrtOptions.toPly) {
         printf("%*sMaterial \"%s\" ", catIndentCount, "", name.c_str());
-        params.Print(catIndentCount);
-        printf("\n");
-    }
-}
-
-void pbrtMakeNamedMaterial(const std::string &name, const ParamSet &params) {
-    VERIFY_WORLD("MakeNamedMaterial");
-    // error checking, warning if replace, what to use for transform?
-    ParamSet emptyParams;
-    TextureParams mp(params, emptyParams, *graphicsState.floatTextures,
-                     *graphicsState.spectrumTextures);
-    std::string matName = mp.FindString("type");
-    WARN_IF_ANIMATED_TRANSFORM("MakeNamedMaterial");
-    if (matName == "")
-        Error("No parameter string \"type\" found in MakeNamedMaterial");
-
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sMakeNamedMaterial \"%s\" ", catIndentCount, "",
-               name.c_str());
-        params.Print(catIndentCount);
-        printf("\n");
-    } else {
-        std::shared_ptr<Material> mtl = MakeMaterial(matName, mp);
-        if (graphicsState.namedMaterials->find(name) !=
-            graphicsState.namedMaterials->end())
-            Warning("Named material \"%s\" redefined.", name.c_str());
-        if (graphicsState.namedMaterialsShared) {
-            graphicsState.namedMaterials =
-                std::make_shared<GraphicsState::NamedMaterialMap>(*graphicsState.namedMaterials);
-            graphicsState.namedMaterialsShared = false;
-        }
-        (*graphicsState.namedMaterials)[name] =
-            std::make_shared<MaterialInstance>(matName, mtl, params);
-    }
-}
-
-void pbrtNamedMaterial(const std::string &name) {
-    VERIFY_WORLD("NamedMaterial");
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sNamedMaterial \"%s\"\n", catIndentCount, "", name.c_str());
-        return;
-    }
-
-    auto iter = graphicsState.namedMaterials->find(name);
-    if (iter == graphicsState.namedMaterials->end()) {
-        Error("NamedMaterial \"%s\" unknown.", name.c_str());
-        return;
-    }
-    graphicsState.currentMaterial = iter->second;
-}
-
-void pbrtLightSource(const std::string &name, const ParamSet &params) {
-    VERIFY_WORLD("LightSource");
-    WARN_IF_ANIMATED_TRANSFORM("LightSource");
-    MediumInterface mi = graphicsState.CreateMediumInterface();
-    std::shared_ptr<Light> lt = MakeLight(name, params, curTransform[0], mi);
-    if (!lt)
-        Error("LightSource: light type \"%s\" unknown.", name.c_str());
-    else
-        renderOptions->lights.push_back(lt);
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sLightSource \"%s\" ", catIndentCount, "", name.c_str());
         params.Print(catIndentCount);
         printf("\n");
     }
@@ -1067,46 +700,8 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
                 std::make_shared<GeometricPrimitive>(s, mtl, area, mi));
         }
     } else {
-        // Initialize _prims_ and _areaLights_ for animated shape
-
-        // Create initial shape or shapes for animated shape
-        if (graphicsState.areaLight != "")
-            Warning(
-                "Ignoring currently set area light when creating "
-                "animated shape");
-        Transform *identity = transformCache.Lookup(Transform());
-        std::vector<std::shared_ptr<Shape>> shapes = MakeShapes(
-            name, identity, identity, graphicsState.reverseOrientation, params);
-        if (shapes.empty()) return;
-
-        // Create _GeometricPrimitive_(s) for animated shape
-        std::shared_ptr<Material> mtl = graphicsState.GetMaterialForShape(params);
-        params.ReportUnused();
-        MediumInterface mi = graphicsState.CreateMediumInterface();
-        prims.reserve(shapes.size());
-        for (auto s : shapes)
-            prims.push_back(
-                std::make_shared<GeometricPrimitive>(s, mtl, nullptr, mi));
-
-        // Create single _TransformedPrimitive_ for _prims_
-
-        // Get _animatedObjectToWorld_ transform for shape
-        static_assert(MaxTransforms == 2,
-                      "TransformCache assumes only two transforms");
-        Transform *ObjToWorld[2] = {
-            transformCache.Lookup(curTransform[0]),
-            transformCache.Lookup(curTransform[1])
-        };
-        AnimatedTransform animatedObjectToWorld(
-            ObjToWorld[0], renderOptions->transformStartTime, ObjToWorld[1],
-            renderOptions->transformEndTime);
-        if (prims.size() > 1) {
-            std::shared_ptr<Primitive> bvh = std::make_shared<BVHAccel>(prims);
-            prims.clear();
-            prims.push_back(bvh);
-        }
-        prims[0] = std::make_shared<TransformedPrimitive>(
-            prims[0], animatedObjectToWorld);
+        printf("Animated Scene not supported.\n");
+        assert(false);
     }
     // Add _prims_ and _areaLights_ to scene or current instance
     if (renderOptions->currentInstance) {
@@ -1215,82 +810,9 @@ MediumInterface GraphicsState::CreateMediumInterface() {
     return m;
 }
 
-void pbrtReverseOrientation() {
-    VERIFY_WORLD("ReverseOrientation");
-    graphicsState.reverseOrientation = !graphicsState.reverseOrientation;
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sReverseOrientation\n", catIndentCount, "");
-}
-
-void pbrtObjectBegin(const std::string &name) {
-    VERIFY_WORLD("ObjectBegin");
-    pbrtAttributeBegin();
-    if (renderOptions->currentInstance)
-        Error("ObjectBegin called inside of instance definition");
-    renderOptions->instances[name] = std::vector<std::shared_ptr<Primitive>>();
-    renderOptions->currentInstance = &renderOptions->instances[name];
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sObjectBegin \"%s\"\n", catIndentCount, "", name.c_str());
-}
-
 STAT_COUNTER("Scene/Object instances created", nObjectInstancesCreated);
 
-void pbrtObjectEnd() {
-    VERIFY_WORLD("ObjectEnd");
-    if (!renderOptions->currentInstance)
-        Error("ObjectEnd called outside of instance definition");
-    if (PbrtOptions.cat || PbrtOptions.toPly)
-        printf("%*sObjectEnd\n", catIndentCount, "");
-    renderOptions->currentInstance = nullptr;
-    pbrtAttributeEnd();
-    ++nObjectInstancesCreated;
-}
-
 STAT_COUNTER("Scene/Object instances used", nObjectInstancesUsed);
-
-void pbrtObjectInstance(const std::string &name) {
-    VERIFY_WORLD("ObjectInstance");
-    if (PbrtOptions.cat || PbrtOptions.toPly) {
-        printf("%*sObjectInstance \"%s\"\n", catIndentCount, "", name.c_str());
-        return;
-    }
-
-    // Perform object instance error checking
-    if (renderOptions->currentInstance) {
-        Error("ObjectInstance can't be called inside instance definition");
-        return;
-    }
-    if (renderOptions->instances.find(name) == renderOptions->instances.end()) {
-        Error("Unable to find instance named \"%s\"", name.c_str());
-        return;
-    }
-    std::vector<std::shared_ptr<Primitive>> &in =
-        renderOptions->instances[name];
-    if (in.empty()) return;
-    ++nObjectInstancesUsed;
-    if (in.size() > 1) {
-        // Create aggregate for instance _Primitive_s
-        std::shared_ptr<Primitive> accel(
-            MakeAccelerator(renderOptions->AcceleratorName, std::move(in),
-                            renderOptions->AcceleratorParams));
-        if (!accel) accel = std::make_shared<BVHAccel>(in);
-        in.clear();
-        in.push_back(accel);
-    }
-    static_assert(MaxTransforms == 2,
-                  "TransformCache assumes only two transforms");
-    // Create _animatedInstanceToWorld_ transform for instance
-    Transform *InstanceToWorld[2] = {
-        transformCache.Lookup(curTransform[0]),
-        transformCache.Lookup(curTransform[1])
-    };
-    AnimatedTransform animatedInstanceToWorld(
-        InstanceToWorld[0], renderOptions->transformStartTime,
-        InstanceToWorld[1], renderOptions->transformEndTime);
-    std::shared_ptr<Primitive> prim(
-        std::make_shared<TransformedPrimitive>(in[0], animatedInstanceToWorld));
-    renderOptions->primitives.push_back(prim);
-}
 
 void pbrtWorldEnd() {
     VERIFY_WORLD("WorldEnd");
@@ -1379,10 +901,7 @@ Integrator *RenderOptions::MakeIntegrator() const {
     }
 
     Integrator *integrator = nullptr;
-    if (IntegratorName == "directlighting")
-        integrator =
-            CreateDirectLightingIntegrator(IntegratorParams, sampler, camera);
-    else if (IntegratorName == "path")
+    if (IntegratorName == "path")
         integrator = CreatePathIntegrator(IntegratorParams, sampler, camera);
     else {
         Error("Integrator \"%s\" unknown.", IntegratorName.c_str());

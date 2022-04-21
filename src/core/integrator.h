@@ -57,10 +57,6 @@ class Integrator {
     virtual void Render(const Scene &scene) = 0;
 };
 
-Spectrum UniformSampleAllLights(const Interaction &it, const Scene &scene,
-                                MemoryArena &arena, Sampler &sampler,
-                                const std::vector<int> &nLightSamples,
-                                bool handleMedia = false);
 Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
                                MemoryArena &arena, Sampler &sampler,
                                bool handleMedia = false,
@@ -70,8 +66,6 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uShading,
                         const Scene &scene, Sampler &sampler,
                         MemoryArena &arena, bool handleMedia = false,
                         bool specular = false);
-std::unique_ptr<Distribution1D> ComputeLightPowerDistribution(
-    const Scene &scene);
 
 // SamplerIntegrator Declarations
 class SamplerIntegrator : public Integrator {
@@ -86,14 +80,6 @@ class SamplerIntegrator : public Integrator {
     virtual Spectrum Li(const RayDifferential &ray, const Scene &scene,
                         Sampler &sampler, MemoryArena &arena,
                         int depth = 0) const = 0;
-    Spectrum SpecularReflect(const RayDifferential &ray,
-                             const SurfaceInteraction &isect,
-                             const Scene &scene, Sampler &sampler,
-                             MemoryArena &arena, int depth) const;
-    Spectrum SpecularTransmit(const RayDifferential &ray,
-                              const SurfaceInteraction &isect,
-                              const Scene &scene, Sampler &sampler,
-                              MemoryArena &arena, int depth) const;
 
   protected:
     // SamplerIntegrator Protected Data

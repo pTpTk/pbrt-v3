@@ -88,33 +88,6 @@ class GeometricPrimitive : public Primitive {
     MediumInterface mediumInterface;
 };
 
-// TransformedPrimitive Declarations
-class TransformedPrimitive : public Primitive {
-  public:
-    // TransformedPrimitive Public Methods
-    TransformedPrimitive(std::shared_ptr<Primitive> &primitive,
-                         const AnimatedTransform &PrimitiveToWorld);
-    bool Intersect(const Ray &r, SurfaceInteraction *in) const;
-    bool IntersectP(const Ray &r) const;
-    const AreaLight *GetAreaLight() const { return nullptr; }
-    const Material *GetMaterial() const { return nullptr; }
-    void ComputeScatteringFunctions(SurfaceInteraction *isect,
-                                    MemoryArena &arena, TransportMode mode,
-                                    bool allowMultipleLobes) const {
-        LOG(FATAL) <<
-            "TransformedPrimitive::ComputeScatteringFunctions() shouldn't be "
-            "called";
-    }
-    Bounds3f WorldBound() const {
-        return PrimitiveToWorld.MotionBounds(primitive->WorldBound());
-    }
-
-  private:
-    // TransformedPrimitive Private Data
-    std::shared_ptr<Primitive> primitive;
-    const AnimatedTransform PrimitiveToWorld;
-};
-
 // Aggregate Declarations
 class Aggregate : public Primitive {
   public:

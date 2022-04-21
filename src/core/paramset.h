@@ -75,12 +75,6 @@ class ParamSet {
                         int nValues);
     void AddXYZSpectrum(const std::string &, std::unique_ptr<Float[]> v,
                         int nValues);
-    void AddBlackbodySpectrum(const std::string &, std::unique_ptr<Float[]> v,
-                              int nValues);
-    void AddSampledSpectrumFiles(const std::string &, const char **,
-                                 int nValues);
-    void AddSampledSpectrum(const std::string &, std::unique_ptr<Float[]> v,
-                            int nValues);
     bool EraseInt(const std::string &);
     bool EraseBool(const std::string &);
     bool EraseFloat(const std::string &);
