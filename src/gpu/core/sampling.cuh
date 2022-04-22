@@ -47,6 +47,20 @@
 namespace pbrt {
 namespace gpu {
 
+inline int FindIntervalSampling(int size, const Float *nodes, const Float x) {
+    int first = 0, len = size;
+    while (len > 0) {
+        int half = len >> 1, middle = first + half;
+        // Bisect range based on value of _pred_ at _middle_
+        if (nodes[middle] <= x) {
+            first = middle + 1;
+            len -= half + 1;
+        } else
+            len = half;
+    }
+    return Clamp(first - 1, 0, size - 2);
+}
+
 // Sampling Declarations
 void StratifiedSample1D(Float *samples, int nsamples, RNG &rng,
                         bool jitter = true);
@@ -93,8 +107,9 @@ struct Distribution1D {
     int SampleDiscrete(Float u, Float *pdf = nullptr,
                        Float *uRemapped = nullptr) const {
         // Find surrounding CDF segments and _offset_
-        int offset = FindInterval((int)cdf.size(),
-                                  [&](int index) { return cdf[index] <= u; });
+        int offset = FindIntervalSampling(cdf.size(), cdf.data(), u);
+        // int offset = FindInterval((int)cdf.size(),
+        //                           [&](int index) { return cdf[index] <= u; });
         if (pdf) *pdf = (funcInt > 0) ? func[offset] / (funcInt * Count()) : 0;
         if (uRemapped)
             *uRemapped = (u - cdf[offset]) / (cdf[offset + 1] - cdf[offset]);

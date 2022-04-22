@@ -120,8 +120,7 @@ struct Quaternion {
     // Quaternion Public Data
     Vector3f v;
     Float w;
-};
-
+};__both__
 Quaternion Slerp(Float t, const Quaternion &q1, const Quaternion &q2);
 
 // Quaternion Inline Functions

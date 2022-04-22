@@ -407,7 +407,6 @@ inline int CountTrailingZeros(uint32_t v) {
 }
 
 template <typename Predicate>
-__both__
 int FindInterval(int size, const Predicate &pred) {
     int first = 0, len = size;
     while (len > 0) {

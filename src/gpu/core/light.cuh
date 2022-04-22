@@ -53,7 +53,7 @@ enum class LightFlags : int {
     Area = 4,
     Infinite = 8
 };
-
+__both__
 inline bool IsDeltaLight(int flags) {
     return flags & (int)LightFlags::DeltaPosition ||
            flags & (int)LightFlags::DeltaDirection;

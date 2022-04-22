@@ -458,6 +458,7 @@ class AnimatedTransform {
     // AnimatedTransform Public Methods
     AnimatedTransform(const Transform *startTransform, Float startTime,
                       const Transform *endTransform, Float endTime);
+    __both__
     static void Decompose(const Matrix4x4 &m, Vector3f *T, Quaternion *R,
                           Matrix4x4 *S);
     __both__
