@@ -46,6 +46,20 @@
 
 namespace pbrt {
 
+inline int FindIntervalSampling(int size, const Float *nodes, const Float x) {
+    int first = 0, len = size;
+    while (len > 0) {
+        int half = len >> 1, middle = first + half;
+        // Bisect range based on value of _pred_ at _middle_
+        if (nodes[middle] <= x) {
+            first = middle + 1;
+            len -= half + 1;
+        } else
+            len = half;
+    }
+    return Clamp(first - 1, 0, size - 2);
+}
+
 // Sampling Declarations
 void StratifiedSample1D(Float *samples, int nsamples, RNG &rng,
                         bool jitter = true);
@@ -54,7 +68,7 @@ void StratifiedSample2D(Point2f *samples, int nx, int ny, RNG &rng,
 void LatinHypercube(Float *samples, int nSamples, int nDim, RNG &rng);
 struct Distribution1D {
     // Distribution1D Public Methods
-    Distribution1D(const Float *f, int n) : func(f, f + n), cdf(n + 1) {
+    Distribution1D(const Float *f, int n) : func(f, f + n), cdf(n + 1), N(n+1) {
         // Compute integral of step function at $x_i$
         cdf[0] = 0;
         for (int i = 1; i < n + 1; ++i) cdf[i] = cdf[i - 1] + func[i - 1] / n;
@@ -90,8 +104,7 @@ struct Distribution1D {
     int SampleDiscrete(Float u, Float *pdf = nullptr,
                        Float *uRemapped = nullptr) const {
         // Find surrounding CDF segments and _offset_
-        int offset = FindInterval((int)cdf.size(),
-                                  [&](int index) { return cdf[index] <= u; });
+        int offset = FindIntervalSampling(N, cdf.data(), u);
         if (pdf) *pdf = (funcInt > 0) ? func[offset] / (funcInt * Count()) : 0;
         if (uRemapped)
             *uRemapped = (u - cdf[offset]) / (cdf[offset + 1] - cdf[offset]);
@@ -105,6 +118,8 @@ struct Distribution1D {
 
     // Distribution1D Public Data
     std::vector<Float> func, cdf;
+    int N;
+    // Float* func, cdf;
     Float funcInt;
 };
 

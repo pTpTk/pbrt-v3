@@ -66,6 +66,7 @@ inline void RGBToXYZ(const Float rgb[3], Float xyz[3]) {
 }
 
 enum class SpectrumType { Reflectance, Illuminant };
+int FindIntervalSpectrum(int size, const Float *nodes, const Float x);
 extern Float InterpolateSpectrumSamples(const Float *lambda, const Float *vals,
                                         int n, Float l);
 extern void Blackbody(const Float *lambda, int n, Float T, Float *Le);

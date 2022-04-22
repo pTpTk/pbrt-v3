@@ -43,6 +43,9 @@
 
 namespace pbrt {
 
+int FindIntervalInterpolation(int size, const Float *nodes, const Float x);
+inline Float interpolate(int offset, int size2, const Float *array, const Float *weights, int idx);
+int FindIntervalSampleCatmullRom2D(int offset, int size, const Float *cdf, const Float *weights, const Float u, int size2);
 // Spline Interpolation Declarations
 Float CatmullRom(int size, const Float *nodes, const Float *values, Float x);
 bool CatmullRomWeights(int size, const Float *nodes, Float x, int *offset,

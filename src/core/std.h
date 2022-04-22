@@ -85,5 +85,23 @@ template<> class numeric_limits<double>{
     __both__ static constexpr double max() { return 1.79769e+308; }
 };
 
+template<class T>
+class shared_ptr {
+  public:
+    shared_ptr(T* _ptr) : ptr{_ptr} {}
+    T* get() { return ptr; }
+    T* ptr;
+};
+
+template<class T>
+shared_ptr<T> make_shared(T obj) {
+  // create memory and transfer
+  void* voidptr;
+  cudaMallocManaged(&voidptr, sizeof(T));
+  T* ptr = new(voidptr) T;
+  *ptr = obj;
+  return shared_ptr<T>(ptr);
+}
+
 } // namespace pbrt
 #endif
