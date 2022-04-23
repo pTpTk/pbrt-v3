@@ -89,7 +89,7 @@ Float AverageSpectrumSamples(const Float *lambda, const Float *vals, int n,
     }
     return sum / (lambdaEnd - lambdaStart);
 }
-
+__both__
 int FindIntervalSpectrum(int size, const Float *nodes, const Float x) {
     int first = 0, len = size;
     while (len > 0) {

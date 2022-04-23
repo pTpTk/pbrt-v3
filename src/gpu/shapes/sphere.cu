@@ -158,7 +158,7 @@ bool Sphere::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
 }
 __both__
 bool Sphere::IntersectP(const Ray &r, bool testAlphaTexture) const {
-    ProfilePhase p(Prof::ShapeIntersectP);
+    // ProfilePhase p(Prof::ShapeIntersectP);
     Float phi;
     Point3f pHit;
     // Transform _Ray_ to object space
@@ -217,7 +217,7 @@ bool Sphere::IntersectP(const Ray &r, bool testAlphaTexture) const {
 }
 
 Float Sphere::Area() const { return phiMax * radius * (zMax - zMin); }
-
+__both__
 Interaction Sphere::Sample(const Point2f &u, Float *pdf) const {
     Point3f pObj = Point3f(0, 0, 0) + radius * UniformSampleSphere(u);
     Interaction it;
@@ -230,7 +230,7 @@ Interaction Sphere::Sample(const Point2f &u, Float *pdf) const {
     *pdf = 1 / Area();
     return it;
 }
-
+__both__
 Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
                            Float *pdf) const {
     Point3f pCenter = (*ObjectToWorld)(Point3f(0, 0, 0));
@@ -301,7 +301,7 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
 
     return it;
 }
-
+__both__
 Float Sphere::Pdf(const Interaction &ref, const Vector3f &wi) const {
     Point3f pCenter = (*ObjectToWorld)(Point3f(0, 0, 0));
     // Return uniform PDF if point is inside sphere

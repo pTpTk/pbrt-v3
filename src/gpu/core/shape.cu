@@ -54,7 +54,7 @@ Shape::Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
 
 __both__
 Bounds3f Shape::WorldBound() const { return (*ObjectToWorld)(ObjectBound()); }
-
+__both__
 Interaction Shape::Sample(const Interaction &ref, const Point2f &u,
                           Float *pdf) const {
     Interaction intr = Sample(u, pdf);
@@ -70,7 +70,7 @@ Interaction Shape::Sample(const Interaction &ref, const Point2f &u,
     }
     return intr;
 }
-
+__both__
 Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
     // Intersect sample ray with area light geometry
     Ray ray = ref.SpawnRay(wi);

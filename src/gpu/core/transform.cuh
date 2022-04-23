@@ -456,6 +456,7 @@ inline Ray Transform::operator()(const Ray &r, const Vector3f &oErrorIn,
 class AnimatedTransform {
   public:
     // AnimatedTransform Public Methods
+    __both__
     AnimatedTransform(const Transform *startTransform, Float startTime,
                       const Transform *endTransform, Float endTime);
     __both__

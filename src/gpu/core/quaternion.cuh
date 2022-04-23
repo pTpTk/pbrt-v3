@@ -124,6 +124,7 @@ struct Quaternion {
 Quaternion Slerp(Float t, const Quaternion &q1, const Quaternion &q2);
 
 // Quaternion Inline Functions
+__both__
 inline Quaternion operator*(Float f, const Quaternion &q) { return q * f; }
 __both__
 inline Float Dot(const Quaternion &q1, const Quaternion &q2) {

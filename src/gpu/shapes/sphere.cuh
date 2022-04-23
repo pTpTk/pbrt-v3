@@ -65,10 +65,14 @@ class Sphere : public Shape {
                    bool testAlphaTexture) const;
     __both__
     bool IntersectP(const Ray &ray, bool testAlphaTexture) const;
+    __both__
     Float Area() const;
+    __both__
     Interaction Sample(const Point2f &u, Float *pdf) const;
+    __both__
     Interaction Sample(const Interaction &ref, const Point2f &u,
                        Float *pdf) const;
+    __both__
     Float Pdf(const Interaction &ref, const Vector3f &wi) const;
     Float SolidAngle(const Point3f &p, int nSamples) const;
 

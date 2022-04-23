@@ -257,7 +257,7 @@ Float SampleCatmullRom2D(int size1, int size2, const Float *nodes1,
     // Set initial guess for $t$ by importance sampling a linear interpolant
     Float t;
     if (f0 != f1)
-        t = (f0 - std::sqrt(std::max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
+        t = (f0 - std::sqrt(max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
             (f0 - f1);
     else
         t = u / f0;

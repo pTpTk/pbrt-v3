@@ -53,35 +53,39 @@ Spectrum FrConductor(Float cosThetaI, const Spectrum &etaI,
                      const Spectrum &etaT, const Spectrum &k);
 
 // BSDF Inline Functions
+__both__
 inline Float CosTheta(const Vector3f &w) { return w.z; }
+__both__
 inline Float Cos2Theta(const Vector3f &w) { return w.z * w.z; }
-inline Float AbsCosTheta(const Vector3f &w) { return std::abs(w.z); }
+__both__
+inline Float AbsCosTheta(const Vector3f &w) { return abs(w.z); }
+__both__
 inline Float Sin2Theta(const Vector3f &w) {
     return max((Float)0, (Float)1 - Cos2Theta(w));
 }
-
+__both__
 inline Float SinTheta(const Vector3f &w) { return std::sqrt(Sin2Theta(w)); }
-
+__both__
 inline Float TanTheta(const Vector3f &w) { return SinTheta(w) / CosTheta(w); }
-
+__both__
 inline Float Tan2Theta(const Vector3f &w) {
     return Sin2Theta(w) / Cos2Theta(w);
 }
-
+__both__
 inline Float CosPhi(const Vector3f &w) {
     Float sinTheta = SinTheta(w);
     return (sinTheta == 0) ? 1 : Clamp(w.x / sinTheta, -1, 1);
 }
-
+__both__
 inline Float SinPhi(const Vector3f &w) {
     Float sinTheta = SinTheta(w);
     return (sinTheta == 0) ? 0 : Clamp(w.y / sinTheta, -1, 1);
 }
-
+__both__
 inline Float Cos2Phi(const Vector3f &w) { return CosPhi(w) * CosPhi(w); }
-
+__both__
 inline Float Sin2Phi(const Vector3f &w) { return SinPhi(w) * SinPhi(w); }
-
+__both__
 inline Float CosDPhi(const Vector3f &wa, const Vector3f &wb) {
     Float waxy = wa.x * wa.x + wa.y * wa.y;
     Float wbxy = wb.x * wb.x + wb.y * wb.y;
@@ -89,11 +93,11 @@ inline Float CosDPhi(const Vector3f &wa, const Vector3f &wb) {
         return 1;
     return Clamp((wa.x * wb.x + wa.y * wb.y) / std::sqrt(waxy * wbxy), -1, 1);
 }
-
+__both__
 inline Vector3f Reflect(const Vector3f &wo, const Vector3f &n) {
     return -wo + 2 * Dot(wo, n) * n;
 }
-
+__both__
 inline bool Refract(const Vector3f &wi, const Normal3f &n, Float eta,
                     Vector3f *wt) {
     // Compute $\cos \theta_\roman{t}$ using Snell's law
@@ -107,11 +111,11 @@ inline bool Refract(const Vector3f &wi, const Normal3f &n, Float eta,
     *wt = eta * -wi + (eta * cosThetaI - cosThetaT) * Vector3f(n);
     return true;
 }
-
+__both__
 inline bool SameHemisphere(const Vector3f &w, const Vector3f &wp) {
     return w.z * wp.z > 0;
 }
-
+__both__
 inline bool SameHemisphere(const Vector3f &w, const Normal3f &wp) {
     return w.z * wp.z > 0;
 }

@@ -46,7 +46,7 @@
 
 namespace pbrt {
 namespace gpu {
-
+__both__
 inline int FindIntervalSampling(int size, const Float *nodes, const Float x) {
     int first = 0, len = size;
     while (len > 0) {
@@ -62,8 +62,10 @@ inline int FindIntervalSampling(int size, const Float *nodes, const Float x) {
 }
 
 // Sampling Declarations
+__both__
 void StratifiedSample1D(Float *samples, int nsamples, RNG &rng,
                         bool jitter = true);
+__both__
 void StratifiedSample2D(Point2f *samples, int nx, int ny, RNG &rng,
                         bool jitter = true);
 void LatinHypercube(Float *samples, int nSamples, int nDim, RNG &rng);
@@ -127,16 +129,26 @@ struct Distribution1D {
 };
 
 Point2f RejectionSampleDisk(RNG &rng);
+__both__
 Vector3f UniformSampleHemisphere(const Point2f &u);
+__both__
 Float UniformHemispherePdf();
+__both__
 Vector3f UniformSampleSphere(const Point2f &u);
+__both__
 Float UniformSpherePdf();
+__both__
 Vector3f UniformSampleCone(const Point2f &u, Float thetamax);
+__both__
 Vector3f UniformSampleCone(const Point2f &u, Float thetamax, const Vector3f &x,
                            const Vector3f &y, const Vector3f &z);
+__both__
 Float UniformConePdf(Float thetamax);
+__both__
 Point2f UniformSampleDisk(const Point2f &u);
+__both__
 Point2f ConcentricSampleDisk(const Point2f &u);
+__both__
 Point2f UniformSampleTriangle(const Point2f &u);
 class Distribution2D {
   public:
@@ -174,15 +186,15 @@ void Shuffle(T *samp, int count, int nDimensions, RNG &rng) {
             pbrt::gpu::Swap(samp[nDimensions * i + j], samp[nDimensions * other + j]);
     }
 }
-
+__both__
 inline Vector3f CosineSampleHemisphere(const Point2f &u) {
     Point2f d = ConcentricSampleDisk(u);
-    Float z = std::sqrt(max((Float)0, 1 - d.x * d.x - d.y * d.y));
+    Float z = sqrt(max((Float)0, 1 - d.x * d.x - d.y * d.y));
     return Vector3f(d.x, d.y, z);
 }
-
+__both__
 inline Float CosineHemispherePdf(Float cosTheta) { return cosTheta * InvPi; }
-
+__both__
 inline Float BalanceHeuristic(int nf, Float fPdf, int ng, Float gPdf) {
     return (nf * fPdf) / (nf * fPdf + ng * gPdf);
 }

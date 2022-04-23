@@ -68,6 +68,7 @@ inline double SobolSampleDouble(int64_t index, int dimension,
                                 uint64_t scramble = 0);
 
 // Low Discrepancy Inline Functions
+__both__
 inline uint32_t ReverseBits32(uint32_t n) {
     n = (n << 16) | (n >> 16);
     n = ((n & 0x00ff00ff) << 8) | ((n & 0xff00ff00) >> 8);
@@ -76,7 +77,7 @@ inline uint32_t ReverseBits32(uint32_t n) {
     n = ((n & 0x55555555) << 1) | ((n & 0xaaaaaaaa) >> 1);
     return n;
 }
-
+__both__
 inline uint64_t ReverseBits64(uint64_t n) {
     uint64_t n0 = ReverseBits32((uint32_t)n);
     uint64_t n1 = ReverseBits32((uint32_t)(n >> 32));

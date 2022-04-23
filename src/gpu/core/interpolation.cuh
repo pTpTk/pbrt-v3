@@ -43,9 +43,11 @@
 
 namespace pbrt {
 namespace gpu {
-
+__both__
 int FindIntervalInterpolation(int size, const Float *nodes, const Float x);
+__both__
 inline Float interpolate(int offset, int size2, const Float *array, const Float *weights, int idx);
+__both__
 int FindIntervalSampleCatmullRom2D(int offset, int size, const Float *cdf, const Float *weights, const Float u, int size2);
 // Spline Interpolation Declarations
 __both__

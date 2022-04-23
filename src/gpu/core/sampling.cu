@@ -86,29 +86,29 @@ Point2f RejectionSampleDisk(RNG &rng) {
     } while (p.x * p.x + p.y * p.y > 1);
     return p;
 }
-
+__both__
 Vector3f UniformSampleHemisphere(const Point2f &u) {
     Float z = u[0];
-    Float r = std::sqrt(max((Float)0, (Float)1. - z * z));
+    Float r = sqrt(max((Float)0, (Float)1. - z * z));
     Float phi = 2 * Pi * u[1];
-    return Vector3f(r * std::cos(phi), r * std::sin(phi), z);
+    return Vector3f(r * cos(phi), r * sin(phi), z);
 }
-
+__both__
 Float UniformHemispherePdf() { return Inv2Pi; }
 
 Vector3f UniformSampleSphere(const Point2f &u) {
     Float z = 1 - 2 * u[0];
-    Float r = std::sqrt(max((Float)0, (Float)1 - z * z));
+    Float r = sqrt(max((Float)0, (Float)1 - z * z));
     Float phi = 2 * Pi * u[1];
-    return Vector3f(r * std::cos(phi), r * std::sin(phi), z);
+    return Vector3f(r * cos(phi), r * sin(phi), z);
 }
 
 Float UniformSpherePdf() { return Inv4Pi; }
 
 Point2f UniformSampleDisk(const Point2f &u) {
-    Float r = std::sqrt(u[0]);
+    Float r = sqrt(u[0]);
     Float theta = 2 * Pi * u[1];
-    return Point2f(r * std::cos(theta), r * std::sin(theta));
+    return Point2f(r * cos(theta), r * sin(theta));
 }
 
 Point2f ConcentricSampleDisk(const Point2f &u) {
@@ -120,14 +120,14 @@ Point2f ConcentricSampleDisk(const Point2f &u) {
 
     // Apply concentric mapping to point
     Float theta, r;
-    if (std::abs(uOffset.x) > std::abs(uOffset.y)) {
+    if (abs(uOffset.x) > abs(uOffset.y)) {
         r = uOffset.x;
         theta = PiOver4 * (uOffset.y / uOffset.x);
     } else {
         r = uOffset.y;
         theta = PiOver2 - PiOver4 * (uOffset.x / uOffset.y);
     }
-    return r * Point2f(std::cos(theta), std::sin(theta));
+    return r * Point2f(cos(theta), sin(theta));
 }
 
 Float UniformConePdf(Float cosThetaMax) {
@@ -136,9 +136,9 @@ Float UniformConePdf(Float cosThetaMax) {
 
 Vector3f UniformSampleCone(const Point2f &u, Float cosThetaMax) {
     Float cosTheta = ((Float)1 - u[0]) + u[0] * cosThetaMax;
-    Float sinTheta = std::sqrt((Float)1 - cosTheta * cosTheta);
+    Float sinTheta = sqrt((Float)1 - cosTheta * cosTheta);
     Float phi = u[1] * 2 * Pi;
-    return Vector3f(std::cos(phi) * sinTheta, std::sin(phi) * sinTheta,
+    return Vector3f(cos(phi) * sinTheta, sin(phi) * sinTheta,
                     cosTheta);
 }
 
@@ -146,14 +146,14 @@ Vector3f UniformSampleCone(const Point2f &u, Float cosThetaMax,
                            const Vector3f &x, const Vector3f &y,
                            const Vector3f &z) {
     Float cosTheta = Lerp(u[0], cosThetaMax, 1.f);
-    Float sinTheta = std::sqrt((Float)1. - cosTheta * cosTheta);
+    Float sinTheta = sqrt((Float)1. - cosTheta * cosTheta);
     Float phi = u[1] * 2 * Pi;
-    return std::cos(phi) * sinTheta * x + std::sin(phi) * sinTheta * y +
+    return cos(phi) * sinTheta * x + sin(phi) * sinTheta * y +
            cosTheta * z;
 }
 
 Point2f UniformSampleTriangle(const Point2f &u) {
-    Float su0 = std::sqrt(u[0]);
+    Float su0 = sqrt(u[0]);
     return Point2f(1 - su0, u[1] * su0);
 }
 

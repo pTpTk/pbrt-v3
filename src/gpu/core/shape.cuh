@@ -68,16 +68,21 @@ class Shape {
                             bool testAlphaTexture = true) const {
         return Intersect(ray, nullptr, nullptr, testAlphaTexture);
     }
+    __both__
     virtual Float Area() const = 0;
     // Sample a point on the surface of the shape and return the PDF with
     // respect to area on the surface.
+    __both__
     virtual Interaction Sample(const Point2f &u, Float *pdf) const = 0;
+    __both__
     virtual Float Pdf(const Interaction &) const { return 1 / Area(); }
 
     // Sample a point on the shape given a reference point |ref| and
     // return the PDF with respect to solid angle from |ref|.
+    __both__
     virtual Interaction Sample(const Interaction &ref, const Point2f &u,
                                Float *pdf) const;
+    __both__
     virtual Float Pdf(const Interaction &ref, const Vector3f &wi) const;
 
     // Returns the solid angle subtended by the shape w.r.t. the reference
