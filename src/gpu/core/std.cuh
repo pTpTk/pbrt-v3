@@ -101,6 +101,34 @@ template<> class numeric_limits<double>{
     __both__ static constexpr double infinity() { return max() + 2; }
 };
 
+template<typename T>
+class shared_ptr {
+public:
+   __both__
+   shared_ptr() : ptr {new T} {}
+   __both__
+   shared_ptr(T *_ptr) : ptr {new T} {
+      *ptr = *_ptr;
+      // delete _ptr; ?? Maybe delete the sink pointer
+   }
+   __both__
+   T& operator*() const noexcept { return *(get()); }
+   __both__
+   T* operator->() const noexcept { return get(); }
+   __both__
+   T *get() const noexcept { return ptr; }
+private:
+   T *ptr;
+};
+
+template<typename T>
+__both__
+shared_ptr<T> make_shared(T obj) {
+   shared_ptr<T> ptr;
+   *ptr = obj;
+   return ptr;
+}
+
 }  // namespace gpu
 }  // namespace pbrt
 #endif
