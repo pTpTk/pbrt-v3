@@ -51,8 +51,8 @@ class Scene {
   public:
     // Scene Public Methods
     Scene(std::shared_ptr<Primitive> aggregate,
-          const std::vector<std::shared_ptr<Light>> &lights)
-        : lights(lights), aggregate(aggregate) {
+          const std::shared_ptr<Light> &lights, int nLights)
+        : lights(lights), aggregate(aggregate), nLights(nLights) {
         // Scene Constructor Implementation
         worldBound = aggregate->WorldBound();
         for (const auto &light : lights) {
@@ -68,7 +68,8 @@ class Scene {
                      Spectrum *transmittance) const;
 
     // Scene Public Data
-    std::vector<std::shared_ptr<Light>> lights;
+    std::shared_ptr<Light>* lights;
+    int nLights;
     // Store infinite light sources separately for cases where we only want
     // to loop over them.
     std::vector<std::shared_ptr<Light>> infiniteLights;
