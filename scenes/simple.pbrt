@@ -1,47 +1,127 @@
-
-LookAt 400 20 30   0 63 -110   0 0 1
-Rotate -5 0 0 1
-Camera "perspective" "float fov" [39]
+LookAt -200 0 0   50 0 0   0 0 1
+Camera "perspective" "float fov" [90]
 Film "image"  
-"integer xresolution" [700] "integer yresolution" [700]
-    "string filename" "killeroo-simple.exr"
+"integer xresolution" [2000] "integer yresolution" [2000]
 
-# zoom in by feet
-# "integer xresolution" [1500] "integer yresolution" [1500]
-#	"float cropwindow" [ .34 .49  .67 .8 ]
-
-Sampler "halton" "integer pixelsamples" [8]
+Sampler "halton" "integer pixelsamples" [128]
 
 Integrator "path"
 
 WorldBegin
 
 AttributeBegin
-Material "matte" "color Kd" [0 0 0]
-Translate 150 0  20
-Translate 0 120 0
-AreaLightSource "area"  "color L" [2000 2000 2000] "integer nsamples" [8]
-Shape "sphere" "float radius" [3]
+  Material "matte" "color Kd" [0 0 0]
+  AreaLightSource "area"  "color L" [2000 2000 2000] "integer nsamples" [128]
+  Shape "sphere" "float radius" [3]
+AttributeEnd
+AttributeBegin
+  Material "matte" "color Kd" [0 0 0]
+  Translate 150 0  120
+  Translate 0 120 0
+  AreaLightSource "area"  "color L" [2000 2000 2000] "integer nsamples" [128]
+  Shape "sphere" "float radius" [5]
 AttributeEnd
 
+AttributeBegin
+  Material "matte" "color Kd" [.7 .4 .2]
+Translate 49 37 34
+Shape "sphere" "float radius" [12]
+AttributeEnd
 
 AttributeBegin
-  Material "matte" "color Kd" [.5 .5 .8]
-  Translate 0 0 -140
+  Material "matte" "color Kd" [.9 .5 .2]
+Translate 6 -123 156
+Shape "sphere" "float radius" [1]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.1 .1 .9]
+Translate 44 129 -153
+Shape "sphere" "float radius" [20]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.3 .8 .1]
+Translate -71 -76 59
+Shape "sphere" "float radius" [14]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.1 .2 .2]
+Translate 4 90 -156
+Shape "sphere" "float radius" [15]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.9 .1 .6]
+Translate 23 19 -87
+Shape "sphere" "float radius" [14]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.4 .6 .6]
+Translate -17 -153 57
+Shape "sphere" "float radius" [14]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.5 .1 .2]
+Translate -80 4 -26
+Shape "sphere" "float radius" [6]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.5 .2 .2]
+Translate -15 -18 -47
 Shape "sphere" "float radius" [10]
 AttributeEnd
 
 AttributeBegin
-Scale .5 .5 .5
-Rotate -60 0 0 1
-    Material "plastic" "color Kd" [.4 .2 .2] "color Ks" [.5 .5 .5]
-        "float roughness" [.025]
-Translate 100 200 -140
-Shape "sphere" "float radius" [7]
-    Material "plastic" "color Ks" [.3 .3 .3] "color Kd" [.4 .5 .4]
-        "float roughness" [.15] 
-Translate -200 0 0
-Shape "sphere" "float radius" [20]
-
+  Material "matte" "color Kd" [.2 .7 .5]
+Translate 14 -82 -96
+Shape "sphere" "float radius" [14]
 AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.5 .6 .5]
+Translate 42 18 -96
+Shape "sphere" "float radius" [14]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.2 .5 .1]
+Translate -10 -87 92
+Shape "sphere" "float radius" [12]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.7 .9 .6]
+Translate -39 -59 -66
+Shape "sphere" "float radius" [10]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.4 .6 .2]
+Translate 39 -88 -4
+Shape "sphere" "float radius" [11]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.6 .9 .4]
+Translate -24 4 -60
+Shape "sphere" "float radius" [9]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.7 .9 .2]
+Translate 36 -30 -28
+Shape "sphere" "float radius" [14]
+AttributeEnd
+
+AttributeBegin
+  Material "matte" "color Kd" [.4 .7 .8]
+Translate 37 12 82
+Shape "sphere" "float radius" [8]
+AttributeEnd
+
 WorldEnd
