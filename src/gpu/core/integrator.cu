@@ -70,8 +70,10 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
         lightPdf = Float(1) / nLights;
     }
     const std::shared_ptr<Light> &light = scene.lights[lightNum];
+    // TODO: Fix operator::[] call
     Point2f uLight = sampler.Get2D();
     Point2f uScattering = sampler.Get2D();
+    // TODO: Fix pointer dereference call
     return EstimateDirect(it, uScattering, *light, uLight,
                           scene, sampler, arena, handleMedia) / lightPdf;
 }
