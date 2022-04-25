@@ -39,6 +39,7 @@
 #include "scene.cuh"
 #include "stats.cuh"
 #include "integrator.cuh"
+#include "utils.cuh"
 #include <numeric>
 
 namespace pbrt {
@@ -215,7 +216,7 @@ SpatialLightDistribution::ComputeDistribution(Point3i pi) const {
     // point on the light source) as an approximation to how much the light
     // is likely to contribute to illumination in the voxel.
     int nSamples = 128;
-    std::vector<Float> lightContrib(scene.lights.size(), Float(0));
+    std::vector<Float> lightContrib(utils::get_buffer_size(scene.lights), Float(0));
     for (int i = 0; i < nSamples; ++i) {
         Point3f po = voxelBounds.Lerp(Point3f(
             RadicalInverse(0, i), RadicalInverse(1, i), RadicalInverse(2, i)));
@@ -225,7 +226,7 @@ SpatialLightDistribution::ComputeDistribution(Point3i pi) const {
         // Use the next two Halton dimensions to sample a point on the
         // light source.
         Point2f u(RadicalInverse(3, i), RadicalInverse(4, i));
-        for (size_t j = 0; j < scene.lights.size(); ++j) {
+        for (size_t j = 0; j < utils::get_buffer_size(scene.lights); ++j) {
             Float pdf;
             Vector3f wi;
             VisibilityTester vis;
