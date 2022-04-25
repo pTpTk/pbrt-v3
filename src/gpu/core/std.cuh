@@ -105,9 +105,9 @@ template<typename T>
 class shared_ptr {
 public:
    __both__
-   shared_ptr() : ptr {new T} {}
+   shared_ptr() : ptr ((T*)malloc(sizeof(T))) {}
    __both__
-   shared_ptr(T *_ptr) : ptr {new T} {
+   shared_ptr(T *_ptr) : ptr ((T*)malloc(sizeof(T))) {
       *ptr = *_ptr;
       // delete _ptr; ?? Maybe delete the sink pointer
    }
