@@ -71,8 +71,26 @@ void StratifiedSample2D(Point2f *samples, int nx, int ny, RNG &rng,
 void LatinHypercube(Float *samples, int nSamples, int nDim, RNG &rng);
 struct Distribution1D {
     // Distribution1D Public Methods
-    Distribution1D(const Float *f, int n) : func(f, f + n), cdf(n + 1) {
+    Distribution1D(const Float *f, int n) {
         // Compute integral of step function at $x_i$
+
+        // only need to realloc memory if the desired size is different from last call
+        // spoiler: it never is, a vector was used in place of a statically sized array for no reason
+        if(N != n+1){
+            N = n + 1;
+            if(cdf != nullptr) free(cdf);
+            cdf = (Float*) malloc(N * sizeof(Float));
+
+            if(func != nullptr) free(func);
+            func = (Float*) malloc(n * sizeof(Float));
+        }
+
+        func[0] = *f;
+        // this one is not exactly correct. The constructor for func takes arguments (f, f+n), which I can't match to any
+        // actual constructor, and the result isn't really what I expect. Using this one returns an image, but it is like
+        // a boosted contrast
+        func[1] = *f + n;
+
         cdf[0] = 0;
         for (int i = 1; i < n + 1; ++i) cdf[i] = cdf[i - 1] + func[i - 1] / n;
 
@@ -85,10 +103,10 @@ struct Distribution1D {
         }
     }
     __both__
-    int Count() const { return (int)func.size(); }
+    int Count() const { return N-1; }
     Float SampleContinuous(Float u, Float *pdf, int *off = nullptr) const {
         // Find surrounding CDF segments and _offset_
-        int offset = FindInterval((int)cdf.size(),
+        int offset = FindInterval(N,
                                   [&](int index) { return cdf[index] <= u; });
         if (off) *off = offset;
         // Compute offset along CDF segment
@@ -109,7 +127,7 @@ struct Distribution1D {
     int SampleDiscrete(Float u, Float *pdf = nullptr,
                        Float *uRemapped = nullptr) const {
         // Find surrounding CDF segments and _offset_
-        int offset = FindIntervalSampling(cdf.size(), cdf.data(), u);
+        int offset = FindIntervalSampling(N, cdf, u);
         // int offset = FindInterval((int)cdf.size(),
         //                           [&](int index) { return cdf[index] <= u; });
         if (pdf) *pdf = (funcInt > 0) ? func[offset] / (funcInt * Count()) : 0;
@@ -124,7 +142,9 @@ struct Distribution1D {
     }
 
     // Distribution1D Public Data
-    std::vector<Float> func, cdf;
+    int N = 0;
+    Float* cdf = nullptr;
+    Float* func = nullptr;
     Float funcInt;
 };
 
