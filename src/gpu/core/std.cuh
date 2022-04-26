@@ -115,7 +115,7 @@ public:
 
    // std::shared_ptr to pbrt::gpu::shared_ptr needs to be invoked from host
    __host__
-   shared_ptr(const std::shared_ptr<T>& _ptr) ptr (_ptr.get()) {}
+   shared_ptr(const std::shared_ptr<T>& _ptr) : ptr (_ptr.get()) {}
    __both__
    T& operator*() const noexcept { return *(get()); }
    __both__
