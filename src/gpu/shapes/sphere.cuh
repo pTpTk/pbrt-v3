@@ -74,6 +74,8 @@ class Sphere : public Shape {
                        Float *pdf) const;
     __both__
     Float Pdf(const Interaction &ref, const Vector3f &wi) const;
+    __both__
+    Float Pdf(const Interaction &ref) const { return Shape::Pdf(ref); }
     Float SolidAngle(const Point3f &p, int nSamples) const;
 
   private:
