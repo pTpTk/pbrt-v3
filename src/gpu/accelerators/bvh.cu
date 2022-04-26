@@ -184,39 +184,39 @@ static void RadixSort(std::vector<MortonPrimitive> *v) {
 BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p, 
                    int maxPrimsInNode, SplitMethod splitMethod)
     : maxPrimsInNode(min(255, maxPrimsInNode)),
-      splitMethod(splitMethod)
-    //   ,primitives(p)
+      splitMethod(splitMethod),
+      primitives(p)
       {
-    // // ProfilePhase _(Prof::AccelConstruction);
-    // if (primitives.empty()) return;
-    // // Build BVH from _primitives_
+    // ProfilePhase _(Prof::AccelConstruction);
+    if (primitives.empty()) return;
+    // Build BVH from _primitives_
 
-    // // Initialize _primitiveInfo_ array for primitives
-    // std::vector<BVHPrimitiveInfo> primitiveInfo(primitives.size());
-    // for (size_t i = 0; i < primitives.size(); ++i)
-    //     primitiveInfo[i] = {i, primitives[i]->WorldBound()};
+    // Initialize _primitiveInfo_ array for primitives
+    std::vector<BVHPrimitiveInfo> primitiveInfo(primitives.size());
+    for (size_t i = 0; i < primitives.size(); ++i)
+        primitiveInfo[i] = {i, primitives[i]->WorldBound()};
 
-    // // Build BVH tree for primitives using _primitiveInfo_
-    // MemoryArena arena(1024 * 1024);
-    // int totalNodes = 0;
-    // std::vector<std::shared_ptr<Primitive>> orderedPrims;
-    // orderedPrims.reserve(primitives.size());
-    // BVHBuildNode *root;
-    // if (splitMethod == SplitMethod::HLBVH)
-    //     root = HLBVHBuild(arena, primitiveInfo, &totalNodes, orderedPrims);
-    // else
-    //     root = recursiveBuild(arena, primitiveInfo, 0, primitives.size(),
-    //                           &totalNodes, orderedPrims);
-    // primitives.swap(orderedPrims);
-    // primitiveInfo.resize(0);
+    // Build BVH tree for primitives using _primitiveInfo_
+    MemoryArena arena(1024 * 1024);
+    int totalNodes = 0;
+    std::vector<std::shared_ptr<Primitive>> orderedPrims;
+    orderedPrims.reserve(primitives.size());
+    BVHBuildNode *root;
+    if (splitMethod == SplitMethod::HLBVH)
+        root = HLBVHBuild(arena, primitiveInfo, &totalNodes, orderedPrims);
+    else
+        root = recursiveBuild(arena, primitiveInfo, 0, primitives.size(),
+                              &totalNodes, orderedPrims);
+    primitives.swap(orderedPrims);
+    primitiveInfo.resize(0);
 
-    // // Compute representation of depth-first traversal of BVH tree
-    // treeBytes += totalNodes * sizeof(LinearBVHNode) + sizeof(*this) +
-    //              primitives.size() * sizeof(primitives[0]);
-    // nodes = AllocAligned<LinearBVHNode>(totalNodes);
-    // int offset = 0;
-    // flattenBVHTree(root, &offset);
-    // assert(totalNodes == offset);
+    // Compute representation of depth-first traversal of BVH tree
+    treeBytes += totalNodes * sizeof(LinearBVHNode) + sizeof(*this) +
+                 primitives.size() * sizeof(primitives[0]);
+    nodes = AllocAligned<LinearBVHNode>(totalNodes);
+    int offset = 0;
+    flattenBVHTree(root, &offset);
+    assert(totalNodes == offset);
 }
 
 __both__
