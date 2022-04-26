@@ -44,7 +44,7 @@ namespace gpu {
 // Material Method Definitions
 Material::~Material() {}
 __both__
-void Material::Bump(const std::shared_ptr<Texture<Float>> &d,
+void Material::Bump(const shared_ptr<Texture<Float>> &d,
                     SurfaceInteraction *si) {
     // Compute offset positions and evaluate displacement texture
     SurfaceInteraction siEval = *si;
