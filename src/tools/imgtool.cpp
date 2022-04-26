@@ -9,11 +9,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
-#include "fileutil.h"
-#include "imageio.h"
-#include "pbrt.h"
-#include "spectrum.h"
-#include "parallel.h"
+#include "fileutil.cuh"
+#include "imageio.cuh"
+#include "pbrt.cuh"
+#include "spectrum.cuh"
+#include "parallel.cuh"
 extern "C" {
 #include "ext/ArHosekSkyModel.h"
 }

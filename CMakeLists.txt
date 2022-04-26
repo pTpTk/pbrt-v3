@@ -558,7 +558,7 @@ SET(ALL_PBRT_LIBS
 )
 
 # Main renderer
-ADD_EXECUTABLE ( pbrt_exe src/main/pbrt.cpp )
+ADD_EXECUTABLE ( pbrt_exe src/main/pbrt.cu )
 ADD_SANITIZERS ( pbrt_exe )
 
 SET_TARGET_PROPERTIES ( pbrt_exe PROPERTIES OUTPUT_NAME pbrt )
