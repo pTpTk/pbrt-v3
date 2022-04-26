@@ -38,6 +38,7 @@
 #include "paramset.cuh"
 #include "scene.cuh"
 #include "stats.cuh"
+#include "utils.cuh"
 
 namespace pbrt {
 namespace gpu {
@@ -90,8 +91,10 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
             if (foundIntersection) {
                 L += beta * isect.Le(-ray.d);
             } else {
-                for (const auto &light : scene.infiniteLights)
+                for (int i = 0; i < utils::get_buffer_size(scene.infiniteLights); ++i) {
+                    const auto &light = scene.infiniteLights[i];
                     L += beta * light->Le(ray);
+                }
             }
         }
 
