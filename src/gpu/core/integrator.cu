@@ -42,6 +42,7 @@
 #include "progressreporter.cuh"
 #include "camera.cuh"
 #include "stats.cuh"
+#include "utils.cuh"
 
 namespace pbrt {
 namespace gpu {
@@ -58,7 +59,7 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
                                bool handleMedia, const Distribution1D *lightDistrib) {
     // ProfilePhase p(Prof::DirectLighting);
     // Randomly choose a single light to sample, _light_
-    int nLights = int(scene.lights.size());
+    int nLights = utils::get_buffer_size(scene.lights);
     if (nLights == 0) return Spectrum(0.f);
     int lightNum;
     Float lightPdf;
@@ -69,9 +70,11 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
         lightNum = min((int)(sampler.Get1D() * nLights), nLights - 1);
         lightPdf = Float(1) / nLights;
     }
-    const std::shared_ptr<Light> &light = scene.lights[lightNum];
+    // TODO: Fix operator::[] call
+    const shared_ptr<Light> &light = scene.lights[lightNum];
     Point2f uLight = sampler.Get2D();
     Point2f uScattering = sampler.Get2D();
+    // TODO: Fix pointer dereference call
     return EstimateDirect(it, uScattering, *light, uLight,
                           scene, sampler, arena, handleMedia) / lightPdf;
 }

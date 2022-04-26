@@ -59,7 +59,7 @@ class Material {
                                             bool allowMultipleLobes) const = 0;
     virtual ~Material();
     __both__
-    static void Bump(const std::shared_ptr<Texture<Float>> &d,
+    static void Bump(const shared_ptr<Texture<Float>> &d,
                      SurfaceInteraction *si);
 };
 

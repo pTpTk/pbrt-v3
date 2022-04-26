@@ -52,14 +52,28 @@ class Scene {
   public:
     // Scene Public Methods
     Scene(Primitive* aggregate,
-          const std::vector<std::shared_ptr<Light>> &lights)
+          shared_ptr<Light> * const lights)
         : lights(lights), aggregate(aggregate) {
         // Scene Constructor Implementation
         worldBound = aggregate->WorldBound();
-        for (const auto &light : lights) {
-            light->Preprocess(*this);
-            if (light->flags & (int)LightFlags::Infinite)
-                infiniteLights.push_back(light);
+        std::size_t count = 0;
+        for (auto it = lights; it != nullptr; ++it) {
+          shared_ptr<Light> light = *it;
+          light->Preprocess(*this);
+          if (light->flags & (int)LightFlags::Infinite) {
+            ++count;
+          }
+        }
+        // allocate memory
+        infiniteLights = new shared_ptr<Light>[count];
+        count = 0;
+        for (auto it = lights; it != nullptr; ++it) {
+          shared_ptr<Light> light = *it;
+          // uncomment this line if you see runtime probs
+          // light->Preprocess(*this);
+          if (light->flags & (int)LightFlags::Infinite) {
+            infiniteLights[count++] = light;
+          }
         }
     }
     __both__
@@ -73,10 +87,10 @@ class Scene {
                      Spectrum *transmittance) const;
 
     // Scene Public Data
-    std::vector<std::shared_ptr<Light>> lights;
+    shared_ptr<Light> *lights;
     // Store infinite light sources separately for cases where we only want
     // to loop over them.
-    std::vector<std::shared_ptr<Light>> infiniteLights;
+    shared_ptr<Light> *infiniteLights;
 
   private:
     // Scene Private Data

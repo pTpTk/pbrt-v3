@@ -73,7 +73,7 @@ class DiffuseAreaLight : public AreaLight {
   protected:
     // DiffuseAreaLight Protected Data
     const Spectrum Lemit;
-    std::shared_ptr<Shape> shape;
+    shared_ptr<Shape> shape;
     // Added after book publication: by default, DiffuseAreaLights still
     // only emit in the hemimsphere around the surface normal.  However,
     // this behavior can now be overridden to give emission on both sides.

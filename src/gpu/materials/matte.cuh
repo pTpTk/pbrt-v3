@@ -60,8 +60,8 @@ class MatteMaterial : public Material {
 
   private:
     // MatteMaterial Private Data
-    std::shared_ptr<Texture<Spectrum>> Kd;
-    std::shared_ptr<Texture<Float>> sigma, bumpMap;
+    shared_ptr<Texture<Spectrum>> Kd;
+    shared_ptr<Texture<Float>> sigma, bumpMap;
 };
 
 MatteMaterial *CreateMatteMaterial(const TextureParams &mp);
