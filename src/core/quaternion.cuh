@@ -48,54 +48,66 @@ namespace pbrt {
 // Quaternion Declarations
 struct Quaternion {
     // Quaternion Public Methods
+    __both__
     Quaternion() : v(0, 0, 0), w(1) {}
+    __both__
     Quaternion &operator+=(const Quaternion &q) {
         v += q.v;
         w += q.w;
         return *this;
     }
+    __both__
     friend Quaternion operator+(const Quaternion &q1, const Quaternion &q2) {
         Quaternion ret = q1;
         return ret += q2;
     }
+    __both__
     Quaternion &operator-=(const Quaternion &q) {
         v -= q.v;
         w -= q.w;
         return *this;
     }
+    __both__
     Quaternion operator-() const {
         Quaternion ret;
         ret.v = -v;
         ret.w = -w;
         return ret;
     }
+    __both__
     friend Quaternion operator-(const Quaternion &q1, const Quaternion &q2) {
         Quaternion ret = q1;
         return ret -= q2;
     }
+    __both__
     Quaternion &operator*=(Float f) {
         v *= f;
         w *= f;
         return *this;
     }
+    __both__
     Quaternion operator*(Float f) const {
         Quaternion ret = *this;
         ret.v *= f;
         ret.w *= f;
         return ret;
     }
+    __both__
     Quaternion &operator/=(Float f) {
         v /= f;
         w /= f;
         return *this;
     }
+    __both__
     Quaternion operator/(Float f) const {
         Quaternion ret = *this;
         ret.v /= f;
         ret.w /= f;
         return ret;
     }
+    __both__
     Transform ToTransform() const;
+    __both__
     Quaternion(const Transform &t);
 
     friend std::ostream &operator<<(std::ostream &os, const Quaternion &q) {
@@ -108,16 +120,17 @@ struct Quaternion {
     Vector3f v;
     Float w;
 };
-
+__both__
 Quaternion Slerp(Float t, const Quaternion &q1, const Quaternion &q2);
 
 // Quaternion Inline Functions
+__both__
 inline Quaternion operator*(Float f, const Quaternion &q) { return q * f; }
-
+__both__
 inline Float Dot(const Quaternion &q1, const Quaternion &q2) {
     return Dot(q1.v, q2.v) + q1.w * q2.w;
 }
-
+__both__
 inline Quaternion Normalize(const Quaternion &q) {
     return q / std::sqrt(Dot(q, q));
 }

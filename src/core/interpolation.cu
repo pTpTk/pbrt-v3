@@ -34,6 +34,7 @@
 #include "interpolation.cuh"
 
 namespace pbrt {
+__both__
 int FindIntervalInterpolation(int size, const Float *nodes, const Float x) {
     int first = 0, len = size;
     while (len > 0) {
@@ -48,6 +49,7 @@ int FindIntervalInterpolation(int size, const Float *nodes, const Float x) {
     return Clamp(first - 1, 0, size - 2);
 }
 // Spline Interpolation Definitions
+__both__
 Float CatmullRom(int size, const Float *nodes, const Float *values, Float x) {
     if (!(x >= nodes[0] && x <= nodes[size - 1])) return 0;
     int idx = FindIntervalInterpolation(size, nodes, x);
@@ -69,7 +71,7 @@ Float CatmullRom(int size, const Float *nodes, const Float *values, Float x) {
     return (2 * t3 - 3 * t2 + 1) * f0 + (-2 * t3 + 3 * t2) * f1 +
            (t3 - 2 * t2 + t) * d0 + (t3 - t2) * d1;
 }
-
+__both__
 bool CatmullRomWeights(int size, const Float *nodes, Float x, int *offset,
                        Float *weights) {
     // Return _false_ if _x_ is out of bounds
@@ -112,7 +114,7 @@ bool CatmullRomWeights(int size, const Float *nodes, Float x, int *offset,
     }
     return true;
 }
-
+__both__
 Float SampleCatmullRom(int n, const Float *x, const Float *f, const Float *F,
                        Float u, Float *fval, Float *pdf) {
     // Map _u_ to a spline interval by inverting _F_
@@ -143,7 +145,7 @@ Float SampleCatmullRom(int n, const Float *x, const Float *f, const Float *F,
     // Set initial guess for $t$ by importance sampling a linear interpolant
     Float t;
     if (f0 != f1)
-        t = (f0 - std::sqrt(std::max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
+        t = (f0 - std::sqrt(max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
             (f0 - f1);
     else
         t = u / f0;
@@ -180,7 +182,7 @@ Float SampleCatmullRom(int n, const Float *x, const Float *f, const Float *F,
     if (pdf) *pdf = fhat / F[n - 1];
     return x0 + width * t;
 }
-
+__both__
 inline Float interpolate(int offset, int size2, const Float *array, const Float *weights, int idx) {
     Float value = 0;
         for (int i = 0; i < 4; ++i)
@@ -188,7 +190,7 @@ inline Float interpolate(int offset, int size2, const Float *array, const Float 
                 value += array[(offset + i) * size2 + idx] * weights[i];
         return value;
 }
-
+__both__
 int FindIntervalSampleCatmullRom2D(int offset, int size, const Float *cdf, const Float *weights, const Float u, int size2) {
     int first = 0, len = size;
     while (len > 0) {
@@ -202,7 +204,7 @@ int FindIntervalSampleCatmullRom2D(int offset, int size, const Float *cdf, const
     }
     return Clamp(first - 1, 0, size - 2);
 }
-
+__both__
 Float SampleCatmullRom2D(int size1, int size2, const Float *nodes1,
                          const Float *nodes2, const Float *values,
                          const Float *cdf, Float alpha, Float u, Float *fval,
@@ -253,7 +255,7 @@ Float SampleCatmullRom2D(int size1, int size2, const Float *nodes1,
     // Set initial guess for $t$ by importance sampling a linear interpolant
     Float t;
     if (f0 != f1)
-        t = (f0 - std::sqrt(std::max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
+        t = (f0 - std::sqrt(max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
             (f0 - f1);
     else
         t = u / f0;
@@ -290,7 +292,7 @@ Float SampleCatmullRom2D(int size1, int size2, const Float *nodes1,
     if (pdf) *pdf = fhat / maximum;
     return x0 + width * t;
 }
-
+__both__
 Float IntegrateCatmullRom(int n, const Float *x, const Float *values,
                           Float *cdf) {
     Float sum = 0;
@@ -318,7 +320,7 @@ Float IntegrateCatmullRom(int n, const Float *x, const Float *values,
     }
     return sum;
 }
-
+__both__
 Float InvertCatmullRom(int n, const Float *x, const Float *values, Float u) {
     // Stop when _u_ is out of bounds
     if (!(u > values[0]))
@@ -377,7 +379,6 @@ Float InvertCatmullRom(int n, const Float *x, const Float *values, Float u) {
     }
     return x0 + t * width;
 }
-
 // Fourier Interpolation Definitions
 Float Fourier(const Float *a, int m, double cosPhi) {
     double value = 0.0;
@@ -393,7 +394,6 @@ Float Fourier(const Float *a, int m, double cosPhi) {
     }
     return value;
 }
-
 Float SampleFourier(const Float *ak, const Float *recip, int m, Float u,
                     Float *pdf, Float *phiPtr) {
     // Pick a side and declare bisection variables

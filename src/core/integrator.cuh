@@ -57,10 +57,12 @@ class Integrator {
     virtual void Render(const Scene &scene) = 0;
 };
 
+__both__
 Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
                                MemoryArena &arena, Sampler &sampler,
                                bool handleMedia = false,
                                const Distribution1D *lightDistrib = nullptr);
+__both__
 Spectrum EstimateDirect(const Interaction &it, const Point2f &uShading,
                         const Light &light, const Point2f &uLight,
                         const Scene &scene, Sampler &sampler,
@@ -77,6 +79,7 @@ class SamplerIntegrator : public Integrator {
         : camera(camera), sampler(sampler), pixelBounds(pixelBounds) {}
     virtual void Preprocess(const Scene &scene, Sampler &sampler) {}
     void Render(const Scene &scene);
+    __device__
     virtual Spectrum Li(const RayDifferential &ray, const Scene &scene,
                         Sampler &sampler, MemoryArena &arena,
                         int depth = 0) const = 0;

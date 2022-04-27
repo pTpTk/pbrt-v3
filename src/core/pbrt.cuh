@@ -180,17 +180,17 @@ class TextureParams;
 
 // Global Constants
 #ifdef _MSC_VER
-#define MaxFloat std::numeric_limits<Float>::max()
-#define Infinity std::numeric_limits<Float>::infinity()
+#define MaxFloat numeric_limits<Float>::max()
+#define Infinity numeric_limits<Float>::infinity()
 #else
-static PBRT_CONSTEXPR Float MaxFloat = std::numeric_limits<Float>::max();
-static PBRT_CONSTEXPR Float Infinity = std::numeric_limits<Float>::infinity();
+static PBRT_CONSTEXPR Float MaxFloat = numeric_limits<Float>::max();
+static PBRT_CONSTEXPR Float Infinity = numeric_limits<Float>::infinity();
 #endif
 #ifdef _MSC_VER
-#define MachineEpsilon (std::numeric_limits<Float>::epsilon() * 0.5)
+#define MachineEpsilon (numeric_limits<Float>::epsilon() * 0.5)
 #else
 static PBRT_CONSTEXPR Float MachineEpsilon =
-    std::numeric_limits<Float>::epsilon() * 0.5;
+    numeric_limits<Float>::epsilon() * 0.5;
 #endif
 static PBRT_CONSTEXPR Float ShadowEpsilon = 0.0001f;
 static PBRT_CONSTEXPR Float Pi = 3.14159265358979323846;
@@ -339,7 +339,6 @@ inline Float Log2(Float x) {
     return std::log(x) * invLog2;
 }
 
-__both__
 inline int Log2Int(uint32_t v) {
 #if defined(PBRT_IS_MSVC)
     unsigned long lz = 0;
@@ -350,10 +349,8 @@ inline int Log2Int(uint32_t v) {
 #endif
 }
 
-__both__
 inline int Log2Int(int32_t v) { return Log2Int((uint32_t)v); }
 
-__both__
 inline int Log2Int(uint64_t v) {
 #if defined(PBRT_IS_MSVC)
     unsigned long lz = 0;
@@ -371,12 +368,11 @@ inline int Log2Int(uint64_t v) {
 #endif
 }
 
-__both__
 inline int Log2Int(int64_t v) { return Log2Int((uint64_t)v); }
 
 template <typename T>
 __both__
-inline PBRT_CONSTEXPR bool IsPowerOf2(T v) {
+PBRT_CONSTEXPR bool IsPowerOf2(T v) {
     return v && !(v & (v - 1));
 }
 
@@ -403,7 +399,6 @@ inline int64_t RoundUpPow2(int64_t v) {
     return v + 1;
 }
 
-__both__
 inline int CountTrailingZeros(uint32_t v) {
 #if defined(PBRT_IS_MSVC)
     unsigned long index;
@@ -434,7 +429,7 @@ int FindInterval(int size, const Predicate &pred) {
 __both__
 inline Float Lerp(Float t, Float v1, Float v2) { return (1 - t) * v1 + t * v2; }
 
-__both__
+
 inline bool Quadratic(Float a, Float b, Float c, Float *t0, Float *t1) {
     // Find quadratic discriminant
     double discrim = (double)b * (double)b - 4 * (double)a * (double)c;
@@ -453,7 +448,6 @@ inline bool Quadratic(Float a, Float b, Float c, Float *t0, Float *t1) {
     return true;
 }
 
-__both__
 inline Float ErfInv(Float x) {
     Float w, p;
     x = Clamp(x, -.99999f, .99999f);
@@ -484,7 +478,6 @@ inline Float ErfInv(Float x) {
     return p * x;
 }
 
-__both__
 inline Float Erf(Float x) {
     // constants
     Float a1 = 0.254829592f;

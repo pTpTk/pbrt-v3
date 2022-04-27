@@ -48,11 +48,15 @@ namespace pbrt {
 
 // MediumInterface Declarations
 struct MediumInterface {
+    __both__
     MediumInterface() : inside(nullptr), outside(nullptr) {}
     // MediumInterface Public Methods
+    __both__
     MediumInterface(const Medium *medium) : inside(medium), outside(medium) {}
+    __both__
     MediumInterface(const Medium *inside, const Medium *outside)
         : inside(inside), outside(outside) {}
+    __both__
     bool IsMediumTransition() const { return inside != outside; }
     const Medium *inside, *outside;
 };

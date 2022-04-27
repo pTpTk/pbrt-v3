@@ -42,23 +42,31 @@
 #include "pbrt.cuh"
 
 namespace pbrt {
-
+__both__
 int FindIntervalInterpolation(int size, const Float *nodes, const Float x);
+__both__
 inline Float interpolate(int offset, int size2, const Float *array, const Float *weights, int idx);
+__both__
 int FindIntervalSampleCatmullRom2D(int offset, int size, const Float *cdf, const Float *weights, const Float u, int size2);
 // Spline Interpolation Declarations
+__both__
 Float CatmullRom(int size, const Float *nodes, const Float *values, Float x);
+__both__
 bool CatmullRomWeights(int size, const Float *nodes, Float x, int *offset,
                        Float *weights);
+__both__
 Float SampleCatmullRom(int size, const Float *nodes, const Float *f,
                        const Float *cdf, Float sample, Float *fval = nullptr,
                        Float *pdf = nullptr);
+__both__
 Float SampleCatmullRom2D(int size1, int size2, const Float *nodes1,
                          const Float *nodes2, const Float *values,
                          const Float *cdf, Float alpha, Float sample,
                          Float *fval = nullptr, Float *pdf = nullptr);
+__both__
 Float IntegrateCatmullRom(int n, const Float *nodes, const Float *values,
                           Float *cdf);
+__both__
 Float InvertCatmullRom(int n, const Float *x, const Float *values, Float u);
 
 // Fourier Interpolation Declarations

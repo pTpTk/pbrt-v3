@@ -52,14 +52,15 @@ class MatteMaterial : public Material {
                   const std::shared_ptr<Texture<Float>> &sigma,
                   const std::shared_ptr<Texture<Float>> &bumpMap)
         : Kd(Kd), sigma(sigma), bumpMap(bumpMap) {}
+    __both__
     void ComputeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
                                     TransportMode mode,
                                     bool allowMultipleLobes) const;
 
   private:
     // MatteMaterial Private Data
-    std::shared_ptr<Texture<Spectrum>> Kd;
-    std::shared_ptr<Texture<Float>> sigma, bumpMap;
+    shared_ptr<Texture<Spectrum>> Kd;
+    shared_ptr<Texture<Float>> sigma, bumpMap;
 };
 
 MatteMaterial *CreateMatteMaterial(const TextureParams &mp);

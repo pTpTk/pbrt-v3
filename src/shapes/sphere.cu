@@ -41,14 +41,15 @@
 namespace pbrt {
 
 // Sphere Method Definitions
+__both__
 Bounds3f Sphere::ObjectBound() const {
     return Bounds3f(Point3f(-radius, -radius, zMin),
                     Point3f(radius, radius, zMax));
 }
-
+__both__
 bool Sphere::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
                        bool testAlphaTexture) const {
-    ProfilePhase p(Prof::ShapeIntersect);
+    // ProfilePhase p(Prof::ShapeIntersect);
     Float phi;
     Point3f pHit;
     // Transform _Ray_ to object space
@@ -154,9 +155,9 @@ bool Sphere::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     *tHit = (Float)tShapeHit;
     return true;
 }
-
+__both__
 bool Sphere::IntersectP(const Ray &r, bool testAlphaTexture) const {
-    ProfilePhase p(Prof::ShapeIntersectP);
+    // ProfilePhase p(Prof::ShapeIntersectP);
     Float phi;
     Point3f pHit;
     // Transform _Ray_ to object space
@@ -213,9 +214,9 @@ bool Sphere::IntersectP(const Ray &r, bool testAlphaTexture) const {
     }
     return true;
 }
-
+__both__
 Float Sphere::Area() const { return phiMax * radius * (zMax - zMin); }
-
+__both__
 Interaction Sphere::Sample(const Point2f &u, Float *pdf) const {
     Point3f pObj = Point3f(0, 0, 0) + radius * UniformSampleSphere(u);
     Interaction it;
@@ -228,7 +229,7 @@ Interaction Sphere::Sample(const Point2f &u, Float *pdf) const {
     *pdf = 1 / Area();
     return it;
 }
-
+__both__
 Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
                            Float *pdf) const {
     Point3f pCenter = (*ObjectToWorld)(Point3f(0, 0, 0));
@@ -247,7 +248,7 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
             wi = Normalize(wi);
             *pdf *= DistanceSquared(ref.p, intr.p) / AbsDot(intr.n, -wi);
         }
-        if (std::isinf(*pdf)) *pdf = 0.f;
+        if (isinf(*pdf)) *pdf = 0.f;
         return intr;
     }
 
@@ -264,7 +265,7 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
     Float sinThetaMax = radius * invDc;
     Float sinThetaMax2 = sinThetaMax * sinThetaMax;
     Float invSinThetaMax = 1 / sinThetaMax;
-    Float cosThetaMax = std::sqrt(std::max((Float)0.f, 1 - sinThetaMax2));
+    Float cosThetaMax = std::sqrt(max((Float)0.f, 1 - sinThetaMax2));
 
     Float cosTheta  = (cosThetaMax - 1) * u[0] + 1;
     Float sinTheta2 = 1 - cosTheta * cosTheta;
@@ -278,8 +279,8 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
 
     // Compute angle $\alpha$ from center of sphere to sampled point on surface
     Float cosAlpha = sinTheta2 * invSinThetaMax +
-        cosTheta * std::sqrt(std::max((Float)0.f, 1.f - sinTheta2 * invSinThetaMax * invSinThetaMax));
-    Float sinAlpha = std::sqrt(std::max((Float)0.f, 1.f - cosAlpha*cosAlpha));
+        cosTheta * std::sqrt(max((Float)0.f, 1.f - sinTheta2 * invSinThetaMax * invSinThetaMax));
+    Float sinAlpha = std::sqrt(max((Float)0.f, 1.f - cosAlpha*cosAlpha));
     Float phi = u[1] * 2 * Pi;
 
     // Compute surface normal and sampled point on sphere
@@ -299,7 +300,7 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
 
     return it;
 }
-
+__both__
 Float Sphere::Pdf(const Interaction &ref, const Vector3f &wi) const {
     Point3f pCenter = (*ObjectToWorld)(Point3f(0, 0, 0));
     // Return uniform PDF if point is inside sphere
@@ -310,7 +311,7 @@ Float Sphere::Pdf(const Interaction &ref, const Vector3f &wi) const {
 
     // Compute general sphere PDF
     Float sinThetaMax2 = radius * radius / DistanceSquared(ref.p, pCenter);
-    Float cosThetaMax = std::sqrt(std::max((Float)0, 1 - sinThetaMax2));
+    Float cosThetaMax = std::sqrt(max((Float)0, 1 - sinThetaMax2));
     return UniformConePdf(cosThetaMax);
 }
 

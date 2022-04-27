@@ -43,27 +43,19 @@ STAT_MEMORY_COUNTER("Memory/Primitives", primitiveMemory);
 
 // Primitive Method Definitions
 Primitive::~Primitive() {}
+__both__
 const AreaLight *Aggregate::GetAreaLight() const {
-    LOG(FATAL) <<
-        "Aggregate::GetAreaLight() method"
-        "called; should have gone to GeometricPrimitive";
     return nullptr;
 }
-
+__both__
 const Material *Aggregate::GetMaterial() const {
-    LOG(FATAL) <<
-        "Aggregate::GetMaterial() method"
-        "called; should have gone to GeometricPrimitive";
     return nullptr;
 }
-
+__both__
 void Aggregate::ComputeScatteringFunctions(SurfaceInteraction *isect,
                                            MemoryArena &arena,
                                            TransportMode mode,
                                            bool allowMultipleLobes) const {
-    LOG(FATAL) <<
-        "Aggregate::ComputeScatteringFunctions() method"
-        "called; should have gone to GeometricPrimitive";
 }
 
 // GeometricPrimitive Method Definitions
@@ -75,22 +67,24 @@ GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape> &shape,
     material(material),
     areaLight(areaLight),
     mediumInterface(mediumInterface) {
-    primitiveMemory += sizeof(*this);
+    // primitiveMemory += sizeof(*this);
 }
 
+__both__
 Bounds3f GeometricPrimitive::WorldBound() const { return shape->WorldBound(); }
+__both__
 
 bool GeometricPrimitive::IntersectP(const Ray &r) const {
-    return shape->IntersectP(r);
+    return shape->IntersectP(r);   
 }
-
+__both__
 bool GeometricPrimitive::Intersect(const Ray &r,
                                    SurfaceInteraction *isect) const {
     Float tHit;
     if (!shape->Intersect(r, &tHit, isect)) return false;
     r.tMax = tHit;
     isect->primitive = this;
-    CHECK_GE(Dot(isect->n, isect->shading.n), 0.);
+    assert(Dot(isect->n, isect->shading.n) => 0.);
     // Initialize _SurfaceInteraction::mediumInterface_ after _Shape_
     // intersection
     if (mediumInterface.IsMediumTransition())
@@ -100,22 +94,23 @@ bool GeometricPrimitive::Intersect(const Ray &r,
     return true;
 }
 
+__both__
 const AreaLight *GeometricPrimitive::GetAreaLight() const {
     return areaLight.get();
 }
 
+__both__
 const Material *GeometricPrimitive::GetMaterial() const {
     return material.get();
 }
-
+__both__
 void GeometricPrimitive::ComputeScatteringFunctions(
     SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
     bool allowMultipleLobes) const {
-    ProfilePhase p(Prof::ComputeScatteringFuncs);
+    // ProfilePhase p(Prof::ComputeScatteringFuncs);
     if (material)
         material->ComputeScatteringFunctions(isect, arena, mode,
                                              allowMultipleLobes);
-    CHECK_GE(Dot(isect->n, isect->shading.n), 0.);
+    assert(Dot(isect->n, isect->shading.n) => 0.);
 }
-
 }  // namespace pbrt

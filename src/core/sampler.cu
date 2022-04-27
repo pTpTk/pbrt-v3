@@ -142,14 +142,14 @@ bool GlobalSampler::SetSampleNumber(int64_t sampleNum) {
 }
 
 Float GlobalSampler::Get1D() {
-    ProfilePhase _(Prof::GetSample);
+    // ProfilePhase _(Prof::GetSample);
     if (dimension >= arrayStartDim && dimension < arrayEndDim)
         dimension = arrayEndDim;
     return SampleDimension(intervalSampleIndex, dimension++);
 }
 
 Point2f GlobalSampler::Get2D() {
-    ProfilePhase _(Prof::GetSample);
+    // ProfilePhase _(Prof::GetSample);
     if (dimension + 1 >= arrayStartDim && dimension < arrayEndDim)
         dimension = arrayEndDim;
     Point2f p(SampleDimension(intervalSampleIndex, dimension),

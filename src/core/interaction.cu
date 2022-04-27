@@ -41,6 +41,7 @@
 namespace pbrt {
 
 // SurfaceInteraction Method Definitions
+__both__
 SurfaceInteraction::SurfaceInteraction(
     const Point3f &p, const Vector3f &pError, const Point2f &uv,
     const Vector3f &wo, const Vector3f &dpdu, const Vector3f &dpdv,
@@ -69,7 +70,7 @@ SurfaceInteraction::SurfaceInteraction(
         shading.n *= -1;
     }
 }
-
+__both__
 void SurfaceInteraction::SetShadingGeometry(const Vector3f &dpdus,
                                             const Vector3f &dpdvs,
                                             const Normal3f &dndus,
@@ -88,7 +89,7 @@ void SurfaceInteraction::SetShadingGeometry(const Vector3f &dpdus,
     shading.dndu = dndus;
     shading.dndv = dndvs;
 }
-
+__both__
 void SurfaceInteraction::ComputeScatteringFunctions(const RayDifferential &ray,
                                                     MemoryArena &arena,
                                                     bool allowMultipleLobes,
@@ -97,7 +98,7 @@ void SurfaceInteraction::ComputeScatteringFunctions(const RayDifferential &ray,
     primitive->ComputeScatteringFunctions(this, arena, mode,
                                           allowMultipleLobes);
 }
-
+__both__
 void SurfaceInteraction::ComputeDifferentials(
     const RayDifferential &ray) const {
     if (ray.hasDifferentials) {
@@ -107,11 +108,11 @@ void SurfaceInteraction::ComputeDifferentials(
         Float d = Dot(n, Vector3f(p.x, p.y, p.z));
         Float tx =
             -(Dot(n, Vector3f(ray.rxOrigin)) - d) / Dot(n, ray.rxDirection);
-        if (std::isinf(tx) || std::isnan(tx)) goto fail;
+        if (isinf(tx) || isnan(tx)) goto fail;
         Point3f px = ray.rxOrigin + tx * ray.rxDirection;
         Float ty =
             -(Dot(n, Vector3f(ray.ryOrigin)) - d) / Dot(n, ray.ryDirection);
-        if (std::isinf(ty) || std::isnan(ty)) goto fail;
+        if (isinf(ty) || isnan(ty)) goto fail;
         Point3f py = ray.ryOrigin + ty * ray.ryDirection;
         dpdx = px - p;
         dpdy = py - p;
@@ -145,7 +146,7 @@ void SurfaceInteraction::ComputeDifferentials(
         dpdx = dpdy = Vector3f(0, 0, 0);
     }
 }
-
+__both__
 Spectrum SurfaceInteraction::Le(const Vector3f &w) const {
     const AreaLight *area = primitive->GetAreaLight();
     return area ? area->L(*this, w) : Spectrum(0.f);

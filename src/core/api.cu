@@ -879,7 +879,11 @@ Scene *RenderOptions::MakeScene() {
     std::shared_ptr<Primitive> accelerator =
         MakeAccelerator(AcceleratorName, std::move(primitives), AcceleratorParams);
     if (!accelerator) accelerator = std::make_shared<BVHAccel>(primitives);
-    Scene *scene = new Scene(accelerator, lights);
+    std::vector<shared_ptr<Light>>light_ptrs(lights.size());
+    for(int i = 0; i < lights.size(); i++){
+        light_ptrs[i] = shared_ptr<Light>(lights[i]);
+    }
+    Scene *scene = new Scene(accelerator.get(), light_ptrs.data());
     // Erase primitives and lights from _RenderOptions_
     primitives.clear();
     lights.clear();

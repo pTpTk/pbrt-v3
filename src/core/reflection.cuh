@@ -52,35 +52,39 @@ Spectrum FrConductor(Float cosThetaI, const Spectrum &etaI,
                      const Spectrum &etaT, const Spectrum &k);
 
 // BSDF Inline Functions
+__both__
 inline Float CosTheta(const Vector3f &w) { return w.z; }
+__both__
 inline Float Cos2Theta(const Vector3f &w) { return w.z * w.z; }
-inline Float AbsCosTheta(const Vector3f &w) { return std::abs(w.z); }
+__both__
+inline Float AbsCosTheta(const Vector3f &w) { return abs(w.z); }
+__both__
 inline Float Sin2Theta(const Vector3f &w) {
-    return std::max((Float)0, (Float)1 - Cos2Theta(w));
+    return max((Float)0, (Float)1 - Cos2Theta(w));
 }
-
+__both__
 inline Float SinTheta(const Vector3f &w) { return std::sqrt(Sin2Theta(w)); }
-
+__both__
 inline Float TanTheta(const Vector3f &w) { return SinTheta(w) / CosTheta(w); }
-
+__both__
 inline Float Tan2Theta(const Vector3f &w) {
     return Sin2Theta(w) / Cos2Theta(w);
 }
-
+__both__
 inline Float CosPhi(const Vector3f &w) {
     Float sinTheta = SinTheta(w);
     return (sinTheta == 0) ? 1 : Clamp(w.x / sinTheta, -1, 1);
 }
-
+__both__
 inline Float SinPhi(const Vector3f &w) {
     Float sinTheta = SinTheta(w);
     return (sinTheta == 0) ? 0 : Clamp(w.y / sinTheta, -1, 1);
 }
-
+__both__
 inline Float Cos2Phi(const Vector3f &w) { return CosPhi(w) * CosPhi(w); }
-
+__both__
 inline Float Sin2Phi(const Vector3f &w) { return SinPhi(w) * SinPhi(w); }
-
+__both__
 inline Float CosDPhi(const Vector3f &wa, const Vector3f &wb) {
     Float waxy = wa.x * wa.x + wa.y * wa.y;
     Float wbxy = wb.x * wb.x + wb.y * wb.y;
@@ -88,16 +92,16 @@ inline Float CosDPhi(const Vector3f &wa, const Vector3f &wb) {
         return 1;
     return Clamp((wa.x * wb.x + wa.y * wb.y) / std::sqrt(waxy * wbxy), -1, 1);
 }
-
+__both__
 inline Vector3f Reflect(const Vector3f &wo, const Vector3f &n) {
     return -wo + 2 * Dot(wo, n) * n;
 }
-
+__both__
 inline bool Refract(const Vector3f &wi, const Normal3f &n, Float eta,
                     Vector3f *wt) {
     // Compute $\cos \theta_\roman{t}$ using Snell's law
     Float cosThetaI = Dot(n, wi);
-    Float sin2ThetaI = std::max(Float(0), Float(1 - cosThetaI * cosThetaI));
+    Float sin2ThetaI = max(Float(0), Float(1 - cosThetaI * cosThetaI));
     Float sin2ThetaT = eta * eta * sin2ThetaI;
 
     // Handle total internal reflection for transmission
@@ -106,11 +110,11 @@ inline bool Refract(const Vector3f &wi, const Normal3f &n, Float eta,
     *wt = eta * -wi + (eta * cosThetaI - cosThetaT) * Vector3f(n);
     return true;
 }
-
+__both__
 inline bool SameHemisphere(const Vector3f &w, const Vector3f &wp) {
     return w.z * wp.z > 0;
 }
-
+__both__
 inline bool SameHemisphere(const Vector3f &w, const Normal3f &wp) {
     return w.z * wp.z > 0;
 }
@@ -126,37 +130,81 @@ enum BxDFType {
                BSDF_TRANSMISSION,
 };
 
+struct FourierBSDFTable {
+    // FourierBSDFTable Public Data
+    Float eta;
+    int mMax;
+    int nChannels;
+    int nMu;
+    Float *mu;
+    int *m;
+    int *aOffset;
+    Float *a;
+    Float *a0;
+    Float *cdf;
+    Float *recip;
+
+    ~FourierBSDFTable() {
+        delete[] mu;
+        delete[] m;
+        delete[] aOffset;
+        delete[] a;
+        delete[] a0;
+        delete[] cdf;
+        delete[] recip;
+    }
+
+    // FourierBSDFTable Public Methods
+    static bool Read(const std::string &filename, FourierBSDFTable *table);
+    const Float *GetAk(int offsetI, int offsetO, int *mptr) const {
+        *mptr = m[offsetO * nMu + offsetI];
+        return a + aOffset[offsetO * nMu + offsetI];
+    }
+    bool GetWeightsAndOffset(Float cosTheta, int *offset,
+                             Float weights[4]) const;
+};
+
 class BSDF {
   public:
     // BSDF Public Methods
+    __both__
     BSDF(const SurfaceInteraction &si, Float eta = 1)
         : eta(eta),
           ns(si.shading.n),
           ng(si.n),
           ss(Normalize(si.shading.dpdu)),
           ts(Cross(ns, ss)) {}
+    __both__
     void Add(BxDF *b) {
-        CHECK_LT(nBxDFs, MaxBxDFs);
+        assert(nBxDFs < MaxBxDFs);
         bxdfs[nBxDFs++] = b;
     }
+    __both__
     int NumComponents(BxDFType flags = BSDF_ALL) const;
+    __both__
     Vector3f WorldToLocal(const Vector3f &v) const {
         return Vector3f(Dot(v, ss), Dot(v, ts), Dot(v, ns));
     }
+    __both__
     Vector3f LocalToWorld(const Vector3f &v) const {
         return Vector3f(ss.x * v.x + ts.x * v.y + ns.x * v.z,
                         ss.y * v.x + ts.y * v.y + ns.y * v.z,
                         ss.z * v.x + ts.z * v.y + ns.z * v.z);
     }
+    __both__
     Spectrum f(const Vector3f &woW, const Vector3f &wiW,
                BxDFType flags = BSDF_ALL) const;
+    __both__
     Spectrum rho(int nSamples, const Point2f *samples1, const Point2f *samples2,
                  BxDFType flags = BSDF_ALL) const;
+    __both__
     Spectrum rho(const Vector3f &wo, int nSamples, const Point2f *samples,
                  BxDFType flags = BSDF_ALL) const;
+    __both__
     Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
                       Float *pdf, BxDFType type = BSDF_ALL,
                       BxDFType *sampledType = nullptr) const;
+    __both__
     Float Pdf(const Vector3f &wo, const Vector3f &wi,
               BxDFType flags = BSDF_ALL) const;
     std::string ToString() const;
@@ -187,16 +235,23 @@ class BxDF {
   public:
     // BxDF Interface
     virtual ~BxDF() {}
+    __both__
     BxDF(BxDFType type) : type(type) {}
+    __both__
     bool MatchesFlags(BxDFType t) const { return (type & t) == type; }
+    __both__
     virtual Spectrum f(const Vector3f &wo, const Vector3f &wi) const = 0;
+    __both__
     virtual Spectrum Sample_f(const Vector3f &wo, Vector3f *wi,
                               const Point2f &sample, Float *pdf,
                               BxDFType *sampledType = nullptr) const;
+    __both__
     virtual Spectrum rho(const Vector3f &wo, int nSamples,
                          const Point2f *samples) const;
+    __both__
     virtual Spectrum rho(int nSamples, const Point2f *samples1,
                          const Point2f *samples2) const;
+    __both__
     virtual Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
     virtual std::string ToString() const = 0;
 
@@ -212,10 +267,14 @@ inline std::ostream &operator<<(std::ostream &os, const BxDF &bxdf) {
 class LambertianReflection : public BxDF {
   public:
     // LambertianReflection Public Methods
+    __both__
     LambertianReflection(const Spectrum &R)
         : BxDF(BxDFType(BSDF_REFLECTION | BSDF_DIFFUSE)), R(R) {}
+    __both__
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
+    __both__
     Spectrum rho(const Vector3f &, int, const Point2f *) const { return R; }
+    __both__
     Spectrum rho(int, const Point2f *, const Point2f *) const { return R; }
     std::string ToString() const;
 
@@ -225,6 +284,7 @@ class LambertianReflection : public BxDF {
 };
 
 // BSDF Inline Method Definitions
+__both__
 inline int BSDF::NumComponents(BxDFType flags) const {
     int num = 0;
     for (int i = 0; i < nBxDFs; ++i)

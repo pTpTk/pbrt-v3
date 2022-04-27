@@ -52,7 +52,7 @@ enum class LightFlags : int {
     Area = 4,
     Infinite = 8
 };
-
+__both__
 inline bool IsDeltaLight(int flags) {
     return flags & (int)LightFlags::DeltaPosition ||
            flags & (int)LightFlags::DeltaDirection;
@@ -65,12 +65,16 @@ class Light {
     virtual ~Light();
     Light(int flags, const Transform &LightToWorld,
           const MediumInterface &mediumInterface, int nSamples = 1);
+    __both__
     virtual Spectrum Sample_Li(const Interaction &ref, const Point2f &u,
                                Vector3f *wi, Float *pdf,
                                VisibilityTester *vis) const = 0;
     virtual Spectrum Power() const = 0;
+    __both__
     virtual void Preprocess(const Scene &scene) {}
+    __both__
     virtual Spectrum Le(const RayDifferential &r) const;
+    __both__
     virtual Float Pdf_Li(const Interaction &ref, const Vector3f &wi) const = 0;
     virtual Spectrum Sample_Le(const Point2f &u1, const Point2f &u2, Float time,
                                Ray *ray, Normal3f *nLight, Float *pdfPos,
@@ -90,10 +94,13 @@ class Light {
 
 class VisibilityTester {
   public:
+    __both__
     VisibilityTester() {}
     // VisibilityTester Public Methods
+    __both__
     VisibilityTester(const Interaction &p0, const Interaction &p1)
         : p0(p0), p1(p1) {}
+    __both__
     bool Unoccluded(const Scene &scene) const;
 
   private:
@@ -105,6 +112,7 @@ class AreaLight : public Light {
     // AreaLight Interface
     AreaLight(const Transform &LightToWorld, const MediumInterface &medium,
               int nSamples);
+    __both__
     virtual Spectrum L(const Interaction &intr, const Vector3f &w) const = 0;
 };
 

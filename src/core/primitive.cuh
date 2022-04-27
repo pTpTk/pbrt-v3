@@ -52,11 +52,17 @@ class Primitive {
   public:
     // Primitive Interface
     virtual ~Primitive();
+    __both__
     virtual Bounds3f WorldBound() const = 0;
+    __both__
     virtual bool Intersect(const Ray &r, SurfaceInteraction *) const = 0;
+    __both__
     virtual bool IntersectP(const Ray &r) const = 0;
+    __both__
     virtual const AreaLight *GetAreaLight() const = 0;
+    __both__
     virtual const Material *GetMaterial() const = 0;
+    __both__
     virtual void ComputeScatteringFunctions(SurfaceInteraction *isect,
                                             MemoryArena &arena,
                                             TransportMode mode,
@@ -67,24 +73,31 @@ class Primitive {
 class GeometricPrimitive : public Primitive {
   public:
     // GeometricPrimitive Public Methods
+    __both__
     virtual Bounds3f WorldBound() const;
+    __both__
     virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const;
+    __both__
     virtual bool IntersectP(const Ray &r) const;
+    __both__
     GeometricPrimitive(const std::shared_ptr<Shape> &shape,
                        const std::shared_ptr<Material> &material,
                        const std::shared_ptr<AreaLight> &areaLight,
                        const MediumInterface &mediumInterface);
+    __both__
     const AreaLight *GetAreaLight() const;
+    __both__
     const Material *GetMaterial() const;
+    __both__
     void ComputeScatteringFunctions(SurfaceInteraction *isect,
                                     MemoryArena &arena, TransportMode mode,
                                     bool allowMultipleLobes) const;
 
   private:
     // GeometricPrimitive Private Data
-    std::shared_ptr<Shape> shape;
-    std::shared_ptr<Material> material;
-    std::shared_ptr<AreaLight> areaLight;
+    shared_ptr<Shape> shape;
+    shared_ptr<Material> material;
+    shared_ptr<AreaLight> areaLight;
     MediumInterface mediumInterface;
 };
 
@@ -92,8 +105,11 @@ class GeometricPrimitive : public Primitive {
 class Aggregate : public Primitive {
   public:
     // Aggregate Public Methods
+    __both__
     const AreaLight *GetAreaLight() const;
+    __both__
     const Material *GetMaterial() const;
+    __both__
     void ComputeScatteringFunctions(SurfaceInteraction *isect,
                                     MemoryArena &arena, TransportMode mode,
                                     bool allowMultipleLobes) const;

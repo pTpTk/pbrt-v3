@@ -54,25 +54,34 @@ class Shape {
     Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
           bool reverseOrientation);
     virtual ~Shape();
+    __both__
     virtual Bounds3f ObjectBound() const = 0;
+    __both__
     virtual Bounds3f WorldBound() const;
+    __both__
     virtual bool Intersect(const Ray &ray, Float *tHit,
                            SurfaceInteraction *isect,
                            bool testAlphaTexture = true) const = 0;
+    __both__
     virtual bool IntersectP(const Ray &ray,
                             bool testAlphaTexture = true) const {
         return Intersect(ray, nullptr, nullptr, testAlphaTexture);
     }
+    __both__
     virtual Float Area() const = 0;
     // Sample a point on the surface of the shape and return the PDF with
     // respect to area on the surface.
+    __both__
     virtual Interaction Sample(const Point2f &u, Float *pdf) const = 0;
+    __both__
     virtual Float Pdf(const Interaction &) const { return 1 / Area(); }
 
     // Sample a point on the shape given a reference point |ref| and
     // return the PDF with respect to solid angle from |ref|.
+    __both__
     virtual Interaction Sample(const Interaction &ref, const Point2f &u,
                                Float *pdf) const;
+    __both__
     virtual Float Pdf(const Interaction &ref, const Vector3f &wi) const;
 
     // Returns the solid angle subtended by the shape w.r.t. the reference

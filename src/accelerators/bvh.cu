@@ -223,7 +223,7 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
     flattenBVHTree(root, &offset);
     CHECK_EQ(totalNodes, offset);
 }
-
+__both__
 Bounds3f BVHAccel::WorldBound() const {
     return nodes ? nodes[0].bounds : Bounds3f();
 }
@@ -658,10 +658,10 @@ int BVHAccel::flattenBVHTree(BVHBuildNode *node, int *offset) {
 }
 
 BVHAccel::~BVHAccel() { FreeAligned(nodes); }
-
+__both__
 bool BVHAccel::Intersect(const Ray &ray, SurfaceInteraction *isect) const {
     if (!nodes) return false;
-    ProfilePhase p(Prof::AccelIntersect);
+    // ProfilePhase p(Prof::AccelIntersect);
     bool hit = false;
     Vector3f invDir(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
     int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
@@ -698,10 +698,10 @@ bool BVHAccel::Intersect(const Ray &ray, SurfaceInteraction *isect) const {
     }
     return hit;
 }
-
+__both__
 bool BVHAccel::IntersectP(const Ray &ray) const {
     if (!nodes) return false;
-    ProfilePhase p(Prof::AccelIntersectP);
+    // ProfilePhase p(Prof::AccelIntersectP);
     Vector3f invDir(1.f / ray.d.x, 1.f / ray.d.y, 1.f / ray.d.z);
     int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
     int nodesToVisit[64];

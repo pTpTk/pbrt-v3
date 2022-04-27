@@ -53,6 +53,7 @@ class LightDistribution {
 
     // Given a point |p| in space, this method returns a (hopefully
     // effective) sampling distribution for light sources at that point.
+    __device__
     virtual const Distribution1D *Lookup(const Point3f &p) const = 0;
 };
 
@@ -67,11 +68,13 @@ class SpatialLightDistribution : public LightDistribution {
   public:
     SpatialLightDistribution(const Scene &scene, int maxVoxels = 64);
     ~SpatialLightDistribution();
+    __device__
     const Distribution1D *Lookup(const Point3f &p) const;
 
   private:
     // Compute the sampling distribution for the voxel with integer
     // coordiantes given by "pi".
+    __both__
     Distribution1D *ComputeDistribution(Point3i pi) const;
 
     const Scene &scene;
@@ -83,10 +86,10 @@ class SpatialLightDistribution : public LightDistribution {
     // locks, using atomic operations. (See the Lookup() method
     // implementation for details.)
     struct HashEntry {
-        std::atomic<uint64_t> packedPos;
-        std::atomic<Distribution1D *> distribution;
+        unsigned long long packedPos;
+        Distribution1D * distribution;
     };
-    mutable std::unique_ptr<HashEntry[]> hashTable;
+    mutable HashEntry* hashTable;
     size_t hashTableSize;
 };
 

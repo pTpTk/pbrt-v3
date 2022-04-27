@@ -50,7 +50,9 @@ namespace pbrt {
 // Interaction Declarations
 struct Interaction {
     // Interaction Public Methods
+    __both__
     Interaction() : time(0) {}
+    __both__
     Interaction(const Point3f &p, const Normal3f &n, const Vector3f &pError,
                 const Vector3f &wo, Float time,
                 const MediumInterface &mediumInterface)
@@ -60,34 +62,43 @@ struct Interaction {
           wo(Normalize(wo)),
           n(n),
           mediumInterface(mediumInterface) {}
+          __both__
     bool IsSurfaceInteraction() const { return n != Normal3f(); }
+    __both__
     Ray SpawnRay(const Vector3f &d) const {
         Point3f o = OffsetRayOrigin(p, pError, n, d);
         return Ray(o, d, Infinity, time, GetMedium(d));
     }
+    __both__
     Ray SpawnRayTo(const Point3f &p2) const {
         Point3f origin = OffsetRayOrigin(p, pError, n, p2 - p);
         Vector3f d = p2 - p;
         return Ray(origin, d, 1 - ShadowEpsilon, time, GetMedium(d));
     }
+    __both__
     Ray SpawnRayTo(const Interaction &it) const {
         Point3f origin = OffsetRayOrigin(p, pError, n, it.p - p);
         Point3f target = OffsetRayOrigin(it.p, it.pError, it.n, origin - it.p);
         Vector3f d = target - origin;
         return Ray(origin, d, 1 - ShadowEpsilon, time, GetMedium(d));
     }
+    __both__
     Interaction(const Point3f &p, const Vector3f &wo, Float time,
                 const MediumInterface &mediumInterface)
         : p(p), time(time), wo(wo), mediumInterface(mediumInterface) {}
+    __both__
     Interaction(const Point3f &p, Float time,
                 const MediumInterface &mediumInterface)
         : p(p), time(time), mediumInterface(mediumInterface) {}
+    __both__
     bool IsMediumInteraction() const { return !IsSurfaceInteraction(); }
+    __both__
     const Medium *GetMedium(const Vector3f &w) const {
         return Dot(w, n) > 0 ? mediumInterface.outside : mediumInterface.inside;
     }
+    __both__
     const Medium *GetMedium() const {
-        CHECK_EQ(mediumInterface.inside, mediumInterface.outside);
+        assert(mediumInterface.inside == mediumInterface.outside);
         return mediumInterface.inside;
     }
 
@@ -104,21 +115,27 @@ struct Interaction {
 class SurfaceInteraction : public Interaction {
   public:
     // SurfaceInteraction Public Methods
+    __both__
     SurfaceInteraction() {}
+    __both__
     SurfaceInteraction(const Point3f &p, const Vector3f &pError,
                        const Point2f &uv, const Vector3f &wo,
                        const Vector3f &dpdu, const Vector3f &dpdv,
                        const Normal3f &dndu, const Normal3f &dndv, Float time,
                        const Shape *sh,
                        int faceIndex = 0);
+    __both__
     void SetShadingGeometry(const Vector3f &dpdu, const Vector3f &dpdv,
                             const Normal3f &dndu, const Normal3f &dndv,
                             bool orientationIsAuthoritative);
+    __both__
     void ComputeScatteringFunctions(
         const RayDifferential &ray, MemoryArena &arena,
         bool allowMultipleLobes = false,
         TransportMode mode = TransportMode::Radiance);
+    __both__
     void ComputeDifferentials(const RayDifferential &r) const;
+    __both__
     Spectrum Le(const Vector3f &w) const;
 
     // SurfaceInteraction Public Data

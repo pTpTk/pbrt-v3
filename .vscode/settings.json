@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "bitset": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "memory": "cpp",
+        "optional": "cpp",
+        "string_view": "cpp",
+        "system_error": "cpp",
+        "typeindex": "cpp",
+        "variant": "cpp",
+        "chrono": "cpp",
+        "limits": "cpp",
+        "mutex": "cpp",
+        "type_traits": "cpp"
+    }
+}

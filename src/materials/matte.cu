@@ -42,6 +42,7 @@
 namespace pbrt {
 
 // MatteMaterial Method Definitions
+__both__
 void MatteMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
                                                MemoryArena &arena,
                                                TransportMode mode,

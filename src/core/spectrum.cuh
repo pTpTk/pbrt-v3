@@ -66,6 +66,7 @@ inline void RGBToXYZ(const Float rgb[3], Float xyz[3]) {
 }
 
 enum class SpectrumType { Reflectance, Illuminant };
+__both__
 int FindIntervalSpectrum(int size, const Float *nodes, const Float x);
 extern Float InterpolateSpectrumSamples(const Float *lambda, const Float *vals,
                                         int n, Float l);
@@ -86,9 +87,10 @@ template <int nSpectrumSamples>
 class CoefficientSpectrum {
   public:
     // CoefficientSpectrum Public Methods
+    __both__
     CoefficientSpectrum(Float v = 0.f) {
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] = v;
-        DCHECK(!HasNaNs());
+        assert(!HasNaNs());
     }
 #ifdef DEBUG
     CoefficientSpectrum(const CoefficientSpectrum &s) {
@@ -110,81 +112,95 @@ class CoefficientSpectrum {
         }
         fprintf(f, "]");
     }
+    __both__
     CoefficientSpectrum &operator+=(const CoefficientSpectrum &s2) {
-        DCHECK(!s2.HasNaNs());
+        assert(!s2.HasNaNs());
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] += s2.c[i];
         return *this;
     }
+    __both__
     CoefficientSpectrum operator+(const CoefficientSpectrum &s2) const {
-        DCHECK(!s2.HasNaNs());
+        assert(!s2.HasNaNs());
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] += s2.c[i];
         return ret;
     }
+    __both__
     CoefficientSpectrum operator-(const CoefficientSpectrum &s2) const {
-        DCHECK(!s2.HasNaNs());
+        assert(!s2.HasNaNs());
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] -= s2.c[i];
         return ret;
     }
+    __both__
     CoefficientSpectrum operator/(const CoefficientSpectrum &s2) const {
-        DCHECK(!s2.HasNaNs());
+        assert(!s2.HasNaNs());
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) {
-          CHECK_NE(s2.c[i], 0);
+          assert(s2.c[i] != 0);
           ret.c[i] /= s2.c[i];
         }
         return ret;
     }
+    __both__
     CoefficientSpectrum operator*(const CoefficientSpectrum &sp) const {
-        DCHECK(!sp.HasNaNs());
+        assert(!sp.HasNaNs());
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] *= sp.c[i];
         return ret;
     }
+    __both__
     CoefficientSpectrum &operator*=(const CoefficientSpectrum &sp) {
-        DCHECK(!sp.HasNaNs());
+        assert(!sp.HasNaNs());
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] *= sp.c[i];
         return *this;
     }
+    __both__
     CoefficientSpectrum operator*(Float a) const {
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] *= a;
-        DCHECK(!ret.HasNaNs());
+        assert(!ret.HasNaNs());
         return ret;
     }
+    __both__
     CoefficientSpectrum &operator*=(Float a) {
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] *= a;
-        DCHECK(!HasNaNs());
+        assert(!HasNaNs());
         return *this;
     }
+    __both__
     friend inline CoefficientSpectrum operator*(Float a,
                                                 const CoefficientSpectrum &s) {
-        DCHECK(!std::isnan(a) && !s.HasNaNs());
+        assert(!pbrt::isnan(a) && !s.HasNaNs());
         return s * a;
     }
+    __both__
     CoefficientSpectrum operator/(Float a) const {
-        CHECK_NE(a, 0);
-        DCHECK(!std::isnan(a));
+        assert(a != 0);
+        assert(!pbrt::isnan(a));
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] /= a;
-        DCHECK(!ret.HasNaNs());
+        assert(!ret.HasNaNs());
         return ret;
     }
+    __both__
     CoefficientSpectrum &operator/=(Float a) {
-        CHECK_NE(a, 0);
-        DCHECK(!std::isnan(a));
+        assert(a != 0);
+        assert(!isnan(a));
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] /= a;
         return *this;
     }
+    __both__
     bool operator==(const CoefficientSpectrum &sp) const {
         for (int i = 0; i < nSpectrumSamples; ++i)
             if (c[i] != sp.c[i]) return false;
         return true;
     }
+    __both__
     bool operator!=(const CoefficientSpectrum &sp) const {
         return !(*this == sp);
     }
+    __both__
     bool IsBlack() const {
         for (int i = 0; i < nSpectrumSamples; ++i)
             if (c[i] != 0.) return false;
@@ -197,8 +213,10 @@ class CoefficientSpectrum {
         return ret;
     }
     template <int n>
+    __both__
     friend inline CoefficientSpectrum<n> Pow(const CoefficientSpectrum<n> &s,
                                              Float e);
+    __both__
     CoefficientSpectrum operator-() const {
         CoefficientSpectrum ret;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] = -c[i];
@@ -223,24 +241,27 @@ class CoefficientSpectrum {
         str += " ]";
         return str;
     }
+    __both__
     CoefficientSpectrum Clamp(Float low = 0, Float high = Infinity) const {
         CoefficientSpectrum ret;
         for (int i = 0; i < nSpectrumSamples; ++i)
             ret.c[i] = pbrt::Clamp(c[i], low, high);
-        DCHECK(!ret.HasNaNs());
+        assert(!ret.HasNaNs());
         return ret;
     }
+    __both__
     Float MaxComponentValue() const {
         Float m = c[0];
         for (int i = 1; i < nSpectrumSamples; ++i)
-            m = std::max(m, c[i]);
+            m = max(m, c[i]);
         return m;
     }
+    __both__
     bool HasNaNs() const {
         for (int i = 0; i < nSpectrumSamples; ++i)
-            if (std::isnan(c[i])) return true;
+            if (pbrt::isnan(c[i])) return true;
         return false;
-    }
+    } 
     bool Write(FILE *f) const {
         for (int i = 0; i < nSpectrumSamples; ++i)
             if (fprintf(f, "%f ", c[i]) < 0) return false;
@@ -254,12 +275,14 @@ class CoefficientSpectrum {
         }
         return true;
     }
+    __both__
     Float &operator[](int i) {
-        DCHECK(i >= 0 && i < nSpectrumSamples);
+        assert(i >= 0 && i < nSpectrumSamples);
         return c[i];
     }
+    __both__
     Float operator[](int i) const {
-        DCHECK(i >= 0 && i < nSpectrumSamples);
+        assert(i >= 0 && i < nSpectrumSamples);
         return c[i];
     }
 
@@ -276,8 +299,11 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
 
   public:
     // RGBSpectrum Public Methods
+    __both__
     RGBSpectrum(Float v = 0.f) : CoefficientSpectrum<3>(v) {}
+    __both__
     RGBSpectrum(const CoefficientSpectrum<3> &v) : CoefficientSpectrum<3>(v) {}
+    __both__
     RGBSpectrum(const RGBSpectrum &s,
                 SpectrumType type = SpectrumType::Reflectance) {
         *this = s;

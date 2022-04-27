@@ -69,6 +69,7 @@ HaltonSampler::HaltonSampler(int samplesPerPixel, const Bounds2i &sampleBounds,
     if (radicalInversePermutations.empty()) {
         RNG rng;
         radicalInversePermutations = ComputeRadicalInversePermutations(rng);
+        radicalInversePermutations_ptr = radicalInversePermutations.data();
     }
 
     // Find radical inverse base scales and exponents that cover sampling area
@@ -114,7 +115,7 @@ int64_t HaltonSampler::GetIndexForSample(int64_t sampleNum) const {
     }
     return offsetForCurrentPixel + sampleNum * sampleStride;
 }
-
+__both__
 Float HaltonSampler::SampleDimension(int64_t index, int dim) const {
     if (sampleAtPixelCenter && (dim == 0 || dim == 1)) return 0.5f;
     if (dim == 0)

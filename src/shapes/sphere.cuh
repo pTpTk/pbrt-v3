@@ -57,15 +57,24 @@ class Sphere : public Shape {
           thetaMin(std::acos(Clamp(std::min(zMin, zMax) / radius, -1, 1))),
           thetaMax(std::acos(Clamp(std::max(zMin, zMax) / radius, -1, 1))),
           phiMax(Radians(Clamp(phiMax, 0, 360))) {}
+    __both__
     Bounds3f ObjectBound() const;
+    __both__
     bool Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect,
                    bool testAlphaTexture) const;
+    __both__
     bool IntersectP(const Ray &ray, bool testAlphaTexture) const;
+    __both__
     Float Area() const;
+    __both__
     Interaction Sample(const Point2f &u, Float *pdf) const;
+    __both__
     Interaction Sample(const Interaction &ref, const Point2f &u,
                        Float *pdf) const;
+    __both__
     Float Pdf(const Interaction &ref, const Vector3f &wi) const;
+    __both__
+    Float Pdf(const Interaction &ref) const { return Shape::Pdf(ref); }
     Float SolidAngle(const Point3f &p, int nSamples) const;
 
   private:

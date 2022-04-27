@@ -63,11 +63,11 @@ DiffuseAreaLight::DiffuseAreaLight(const Transform &LightToWorld,
 Spectrum DiffuseAreaLight::Power() const {
     return (twoSided ? 2 : 1) * Lemit * area * Pi;
 }
-
+__both__
 Spectrum DiffuseAreaLight::Sample_Li(const Interaction &ref, const Point2f &u,
                                      Vector3f *wi, Float *pdf,
                                      VisibilityTester *vis) const {
-    ProfilePhase _(Prof::LightSample);
+    // ProfilePhase _(Prof::LightSample);
     Interaction pShape = shape->Sample(ref, u, pdf);
     pShape.mediumInterface = mediumInterface;
     if (*pdf == 0 || (pShape.p - ref.p).LengthSquared() == 0) {
@@ -78,10 +78,10 @@ Spectrum DiffuseAreaLight::Sample_Li(const Interaction &ref, const Point2f &u,
     *vis = VisibilityTester(ref, pShape);
     return L(pShape, -*wi);
 }
-
+__both__
 Float DiffuseAreaLight::Pdf_Li(const Interaction &ref,
                                const Vector3f &wi) const {
-    ProfilePhase _(Prof::LightPdf);
+    // ProfilePhase _(Prof::LightPdf);
     return shape->Pdf(ref, wi);
 }
 

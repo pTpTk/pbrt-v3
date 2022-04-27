@@ -51,13 +51,13 @@ STAT_COUNTER("Integrator/Camera rays traced", nCameraRays);
 Integrator::~Integrator() {}
 
 // Integrator Utility Functions
-
+__both__
 Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
                                MemoryArena &arena, Sampler &sampler,
                                bool handleMedia, const Distribution1D *lightDistrib) {
-    ProfilePhase p(Prof::DirectLighting);
+    // ProfilePhase p(Prof::DirectLighting);
     // Randomly choose a single light to sample, _light_
-    int nLights = int(scene.lights.size());
+    int nLights = utils::get_buffer_size(scene.lights);
     if (nLights == 0) return Spectrum(0.f);
     int lightNum;
     Float lightPdf;
@@ -65,16 +65,17 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
         lightNum = lightDistrib->SampleDiscrete(sampler.Get1D(), &lightPdf);
         if (lightPdf == 0) return Spectrum(0.f);
     } else {
-        lightNum = std::min((int)(sampler.Get1D() * nLights), nLights - 1);
+        lightNum = min((int)(sampler.Get1D() * nLights), nLights - 1);
         lightPdf = Float(1) / nLights;
     }
-    const std::shared_ptr<Light> &light = scene.lights[lightNum];
+    shared_ptr<Light> const &light = scene.lights[lightNum];
     Point2f uLight = sampler.Get2D();
     Point2f uScattering = sampler.Get2D();
     return EstimateDirect(it, uScattering, *light, uLight,
                           scene, sampler, arena, handleMedia) / lightPdf;
 }
 
+__both__
 Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
                         const Light &light, const Point2f &uLight,
                         const Scene &scene, Sampler &sampler,
@@ -87,8 +88,6 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
     Float lightPdf = 0, scatteringPdf = 0;
     VisibilityTester visibility;
     Spectrum Li = light.Sample_Li(it, uLight, &wi, &lightPdf, &visibility);
-    VLOG(2) << "EstimateDirect uLight:" << uLight << " -> Li: " << Li << ", wi: "
-            << wi << ", pdf: " << lightPdf;
     if (lightPdf > 0 && !Li.IsBlack()) {
         // Compute BSDF or phase function's value for light sample
         Spectrum f;
@@ -98,15 +97,12 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
             f = isect.bsdf->f(isect.wo, wi, bsdfFlags) *
                 AbsDot(wi, isect.shading.n);
             scatteringPdf = isect.bsdf->Pdf(isect.wo, wi, bsdfFlags);
-            VLOG(2) << "  surf f*dot :" << f << ", scatteringPdf: " << scatteringPdf;
         }
         if (!f.IsBlack()) {
             // Compute effect of visibility for light source sample
-            if (!visibility.Unoccluded(scene)) {
-            VLOG(2) << "  shadow ray blocked";
-            Li = Spectrum(0.f);
-            } else
-            VLOG(2) << "  shadow ray unoccluded";
+              if (!visibility.Unoccluded(scene)) {
+                Li = Spectrum(0.f);
+            }
 
             // Add light's contribution to reflected radiance
             if (!Li.IsBlack()) {
@@ -134,8 +130,6 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
             f *= AbsDot(wi, isect.shading.n);
             sampledSpecular = (sampledType & BSDF_SPECULAR) != 0;
         }
-        VLOG(2) << "  BSDF / phase sampling f: " << f << ", scatteringPdf: " <<
-            scatteringPdf;
         if (!f.IsBlack() && scatteringPdf > 0) {
             // Account for light contributions along sampled direction _wi_
             Float weight = 1;
@@ -187,7 +181,7 @@ void SamplerIntegrator::Render(const Scene &scene) {
 
             // Get sampler instance for tile
             int seed = tile.y * nTiles.x + tile.x;
-            std::vector<std::unique_ptr<Sampler>> tileSamplers;// = sampler->Clone(seed);
+            std::vector<std::unique_ptr<Sampler>> tileSamplers;
 
             // Compute sample bounds for tile
             int x0 = sampleBounds.pMin.x + tile.x * tileSize;
