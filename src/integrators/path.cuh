@@ -64,7 +64,7 @@ class PathIntegrator : public SamplerIntegrator {
     const int maxDepth;
     const Float rrThreshold;
     const std::string lightSampleStrategy;
-    std::unique_ptr<LightDistribution> lightDistribution;
+    unique_ptr<LightDistribution> lightDistribution;
 };
 
 PathIntegrator *CreatePathIntegrator(const ParamSet &params,

@@ -181,7 +181,7 @@ void SamplerIntegrator::Render(const Scene &scene) {
 
             // Get sampler instance for tile
             int seed = tile.y * nTiles.x + tile.x;
-            std::vector<std::unique_ptr<Sampler>> tileSamplers;
+            std::vector<Sampler*> tileSamplers;
 
             // Compute sample bounds for tile
             int x0 = sampleBounds.pMin.x + tile.x * tileSize;
@@ -196,14 +196,23 @@ void SamplerIntegrator::Render(const Scene &scene) {
                 camera->film->GetFilmTile(tileBounds);
 
             // Creating unified objects for calculations
-            CameraSample* cameraSamples = 
-                new CameraSample[sampler->samplesPerPixel];
-            RayDifferential* rays = 
-                new RayDifferential[sampler->samplesPerPixel];
-            Float* rayWeights = 
-                new Float[sampler->samplesPerPixel];
-            Spectrum* Ls = 
-                new Spectrum[sampler->samplesPerPixel];
+            CameraSample* cameraSamples;
+            RayDifferential* rays;
+            Float* rayWeights;
+            Spectrum* Ls;
+            cudaMallocManaged(&cameraSamples, sizeof(CameraSample) 
+                              * sampler->samplesPerPixel);
+            cudaMallocManaged(&rays,          sizeof(RayDifferential) 
+                              * sampler->samplesPerPixel); 
+            cudaMallocManaged(&rayWeights,    sizeof(Float) 
+                              * sampler->samplesPerPixel); 
+            cudaMallocManaged(&Ls,            sizeof(Spectrum) 
+                              * sampler->samplesPerPixel); 
+
+            new(cameraSamples) CameraSample[sampler->samplesPerPixel];
+            new(rays)         RayDifferential[sampler->samplesPerPixel];
+            new(rayWeights)   Float[sampler->samplesPerPixel];
+            new(Ls)           Spectrum[sampler->samplesPerPixel];
 
             // Loop over pixels in tile to render them
             for (Point2i pixel : tileBounds) {
@@ -233,14 +242,20 @@ void SamplerIntegrator::Render(const Scene &scene) {
                         1 / std::sqrt((Float)tileSamplers[sampleNum]->samplesPerPixel));
                     ++nCameraRays;
                 }
+                
+                // Evaluate radiance along camera ray
+                LiKernel<<<1, sampler->samplesPerPixel>>>
+                    (Ls, this, rays, rayWeights, scene, tileSamplers.data(), arena);
+                cudaDeviceSynchronize();
+
                 for(int64_t sampleNum = 0; 
                     sampleNum < sampler->samplesPerPixel; 
                     sampleNum++) {
-                    // Evaluate radiance along camera ray
-                    Ls[sampleNum] = 0.f;
-                    if (rayWeights[sampleNum] > 0) 
-                        Ls[sampleNum] = 
-                            Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
+                    
+                    // Ls[sampleNum] = 0.f;
+                    // if (rayWeights[sampleNum] > 0) 
+                    //     Ls[sampleNum] = 
+                    //         Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
 
                     // Issue warning if unexpected radiance value returned
                     if (Ls[sampleNum].HasNaNs()) {
@@ -283,10 +298,10 @@ void SamplerIntegrator::Render(const Scene &scene) {
             // Merge image tile into _Film_
             camera->film->MergeFilmTile(std::move(filmTile));
             reporter.Update();
-            delete[] cameraSamples;
-            delete[] rays;
-            delete[] rayWeights;
-            delete[] Ls;
+            cudaFree(cameraSamples);
+            cudaFree(rays);
+            cudaFree(rayWeights);
+            cudaFree(Ls);
         }, nTiles);
         reporter.Done();
     }
@@ -295,6 +310,16 @@ void SamplerIntegrator::Render(const Scene &scene) {
     // Save final image after rendering
     camera->film->WriteImage();
 
+}
+__global__
+void LiKernel(Spectrum* Ls, SamplerIntegrator* integrator,
+              const RayDifferential* rays, const Float* rayWeights,
+              const Scene &scene, Sampler** tileSamplers,
+              MemoryArena &arena) {
+    int sampleNum = threadIdx.x;
+    Ls[sampleNum] = 0.f;
+    if (rayWeights[sampleNum] > 0)
+        Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
 }
 
 }  // namespace pbrt

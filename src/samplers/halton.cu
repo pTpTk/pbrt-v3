@@ -127,8 +127,10 @@ Float HaltonSampler::SampleDimension(int64_t index, int dim) const {
                                        PermutationForDimension(dim));
 }
 
-std::unique_ptr<Sampler> HaltonSampler::Clone(int seed) {
-    return std::unique_ptr<Sampler>(new HaltonSampler(*this));
+Sampler* HaltonSampler::Clone(int seed) {
+    void* samplerAddress;
+    cudaMallocManaged(&samplerAddress, sizeof(HaltonSampler));
+    return new(samplerAddress) HaltonSampler(*this);
 }
 
 HaltonSampler *CreateHaltonSampler(const ParamSet &params,

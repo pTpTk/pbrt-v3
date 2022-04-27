@@ -130,6 +130,33 @@ private:
 };
 
 template<typename T>
+class unique_ptr {
+public:
+   __both__
+   unique_ptr() : ptr ((T*)malloc(sizeof(T))) {}
+   __both__
+   unique_ptr(T *_ptr) : ptr ((T*)malloc(sizeof(T))) {
+      *ptr = *_ptr;
+      //ptr = new (ptr) T(*_ptr); // placement new doesn't work for virtual classes
+      // delete _ptr; ?? Maybe delete the sink pointer
+   }
+
+   // std::shared_ptr to pbrt::gpu::shared_ptr needs to be invoked from host
+   __host__
+   unique_ptr(const std::unique_ptr<T>& _ptr) : ptr (_ptr.get()) {}
+   __both__
+   T& operator*() const noexcept { return *(get()); }
+   __both__
+   T* operator->() const noexcept { return get(); }
+   __both__
+   T *get() const noexcept { return ptr; }
+   __both__
+   operator bool() const noexcept { return get() != nullptr; }
+private:
+   T *ptr;
+};
+
+template<typename T>
 __both__
 shared_ptr<T> make_shared(T obj) {
    shared_ptr<T> ptr;
