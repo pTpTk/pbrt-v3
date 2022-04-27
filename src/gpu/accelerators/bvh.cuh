@@ -94,7 +94,8 @@ class BVHAccel : public Aggregate {
     // BVHAccel Private Data
     const int maxPrimsInNode;
     const SplitMethod splitMethod;
-    std::vector<std::shared_ptr<Primitive>> primitives;
+    std::vector<std::shared_ptr<Primitive>> primitives_v;
+    Primitive* primitives[];
     Primitive* p[];
     LinearBVHNode *nodes = nullptr;
 };

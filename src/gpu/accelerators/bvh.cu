@@ -185,34 +185,34 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
                    int maxPrimsInNode, SplitMethod splitMethod)
     : maxPrimsInNode(min(255, maxPrimsInNode)),
       splitMethod(splitMethod),
-      primitives(p)
+      primitives_v(p)
       {
     // ProfilePhase _(Prof::AccelConstruction);
-    if (primitives.empty()) return;
+    if (primitives_v.empty()) return;
     // Build BVH from _primitives_
 
     // Initialize _primitiveInfo_ array for primitives
-    std::vector<BVHPrimitiveInfo> primitiveInfo(primitives.size());
-    for (size_t i = 0; i < primitives.size(); ++i)
-        primitiveInfo[i] = {i, primitives[i]->WorldBound()};
+    std::vector<BVHPrimitiveInfo> primitiveInfo(primitives_v.size());
+    for (size_t i = 0; i < primitives_v.size(); ++i)
+        primitiveInfo[i] = {i, primitives_v[i]->WorldBound()};
 
     // Build BVH tree for primitives using _primitiveInfo_
     MemoryArena arena(1024 * 1024);
     int totalNodes = 0;
     std::vector<std::shared_ptr<Primitive>> orderedPrims;
-    orderedPrims.reserve(primitives.size());
+    orderedPrims.reserve(primitives_v.size());
     BVHBuildNode *root;
     if (splitMethod == SplitMethod::HLBVH)
         root = HLBVHBuild(arena, primitiveInfo, &totalNodes, orderedPrims);
     else
-        root = recursiveBuild(arena, primitiveInfo, 0, primitives.size(),
+        root = recursiveBuild(arena, primitiveInfo, 0, primitives_v.size(),
                               &totalNodes, orderedPrims);
-    primitives.swap(orderedPrims);
+    primitives_v.swap(orderedPrims);
     primitiveInfo.resize(0);
 
     // Compute representation of depth-first traversal of BVH tree
     treeBytes += totalNodes * sizeof(LinearBVHNode) + sizeof(*this) +
-                 primitives.size() * sizeof(primitives[0]);
+                 primitives_v.size() * sizeof(primitives_v[0]);
     nodes = AllocAligned<LinearBVHNode>(totalNodes);
     int offset = 0;
     flattenBVHTree(root, &offset);
@@ -246,7 +246,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(
         int firstPrimOffset = orderedPrims.size();
         for (int i = start; i < end; ++i) {
             int primNum = primitiveInfo[i].primitiveNumber;
-            orderedPrims.push_back(primitives[primNum]);
+            orderedPrims.push_back(primitives_v[primNum]);
         }
         node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
         return node;
@@ -264,7 +264,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(
             int firstPrimOffset = orderedPrims.size();
             for (int i = start; i < end; ++i) {
                 int primNum = primitiveInfo[i].primitiveNumber;
-                orderedPrims.push_back(primitives[primNum]);
+                orderedPrims.push_back(primitives_v[primNum]);
             }
             node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
             return node;
@@ -378,7 +378,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(
                         int firstPrimOffset = orderedPrims.size();
                         for (int i = start; i < end; ++i) {
                             int primNum = primitiveInfo[i].primitiveNumber;
-                            orderedPrims.push_back(primitives[primNum]);
+                            orderedPrims.push_back(primitives_v[primNum]);
                         }
                         node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
                         return node;
@@ -444,7 +444,7 @@ BVHBuildNode *BVHAccel::HLBVHBuild(
 
     // Create LBVHs for treelets in parallel
     std::atomic<int> atomicTotal(0), orderedPrimsOffset(0);
-    orderedPrims.resize(primitives.size());
+    orderedPrims.resize(primitives_v.size());
     ParallelFor([&](int i) {
         // Generate _i_th LBVH treelet
         int nodesCreated = 0;
@@ -482,7 +482,7 @@ BVHBuildNode *BVHAccel::emitLBVH(
         int firstPrimOffset = orderedPrimsOffset->fetch_add(nPrimitives);
         for (int i = 0; i < nPrimitives; ++i) {
             int primitiveIndex = mortonPrims[i].primitiveIndex;
-            orderedPrims[firstPrimOffset + i] = primitives[primitiveIndex];
+            orderedPrims[firstPrimOffset + i] = primitives_v[primitiveIndex];
             bounds = Union(bounds, primitiveInfo[primitiveIndex].bounds);
         }
         node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
