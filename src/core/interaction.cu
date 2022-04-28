@@ -121,10 +121,10 @@ void SurfaceInteraction::ComputeDifferentials(
 
         // Choose two dimensions to use for ray offset computation
         int dim[2];
-        if (std::abs(n.x) > std::abs(n.y) && std::abs(n.x) > std::abs(n.z)) {
+        if (pbrt::math::abs(n.x) > pbrt::math::abs(n.y) && pbrt::math::abs(n.x) > pbrt::math::abs(n.z)) {
             dim[0] = 1;
             dim[1] = 2;
-        } else if (std::abs(n.y) > std::abs(n.z)) {
+        } else if (pbrt::math::abs(n.y) > pbrt::math::abs(n.z)) {
             dim[0] = 0;
             dim[1] = 2;
         } else {

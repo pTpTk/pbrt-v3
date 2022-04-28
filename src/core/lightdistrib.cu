@@ -48,7 +48,7 @@ LightDistribution::~LightDistribution() {}
 LightDistribution* CreateLightSampleDistribution(
     const std::string &name, const Scene &scene) {
         void* ptr;
-        cudaMallocManaged(&ptr, sizeof(SpatialLightDistribution));
+        cudaMallocHost(&ptr, sizeof(SpatialLightDistribution));
         return new(ptr) SpatialLightDistribution(scene);
 }
 
@@ -82,7 +82,7 @@ SpatialLightDistribution::SpatialLightDistribution(const Scene &scene,
     }
 
     hashTableSize = 4 * nVoxels[0] * nVoxels[1] * nVoxels[2];
-    cudaMallocManaged(&hashTable, sizeof(HashEntry) * hashTableSize);
+    cudaMallocHost(&hashTable, sizeof(HashEntry) * hashTableSize);
     new(hashTable) HashEntry[hashTableSize];
     for (int i = 0; i < hashTableSize; ++i) {
         hashTable[i].packedPos = invalidPackedPos;
@@ -137,7 +137,7 @@ const Distribution1D *SpatialLightDistribution::Lookup(const Point3f &p) const {
     hash *= 0x81dadef4bc2dd44d;
     hash ^= (hash >> 33);
     hash %= hashTableSize;
-    assert(hash => 0);
+    assert(hash >= 0);
 
     // Now, see if the hash table already has an entry for the voxel. We'll
     // use quadratic probing when the hash table entry is already used for
@@ -225,7 +225,7 @@ SpatialLightDistribution::ComputeDistribution(Point3i pi) const {
     // point on the light source) as an approximation to how much the light
     // is likely to contribute to illumination in the voxel.
     int nSamples = 128;
-    int lightContribSize = utils::get_buffer_size(scene.lights);
+    int lightContribSize = scene.lights_size;
     Float* lightContrib = (Float*) malloc(sizeof(Float) * lightContribSize);
     for (int i = 0; i < nSamples; ++i) {
         Point3f po = voxelBounds.Lerp(Point3f(

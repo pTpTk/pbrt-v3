@@ -221,7 +221,8 @@ class TransformCache {
         if (tCached)
             ++nTransformCacheHits;
         else {
-            tCached = arena.Alloc<Transform>();
+            cudaMallocHost(&tCached, sizeof(Transform));
+            // tCached = arena.Alloc<Transform>();
             *tCached = t;
             Insert(tCached);
         }
@@ -412,7 +413,7 @@ AreaLight* MakeAreaLight(const std::string &name,
                                          const Transform &light2world,
                                          const MediumInterface &mediumInterface,
                                          const ParamSet &paramSet,
-                                         const Shape* shape) {
+                                         Shape* const shape) {
     AreaLight* area;
     if (name == "area" || name == "diffuse")
         area = CreateDiffuseAreaLight(light2world, mediumInterface.outside,
@@ -694,7 +695,7 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
         MediumInterface mi = graphicsState.CreateMediumInterface();
         prims.reserve(shapes.size());
         GeometricPrimitive* ptr;
-        cudaMallocManaged(&ptr, sizeof(GeometricPrimitive) * shapes.size());
+        cudaMallocHost(&ptr, sizeof(GeometricPrimitive) * shapes.size());
         for (auto s : shapes) {
             // Possibly create area light for shape
             AreaLight* area;
@@ -841,6 +842,7 @@ void pbrtWorldEnd() {
         printf("%*sWorldEnd\n", catIndentCount, "");
     } else {
         std::unique_ptr<Integrator> integrator(renderOptions->MakeIntegrator());
+        printf("light.size() = %d\n", renderOptions->lights.size());
         std::unique_ptr<Scene> scene(renderOptions->MakeScene());
 
         // This is kind of ugly; we directly override the current profiler
@@ -888,7 +890,8 @@ Scene *RenderOptions::MakeScene() {
     Primitive* accelerator =
         MakeAccelerator(AcceleratorName, std::move(primitives), AcceleratorParams);
     // if (!accelerator) accelerator = std::make_shared<BVHAccel>(primitives);
-    Scene *scene = new Scene(accelerator, lights.data());
+    Scene *scene = new Scene(accelerator, lights);
+    cudaHostRegister(scene, sizeof(Scene), cudaHostRegisterDefault);
     // Erase primitives and lights from _RenderOptions_
     primitives.clear();
     lights.clear();

@@ -129,7 +129,7 @@ Float HaltonSampler::SampleDimension(int64_t index, int dim) const {
 
 Sampler* HaltonSampler::Clone(int seed) {
     void* samplerAddress;
-    cudaMallocManaged(&samplerAddress, sizeof(HaltonSampler));
+    cudaMallocHost(&samplerAddress, sizeof(HaltonSampler));
     return new(samplerAddress) HaltonSampler(*this);
 }
 

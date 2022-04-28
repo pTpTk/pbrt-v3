@@ -54,12 +54,12 @@ Float FrDielectric(Float cosThetaI, Float etaI, Float etaT) {
     }
 
     // Compute _cosThetaT_ using Snell's law
-    Float sinThetaI = std::sqrt(std::max((Float)0, 1 - cosThetaI * cosThetaI));
+    Float sinThetaI = pbrt::math::sqrt(std::max((Float)0, 1 - cosThetaI * cosThetaI));
     Float sinThetaT = etaI / etaT * sinThetaI;
 
     // Handle total internal reflection
     if (sinThetaT >= 1) return 1;
-    Float cosThetaT = std::sqrt(std::max((Float)0, 1 - sinThetaT * sinThetaT));
+    Float cosThetaT = pbrt::math::sqrt(std::max((Float)0, 1 - sinThetaT * sinThetaT));
     Float Rparl = ((etaT * cosThetaI) - (etaI * cosThetaT)) /
                   ((etaT * cosThetaI) + (etaI * cosThetaT));
     Float Rperp = ((etaI * cosThetaI) - (etaT * cosThetaT)) /

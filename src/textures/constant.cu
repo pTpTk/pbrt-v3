@@ -40,14 +40,14 @@ namespace pbrt {
 ConstantTexture<Float> *CreateConstantFloatTexture(const Transform &tex2world,
                                                    const TextureParams &tp) {
     void* ptr;
-    cudaMallocManaged(&ptr, sizeof(ConstantTexture<Float>));
+    cudaMallocHost(&ptr, sizeof(ConstantTexture<Float>));
     return new(ptr) ConstantTexture<Float>(tp.FindFloat("value", 1.f));
 }
 
 ConstantTexture<Spectrum> *CreateConstantSpectrumTexture(
     const Transform &tex2world, const TextureParams &tp) {
     void* ptr;
-    cudaMallocManaged(&ptr, sizeof(ConstantTexture<Spectrum>));
+    cudaMallocHost(&ptr, sizeof(ConstantTexture<Spectrum>));
     return new(ptr) ConstantTexture<Spectrum>(
         tp.FindSpectrum("value", Spectrum(1.f)));
 }

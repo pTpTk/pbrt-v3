@@ -82,7 +82,7 @@ class DiffuseAreaLight : public AreaLight {
 
 AreaLight* CreateDiffuseAreaLight(
     const Transform &light2world, const Medium *medium,
-    const ParamSet &paramSet, Shape const * shape);
+    const ParamSet &paramSet, Shape* const shape);
 
 }  // namespace pbrt
 

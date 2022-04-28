@@ -38,7 +38,7 @@
 #include "parallel.cuh"
 #include <glog/logging.h>
 
-using namespace pbrt;
+// using namespace pbrt;
 
 static void usage(const char *msg = nullptr) {
     if (msg)
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     FLAGS_stderrthreshold = 1; // Warning and above.
 
-    Options options;
+    pbrt::Options options;
     std::vector<std::string> filenames;
     // Process command-line arguments
     for (int i = 1; i < argc; ++i) {
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
             printf("*** WARNING: This is a 32-bit build of pbrt. It will crash "
                    "if used to render highly complex scenes. ***\n");
         printf("pbrt version 3 (built %s at %s) [Detected %d cores]\n",
-               __DATE__, __TIME__, NumSystemCores());
+               __DATE__, __TIME__, pbrt::NumSystemCores());
 #ifndef NDEBUG
         LOG(INFO) << "Running debug build";
         printf("*** DEBUG BUILD ***\n");
@@ -158,16 +158,16 @@ int main(int argc, char *argv[]) {
         printf("See the file LICENSE.txt for the conditions of the license.\n");
         fflush(stdout);
     }
-    pbrtInit(options);
+    pbrt::pbrtInit(options);
     // Process scene description
     if (filenames.empty()) {
         // Parse scene from standard input
-        pbrtParseFile("-");
+        pbrt::pbrtParseFile("-");
     } else {
         // Parse scene from input files
         for (const std::string &f : filenames)
-            pbrtParseFile(f);
+            pbrt::pbrtParseFile(f);
     }
-    pbrtCleanup();
+    pbrt::pbrtCleanup();
     return 0;
 }

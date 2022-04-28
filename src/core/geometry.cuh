@@ -164,7 +164,7 @@ class Vector2 {
     __both__
     Float LengthSquared() const { return x * x + y * y; }
     __both__
-    Float Length() const { return std::sqrt(LengthSquared()); }
+    Float Length() const { return pbrt::math::sqrt(LengthSquared()); }
 
     // Vector2 Public Data
     T x, y;
@@ -297,7 +297,7 @@ class Vector3 {
     __both__
     Float LengthSquared() const { return x * x + y * y + z * z; }
     __both__
-    Float Length() const { return std::sqrt(LengthSquared()); }
+    Float Length() const { return pbrt::math::sqrt(LengthSquared()); }
     __both__
     explicit Vector3(const Normal3<T> &n);
 
@@ -709,7 +709,7 @@ class Normal3 {
     __both__
     Float LengthSquared() const { return x * x + y * y + z * z; }
     __both__
-    Float Length() const { return std::sqrt(LengthSquared()); }
+    Float Length() const { return pbrt::math::sqrt(LengthSquared()); }
 
 #ifndef NDEBUG
     __both__
@@ -1085,7 +1085,7 @@ inline Vector3<T> operator*(U s, const Vector3<T> &v) {
 template <typename T>
 __both__
 Vector3<T> Abs(const Vector3<T> &v) {
-    return Vector3<T>(std::abs(v.x), std::abs(v.y), std::abs(v.z));
+    return Vector3<T>(pbrt::math::abs(v.x), pbrt::math::abs(v.y), pbrt::math::abs(v.z));
 }
 
 template <typename T>
@@ -1099,7 +1099,7 @@ template <typename T>
 __both__
 inline T AbsDot(const Vector3<T> &v1, const Vector3<T> &v2) {
     assert(!v1.HasNaNs() && !v2.HasNaNs());
-    return std::abs(Dot(v1, v2));
+    return pbrt::math::abs(Dot(v1, v2));
 }
 
 template <typename T>
@@ -1179,10 +1179,10 @@ template <typename T>
 __both__
 inline void CoordinateSystem(const Vector3<T> &v1, Vector3<T> *v2,
                              Vector3<T> *v3) {
-    if (std::abs(v1.x) > std::abs(v1.y))
-        *v2 = Vector3<T>(-v1.z, 0, v1.x) / std::sqrt(v1.x * v1.x + v1.z * v1.z);
+    if (pbrt::math::abs(v1.x) > pbrt::math::abs(v1.y))
+        *v2 = Vector3<T>(-v1.z, 0, v1.x) / pbrt::math::sqrt(v1.x * v1.x + v1.z * v1.z);
     else
-        *v2 = Vector3<T>(0, v1.z, -v1.y) / std::sqrt(v1.y * v1.y + v1.z * v1.z);
+        *v2 = Vector3<T>(0, v1.z, -v1.y) / pbrt::math::sqrt(v1.y * v1.y + v1.z * v1.z);
     *v3 = Cross(v1, *v2);
 }
 
@@ -1216,7 +1216,7 @@ template <typename T>
 __both__
 inline Float AbsDot(const Vector2<T> &v1, const Vector2<T> &v2) {
     assert(!v1.HasNaNs() && !v2.HasNaNs());
-    return std::abs(Dot(v1, v2));
+    return pbrt::math::abs(Dot(v1, v2));
 }
 
 template <typename T>
@@ -1227,7 +1227,7 @@ inline Vector2<T> Normalize(const Vector2<T> &v) {
 template <typename T>
 __both__
 Vector2<T> Abs(const Vector2<T> &v) {
-    return Vector2<T>(std::abs(v.x), std::abs(v.y));
+    return Vector2<T>(pbrt::math::abs(v.x), pbrt::math::abs(v.y));
 }
 
 template <typename T>
@@ -1284,7 +1284,7 @@ Point3<T> Ceil(const Point3<T> &p) {
 template <typename T>
 __both__
 Point3<T> Abs(const Point3<T> &p) {
-    return Point3<T>(std::abs(p.x), std::abs(p.y), std::abs(p.z));
+    return Point3<T>(pbrt::math::abs(p.x), pbrt::math::abs(p.y), pbrt::math::abs(p.z));
 }
 
 template <typename T>
@@ -1386,21 +1386,21 @@ template <typename T>
 __both__
 inline T AbsDot(const Normal3<T> &n1, const Vector3<T> &v2) {
     assert(!n1.HasNaNs() && !v2.HasNaNs());
-    return std::abs(n1.x * v2.x + n1.y * v2.y + n1.z * v2.z);
+    return pbrt::math::abs(n1.x * v2.x + n1.y * v2.y + n1.z * v2.z);
 }
 
 template <typename T>
 __both__
 inline T AbsDot(const Vector3<T> &v1, const Normal3<T> &n2) {
     assert(!v1.HasNaNs() && !n2.HasNaNs());
-    return std::abs(v1.x * n2.x + v1.y * n2.y + v1.z * n2.z);
+    return pbrt::math::abs(v1.x * n2.x + v1.y * n2.y + v1.z * n2.z);
 }
 
 template <typename T>
 __both__
 inline T AbsDot(const Normal3<T> &n1, const Normal3<T> &n2) {
     assert(!n1.HasNaNs() && !n2.HasNaNs());
-    return std::abs(n1.x * n2.x + n1.y * n2.y + n1.z * n2.z);
+    return pbrt::math::abs(n1.x * n2.x + n1.y * n2.y + n1.z * n2.z);
 }
 
 template <typename T>
@@ -1430,7 +1430,7 @@ inline Vector3<T> Faceforward(const Vector3<T> &v, const Normal3<T> &n2) {
 template <typename T>
 __both__
 Normal3<T> Abs(const Normal3<T> &v) {
-    return Normal3<T>(std::abs(v.x), std::abs(v.y), std::abs(v.z));
+    return Normal3<T>(pbrt::math::abs(v.x), pbrt::math::abs(v.y), pbrt::math::abs(v.z));
 }
 
 template <typename T>
@@ -1522,7 +1522,7 @@ inline Float DistanceSquared(const Point3<T> &p, const Bounds3<U> &b) {
 template <typename T, typename U>
 __both__
 inline Float Distance(const Point3<T> &p, const Bounds3<U> &b) {
-    return std::sqrt(DistanceSquared(p, b));
+    return pbrt::math::sqrt(DistanceSquared(p, b));
 }
 __both__
 inline Bounds2iIterator begin(const Bounds2i &b) {

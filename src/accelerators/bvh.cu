@@ -218,12 +218,12 @@ BVHAccel::BVHAccel(std::vector<Primitive*> p,
     // Compute representation of depth-first traversal of BVH tree
     treeBytes += totalNodes * sizeof(LinearBVHNode) + sizeof(*this) +
                  primitives_v.size() * sizeof(primitives_v[0]);
-    cudaMallocManaged(&nodes, sizeof(LinearBVHNode)*totalNodes);
+    cudaMallocHost(&nodes, sizeof(LinearBVHNode)*totalNodes);
     int offset = 0;
     flattenBVHTree(root, &offset);
     CHECK_EQ(totalNodes, offset);
     void* ptr;
-    cudaMallocManaged(&ptr, sizeof(Primitive*)*primitives_v.size());
+    cudaMallocHost(&ptr, sizeof(Primitive*)*primitives_v.size());
     primitives = (Primitive**)ptr;
     for(int i = 0; i < primitives_v.size(); i++)
         primitives[i] = primitives_v[i];
@@ -762,7 +762,7 @@ BVHAccel* CreateBVHAccelerator(
 
     int maxPrimsInNode = ps.FindOneInt("maxnodeprims", 4);
     void* ptr;
-    cudaMallocManaged(&ptr, sizeof(BVHAccel));
+    cudaMallocHost(&ptr, sizeof(BVHAccel));
     return new(ptr) BVHAccel(std::move(prims), maxPrimsInNode, splitMethod);
 }
 

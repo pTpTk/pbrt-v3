@@ -51,31 +51,38 @@ class Scene {
   public:
     // Scene Public Methods
     Scene(Primitive* aggregate,
-          Light** const lights)
-        : lights(lights), aggregate(aggregate) {
+          std::vector<Light*> lights_in)
+        : lights_v(lights_in), aggregate(aggregate) {
         // Scene Constructor Implementation
         worldBound = aggregate->WorldBound();
         std::size_t count = 0;
-        for (auto it = lights; it != nullptr; ++it) {
-            Light* light = *it;
+        for (int i = 0; i < lights_v.size(); ++i) {
+            Light* light = lights_v[i];
+            printf("LIGHT*: %x\n", (uint64_t)light);
             light->Preprocess(*this);
             if (light->flags & (int)LightFlags::Infinite) {
                 ++count;
             }
         }
+        infiniteLights_size = count;
         // allocate memory
         void* ptr;
-        cudaMallocManaged(&ptr, sizeof(Light*) * count);
+        cudaMallocHost(&ptr, sizeof(Light*) * count);
         infiniteLights = new(ptr) Light*[count];
         count = 0;
-        for (auto it = lights; it != nullptr; ++it) {
-            Light* light = *it;
+        for (int i = 0; i < lights_v.size(); i++) {
+            Light* light = lights_v[i];
             // uncomment this line if you see runtime probs
             // light->Preprocess(*this);
             if (light->flags & (int)LightFlags::Infinite) {
                 infiniteLights[count++] = light;
             }
         }
+
+        lights = (Light**)lights_v.data();
+        lights_size = lights_v.size();
+
+
     }
     __both__
     const Bounds3f &WorldBound() const { return worldBound; }
@@ -88,10 +95,12 @@ class Scene {
                      Spectrum *transmittance) const;
 
     // Scene Public Data
+    std::vector<Light*> lights_v;
     Light** lights;
     // Store infinite light sources separately for cases where we only want
     // to loop over them.
     Light** infiniteLights;
+    int lights_size, infiniteLights_size;
 
   private:
     // Scene Private Data

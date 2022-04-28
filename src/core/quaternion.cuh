@@ -132,7 +132,7 @@ inline Float Dot(const Quaternion &q1, const Quaternion &q2) {
 }
 __both__
 inline Quaternion Normalize(const Quaternion &q) {
-    return q / std::sqrt(Dot(q, q));
+    return q / pbrt::math::sqrt(Dot(q, q));
 }
 
 }  // namespace pbrt

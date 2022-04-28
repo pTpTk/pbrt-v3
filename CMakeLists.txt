@@ -97,6 +97,7 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}
 #-gencode=arch=compute_70,code=sm_70  
 #-gencode=arch=compute_75,code=sm_75 
 #-gencode=arch=compute_75,code=compute_75"
+--expt-relaxed-constexpr
 )
 #set_target_properties(tgt PROPERTIES CUDA_ARCHITECTURES "61")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

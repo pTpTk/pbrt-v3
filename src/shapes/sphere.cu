@@ -111,7 +111,7 @@ bool Sphere::Intersect(const Ray &r, Float *tHit, SurfaceInteraction *isect,
     Float v = (theta - thetaMin) / (thetaMax - thetaMin);
 
     // Compute sphere $\dpdu$ and $\dpdv$
-    Float zRadius = std::sqrt(pHit.x * pHit.x + pHit.y * pHit.y);
+    Float zRadius = pbrt::math::sqrt(pHit.x * pHit.x + pHit.y * pHit.y);
     Float invZRadius = 1 / zRadius;
     Float cosPhi = pHit.x * invZRadius;
     Float sinPhi = pHit.y * invZRadius;
@@ -265,7 +265,7 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
     Float sinThetaMax = radius * invDc;
     Float sinThetaMax2 = sinThetaMax * sinThetaMax;
     Float invSinThetaMax = 1 / sinThetaMax;
-    Float cosThetaMax = std::sqrt(max((Float)0.f, 1 - sinThetaMax2));
+    Float cosThetaMax = pbrt::math::sqrt(max((Float)0.f, 1 - sinThetaMax2));
 
     Float cosTheta  = (cosThetaMax - 1) * u[0] + 1;
     Float sinTheta2 = 1 - cosTheta * cosTheta;
@@ -274,13 +274,13 @@ Interaction Sphere::Sample(const Interaction &ref, const Point2f &u,
         /* Fall back to a Taylor series expansion for small angles, where
            the standard approach suffers from severe cancellation errors */
         sinTheta2 = sinThetaMax2 * u[0];
-        cosTheta = std::sqrt(1 - sinTheta2);
+        cosTheta = pbrt::math::sqrt(1 - sinTheta2);
     }
 
     // Compute angle $\alpha$ from center of sphere to sampled point on surface
     Float cosAlpha = sinTheta2 * invSinThetaMax +
-        cosTheta * std::sqrt(max((Float)0.f, 1.f - sinTheta2 * invSinThetaMax * invSinThetaMax));
-    Float sinAlpha = std::sqrt(max((Float)0.f, 1.f - cosAlpha*cosAlpha));
+        cosTheta * pbrt::math::sqrt(max((Float)0.f, 1.f - sinTheta2 * invSinThetaMax * invSinThetaMax));
+    Float sinAlpha = pbrt::math::sqrt(max((Float)0.f, 1.f - cosAlpha*cosAlpha));
     Float phi = u[1] * 2 * Pi;
 
     // Compute surface normal and sampled point on sphere
@@ -311,7 +311,7 @@ Float Sphere::Pdf(const Interaction &ref, const Vector3f &wi) const {
 
     // Compute general sphere PDF
     Float sinThetaMax2 = radius * radius / DistanceSquared(ref.p, pCenter);
-    Float cosThetaMax = std::sqrt(max((Float)0, 1 - sinThetaMax2));
+    Float cosThetaMax = pbrt::math::sqrt(max((Float)0, 1 - sinThetaMax2));
     return UniformConePdf(cosThetaMax);
 }
 
@@ -320,7 +320,7 @@ Float Sphere::SolidAngle(const Point3f &p, int nSamples) const {
     if (DistanceSquared(p, pCenter) <= radius * radius)
         return 4 * Pi;
     Float sinTheta2 = radius * radius / DistanceSquared(p, pCenter);
-    Float cosTheta = std::sqrt(std::max((Float)0, 1 - sinTheta2));
+    Float cosTheta = pbrt::math::sqrt(std::max((Float)0, 1 - sinTheta2));
     return (2 * Pi * (1 - cosTheta));
 }
 
@@ -331,7 +331,7 @@ Shape* CreateSphereShape(const Transform *o2w, const Transform *w2o,
     Float zmax = params.FindOneFloat("zmax", radius);
     Float phimax = params.FindOneFloat("phimax", 360.f);
     void* ptr;
-    cudaMallocManaged(&ptr, sizeof(Sphere));
+    cudaMallocHost(&ptr, sizeof(Sphere));
     return new(ptr) Sphere(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
 }
 

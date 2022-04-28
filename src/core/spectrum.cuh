@@ -41,6 +41,7 @@
 // core/spectrum.h*
 #include "pbrt.cuh"
 #include "stringprint.cuh"
+#include <iostream>
 
 namespace pbrt {
 
@@ -171,13 +172,13 @@ class CoefficientSpectrum {
     __both__
     friend inline CoefficientSpectrum operator*(Float a,
                                                 const CoefficientSpectrum &s) {
-        assert(!pbrt::isnan(a) && !s.HasNaNs());
+        assert(!pbrt::math::isnan(a) && !s.HasNaNs());
         return s * a;
     }
     __both__
     CoefficientSpectrum operator/(Float a) const {
         assert(a != 0);
-        assert(!pbrt::isnan(a));
+        assert(!pbrt::math::isnan(a));
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] /= a;
         assert(!ret.HasNaNs());
@@ -208,7 +209,7 @@ class CoefficientSpectrum {
     }
     friend CoefficientSpectrum Sqrt(const CoefficientSpectrum &s) {
         CoefficientSpectrum ret;
-        for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] = std::sqrt(s.c[i]);
+        for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] = pbrt::math::sqrt(s.c[i]);
         DCHECK(!ret.HasNaNs());
         return ret;
     }
@@ -259,7 +260,7 @@ class CoefficientSpectrum {
     __both__
     bool HasNaNs() const {
         for (int i = 0; i < nSpectrumSamples; ++i)
-            if (pbrt::isnan(c[i])) return true;
+            if (pbrt::math::isnan(c[i])) return true;
         return false;
     } 
     bool Write(FILE *f) const {
@@ -314,6 +315,7 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
         s.c[0] = rgb[0];
         s.c[1] = rgb[1];
         s.c[2] = rgb[2];
+
         DCHECK(!s.HasNaNs());
         return s;
     }

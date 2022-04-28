@@ -49,7 +49,7 @@ void Material::Bump(Texture<Float> const * d,
     SurfaceInteraction siEval = *si;
 
     // Shift _siEval_ _du_ in the $u$ direction
-    Float du = .5f * (std::abs(si->dudx) + std::abs(si->dudy));
+    Float du = .5f * (pbrt::math::abs(si->dudx) + pbrt::math::abs(si->dudy));
     // The most common reason for du to be zero is for ray that start from
     // light sources, where no differentials are available. In this case,
     // we try to choose a small enough du so that we still get a decently
@@ -62,7 +62,7 @@ void Material::Bump(Texture<Float> const * d,
     Float uDisplace = d->Evaluate(siEval);
 
     // Shift _siEval_ _dv_ in the $v$ direction
-    Float dv = .5f * (std::abs(si->dvdx) + std::abs(si->dvdy));
+    Float dv = .5f * (pbrt::math::abs(si->dvdx) + pbrt::math::abs(si->dvdy));
     if (dv == 0) dv = .0005f;
     siEval.p = si->p + dv * si->shading.dpdv;
     siEval.uv = si->uv + Vector2f(0.f, dv);

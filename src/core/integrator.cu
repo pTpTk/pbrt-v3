@@ -57,7 +57,7 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
                                bool handleMedia, const Distribution1D *lightDistrib) {
     // ProfilePhase p(Prof::DirectLighting);
     // Randomly choose a single light to sample, _light_
-    int nLights = utils::get_buffer_size(scene.lights);
+    int nLights = scene.lights_size;
     if (nLights == 0) return Spectrum(0.f);
     int lightNum;
     Float lightPdf;
@@ -200,13 +200,13 @@ void SamplerIntegrator::Render(const Scene &scene) {
             RayDifferential* rays;
             Float* rayWeights;
             Spectrum* Ls;
-            cudaMallocManaged(&cameraSamples, sizeof(CameraSample) 
+            cudaMallocHost(&cameraSamples, sizeof(CameraSample) 
                               * sampler->samplesPerPixel);
-            cudaMallocManaged(&rays,          sizeof(RayDifferential) 
+            cudaMallocHost(&rays,          sizeof(RayDifferential) 
                               * sampler->samplesPerPixel); 
-            cudaMallocManaged(&rayWeights,    sizeof(Float) 
+            cudaMallocHost(&rayWeights,    sizeof(Float) 
                               * sampler->samplesPerPixel); 
-            cudaMallocManaged(&Ls,            sizeof(Spectrum) 
+            cudaMallocHost(&Ls,            sizeof(Spectrum) 
                               * sampler->samplesPerPixel); 
 
             new(cameraSamples) CameraSample[sampler->samplesPerPixel];

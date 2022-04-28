@@ -145,7 +145,7 @@ Float SampleCatmullRom(int n, const Float *x, const Float *f, const Float *F,
     // Set initial guess for $t$ by importance sampling a linear interpolant
     Float t;
     if (f0 != f1)
-        t = (f0 - std::sqrt(max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
+        t = (f0 - pbrt::math::sqrt(max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
             (f0 - f1);
     else
         t = u / f0;
@@ -165,7 +165,7 @@ Float SampleCatmullRom(int n, const Float *x, const Float *f, const Float *F,
                          t * (d0 + d1 + 2 * (f0 - f1))));
 
         // Stop the iteration if converged
-        if (std::abs(Fhat - u) < 1e-6f || b - a < 1e-6f) break;
+        if (pbrt::math::abs(Fhat - u) < 1e-6f || b - a < 1e-6f) break;
 
         // Update bisection bounds using updated _t_
         if (Fhat - u < 0)
@@ -255,7 +255,7 @@ Float SampleCatmullRom2D(int size1, int size2, const Float *nodes1,
     // Set initial guess for $t$ by importance sampling a linear interpolant
     Float t;
     if (f0 != f1)
-        t = (f0 - std::sqrt(max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
+        t = (f0 - pbrt::math::sqrt(max((Float)0, f0 * f0 + 2 * u * (f1 - f0)))) /
             (f0 - f1);
     else
         t = u / f0;
@@ -275,7 +275,7 @@ Float SampleCatmullRom2D(int size1, int size2, const Float *nodes1,
                          t * (d0 + d1 + 2 * (f0 - f1))));
 
         // Stop the iteration if converged
-        if (std::abs(Fhat - u) < 1e-6f || b - a < 1e-6f) break;
+        if (pbrt::math::abs(Fhat - u) < 1e-6f || b - a < 1e-6f) break;
 
         // Update bisection bounds using updated _t_
         if (Fhat - u < 0)
@@ -366,7 +366,7 @@ Float InvertCatmullRom(int n, const Float *x, const Float *values, Float u) {
                (3 * t2 - 4 * t + 1) * d0 + (3 * t2 - 2 * t) * d1;
 
         // Stop the iteration if converged
-        if (std::abs(Fhat - u) < 1e-6f || b - a < 1e-6f) break;
+        if (pbrt::math::abs(Fhat - u) < 1e-6f || b - a < 1e-6f) break;
 
         // Update bisection bounds using updated _t_
         if (Fhat - u < 0)
@@ -409,7 +409,7 @@ Float SampleFourier(const Float *ak, const Float *recip, int m, Float u,
 
         // Initialize sine and cosine iterates
         double cosPhi = std::cos(phi);
-        double sinPhi = std::sqrt(std::max(0., 1 - cosPhi * cosPhi));
+        double sinPhi = pbrt::math::sqrt(std::max(0., 1 - cosPhi * cosPhi));
         double cosPhiPrev = cosPhi, cosPhiCur = 1;
         double sinPhiPrev = -sinPhi, sinPhiCur = 0;
 
@@ -438,7 +438,7 @@ Float SampleFourier(const Float *ak, const Float *recip, int m, Float u,
             a = phi;
 
         // Stop the Fourier bisection iteration if converged
-        if (std::abs(F) < 1e-6f || b - a < 1e-6f) break;
+        if (pbrt::math::abs(F) < 1e-6f || b - a < 1e-6f) break;
 
         // Perform a Newton step given $f(\phi)$ and $F(\phi)$
         phi -= F / f;

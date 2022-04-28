@@ -95,8 +95,8 @@ class EFloat {
     __both__
     explicit operator double() const { return v; }
     __both__
-    float GetAbsoluteError() const { return NextFloatUp(max(std::abs(high - v),
-                                                                 std::abs(v - low))); }
+    float GetAbsoluteError() const { return NextFloatUp(max(pbrt::math::abs(high - v),
+                                                                 pbrt::math::abs(v - low))); }
     __both__
     float UpperBound() const { return high; }
     __both__
@@ -104,7 +104,7 @@ class EFloat {
 #ifndef NDEBUG
     __both__
     float GetRelativeError() const {
-        return std::abs((vPrecise - v) / vPrecise);
+        return pbrt::math::abs((vPrecise - v) / vPrecise);
     }
     __both__
     long double PreciseValue() const { return vPrecise; }
@@ -178,11 +178,11 @@ class EFloat {
     inline bool operator==(EFloat fe) const { return v == fe.v; }
     __both__
     inline void Check() const {
-        if (!pbrt::isinf(low) && !pbrt::isnan(low) && !pbrt::isinf(high) &&
-            !pbrt::isnan(high))
+        if (!pbrt::isinf(low) && !pbrt::math::isnan(low) && !pbrt::isinf(high) &&
+            !pbrt::math::isnan(high))
             assert(low <= high);
 #ifndef NDEBUG
-        if (!pbrt::isinf(v) && !pbrt::isnan(v)) {
+        if (!pbrt::isinf(v) && !pbrt::math::isnan(v)) {
             assert(LowerBound() <= vPrecise);
             assert(vPrecise <= UpperBound());
         }
@@ -239,12 +239,12 @@ inline EFloat operator-(float f, EFloat fe) { return EFloat(f) - fe; }
 __both__
 inline EFloat sqrt(EFloat fe) {
     EFloat r;
-    r.v = std::sqrt(fe.v);
+    r.v = pbrt::math::sqrt(fe.v);
 #ifndef NDEBUG
-    r.vPrecise = std::sqrt(fe.vPrecise);
+    r.vPrecise = pbrt::math::sqrt(fe.vPrecise);
 #endif
-    r.low = NextFloatDown(std::sqrt(fe.low));
-    r.high = NextFloatUp(std::sqrt(fe.high));
+    r.low = NextFloatDown(pbrt::math::sqrt(fe.low));
+    r.high = NextFloatUp(pbrt::math::sqrt(fe.high));
     r.Check();
     return r;
 }
@@ -267,9 +267,9 @@ inline EFloat abs(EFloat fe) {
     } else {
         // The interval straddles zero.
         EFloat r;
-        r.v = std::abs(fe.v);
+        r.v = pbrt::math::abs(fe.v);
 #ifndef NDEBUG
-        r.vPrecise = std::abs(fe.vPrecise);
+        r.vPrecise = pbrt::math::abs(fe.vPrecise);
 #endif
         r.low = 0;
         r.high = max(-fe.low, fe.high);
@@ -284,7 +284,7 @@ inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0, EFloat *t1) {
     // Find quadratic discriminant
     double discrim = (double)B.v * (double)B.v - 4. * (double)A.v * (double)C.v;
     if (discrim < 0.) return false;
-    double rootDiscrim = std::sqrt(discrim);
+    double rootDiscrim = pbrt::math::sqrt(discrim);
 
     EFloat floatRootDiscrim(rootDiscrim, MachineEpsilon * rootDiscrim);
 

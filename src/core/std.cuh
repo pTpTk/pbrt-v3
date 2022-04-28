@@ -6,6 +6,81 @@ namespace pbrt{
 
 #define __both__ __device__ __host__
 
+namespace math{
+__both__
+inline float sqrt(float x) {
+   #ifdef __CUDA_ARCH__
+      return sqrtf(x);
+   #else
+      return std::sqrt(x);
+   #endif
+}
+
+__both__
+inline double sqrt(double x) {
+   #ifdef __CUDA_ARCH__
+      return sqrt(x);
+   #else
+      return std::sqrt(x);
+   #endif
+}
+
+__both__
+inline long double sqrt(long double x) {
+   #ifdef __CUDA_ARCH__
+      return sqrt(x);
+   #else
+      return std::sqrt(x);
+   #endif
+}
+
+__both__
+inline long double abs(long double x) {
+   #ifdef __CUDA_ARCH__
+      return fabsf(x);
+   #else
+      return std::abs(x);
+   #endif
+}
+
+__both__
+inline float abs(float x) {
+   #ifdef __CUDA_ARCH__
+      return fabsf(x);
+   #else
+      return std::abs(x);
+   #endif
+}
+
+__both__
+inline double abs(double x) {
+   #ifdef __CUDA_ARCH__
+      return fabs(x);
+   #else
+      return std::abs(x);
+   #endif
+}
+
+__both__
+inline int isnan(float x){
+   #ifdef __CUDA_ARCH__
+      return isnan(x);
+   #else
+      return std::isnan(x);
+   #endif
+}
+
+__both__
+inline int isnan(double x){
+   #ifdef __CUDA_ARCH__
+      return isnan(x);
+   #else
+      return std::isnan(x);
+   #endif
+}
+
+}  // namespace math
+
 template<class T>
 __both__
 inline const T& min(const T& a, const T& b)
@@ -48,22 +123,22 @@ inline bool isinf(float x)
 __both__
 inline bool isinf(int x){return false;}
 
-__both__
-inline bool isnan(double x)
-{
-   union { uint64_t u; double f; } ieee754;
-   ieee754.f = x;
-   return ( (unsigned)(ieee754.u >> 32) & 0x7fffffff ) +
-          ( (unsigned)ieee754.u != 0 ) > 0x7ff00000;
-}
+// __both__
+// inline bool isnan(double x)
+// {
+//    union { uint64_t u; double f; } ieee754;
+//    ieee754.f = x;
+//    return ( (unsigned)(ieee754.u >> 32) & 0x7fffffff ) +
+//           ( (unsigned)ieee754.u != 0 ) > 0x7ff00000;
+// }
 
-__both__
-inline bool isnan(float x)
-{
-   union { uint32_t u; float f; } ieee754;
-   ieee754.f = x;
-   return ( ieee754.u & 0x7fffffff >  0x7f800000 );
-}
+// __both__
+// inline bool isnan(float x)
+// {
+//    union { uint32_t u; float f; } ieee754;
+//    ieee754.f = x;
+//    return ( ieee754.u & 0x7fffffff >  0x7f800000 );
+// }
 
 __both__
 inline bool isnan(int x){return false;}

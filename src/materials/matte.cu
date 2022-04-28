@@ -51,12 +51,12 @@ void MatteMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
     if (bumpMap) Bump(bumpMap, si);
 
     // Evaluate textures for _MatteMaterial_ material and allocate BRDF
-    si->bsdf = ARENA_ALLOC(arena, BSDF)(*si);
+    si->bsdf = new BSDF(*si);
     Spectrum r = Kd->Evaluate(*si).Clamp();
     Float sig = Clamp(sigma->Evaluate(*si), 0, 90);
     if (!r.IsBlack()) {
         if (sig == 0)
-            si->bsdf->Add(ARENA_ALLOC(arena, LambertianReflection)(r));
+            si->bsdf->Add(new LambertianReflection(r));
     }
 }
 
@@ -78,7 +78,7 @@ MatteMaterial *CreateMatteMaterial(const TextureParams &mp) {
     Texture<Float>* bumpMap = bumpMapPtr;
 
     void* ptr;
-    cudaMallocManaged(&ptr, sizeof(MatteMaterial));
+    cudaMallocHost(&ptr, sizeof(MatteMaterial));
     return new(ptr) MatteMaterial(Kd, sigma, bumpMap);
 }
 

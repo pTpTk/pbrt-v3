@@ -42,10 +42,10 @@ __both__
 bool SolveLinearSystem2x2(const Float A[2][2], const Float B[2], Float *x0,
                           Float *x1) {
     Float det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
-    if (std::abs(det) < 1e-10f) return false;
+    if (pbrt::math::abs(det) < 1e-10f) return false;
     *x0 = (A[1][1] * B[0] - A[0][1] * B[1]) / det;
     *x1 = (A[0][0] * B[1] - A[1][0] * B[0]) / det;
-    if (pbrt::isnan(*x0) || pbrt::isnan(*x1)) return false;
+    if (pbrt::math::isnan(*x0) || pbrt::math::isnan(*x1)) return false;
     return true;
 }
 __both__
@@ -93,8 +93,8 @@ Matrix4x4 Inverse(const Matrix4x4 &m) {
             if (ipiv[j] != 1) {
                 for (int k = 0; k < 4; k++) {
                     if (ipiv[k] == 0) {
-                        if (std::abs(minv[j][k]) >= big) {
-                            big = Float(std::abs(minv[j][k]));
+                        if (pbrt::math::abs(minv[j][k]) >= big) {
+                            big = Float(pbrt::math::abs(minv[j][k]));
                             irow = j;
                             icol = k;
                         }
@@ -334,7 +334,7 @@ class Interval {
 };
 __both__
 inline Interval Sin(const Interval &i) {
-    assert(i.low => 0);
+    assert(i.low >= 0);
     assert(i.high <= 2.0001 * Pi);
     Float sinLow = std::sin(i.low), sinHigh = std::sin(i.high);
     if (sinLow > sinHigh) pbrt::Swap(sinLow, sinHigh);
@@ -344,7 +344,7 @@ inline Interval Sin(const Interval &i) {
 }
 __both__
 inline Interval Cos(const Interval &i) {
-    assert(i.low => 0);
+    assert(i.low >= 0);
     assert(i.high <= 2.0001 * Pi);
     Float cosLow = std::cos(i.low), cosHigh = std::cos(i.high);
     if (cosLow > cosHigh) pbrt::Swap(cosLow, cosHigh);
@@ -1129,9 +1129,9 @@ void AnimatedTransform::Decompose(const Matrix4x4 &m, Vector3f *T,
         // Compute norm of difference between _R_ and _Rnext_
         norm = 0;
         for (int i = 0; i < 3; ++i) {
-            Float n = std::abs(R.m[i][0] - Rnext.m[i][0]) +
-                      std::abs(R.m[i][1] - Rnext.m[i][1]) +
-                      std::abs(R.m[i][2] - Rnext.m[i][2]);
+            Float n = pbrt::math::abs(R.m[i][0] - Rnext.m[i][0]) +
+                      pbrt::math::abs(R.m[i][1] - Rnext.m[i][1]) +
+                      pbrt::math::abs(R.m[i][2] - Rnext.m[i][2]);
             norm = max(norm, n);
         }
         R = Rnext;

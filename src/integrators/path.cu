@@ -91,7 +91,7 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
                 L += beta * isect.Le(-ray.d);
                 // VLOG(2) << "Added Le -> L = " << L;
             } else {
-                for (int i = 0; i < utils::get_buffer_size(scene.infiniteLights); ++i) {
+                for (int i = 0; i < scene.infiniteLights_size; ++i) {
                     const auto &light = scene.infiniteLights[i];
                     L += beta * light->Le(ray);
                 }
@@ -184,7 +184,7 @@ PathIntegrator *CreatePathIntegrator(const ParamSet &params,
     std::string lightStrategy =
         params.FindOneString("lightsamplestrategy", "spatial");
     void* ptr;
-    cudaMallocManaged(&ptr, sizeof(PathIntegrator));
+    cudaMallocHost(&ptr, sizeof(PathIntegrator));
     return new(ptr) PathIntegrator(maxDepth, camera, sampler, pixelBounds,
                               rrThreshold, lightStrategy);
 }
