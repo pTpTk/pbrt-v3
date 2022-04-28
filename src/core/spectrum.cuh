@@ -330,6 +330,7 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
         XYZToRGB(xyz, r.c);
         return r;
     }
+    __both__
     Float y() const {
         const Float YWeight[3] = {0.212671f, 0.715160f, 0.072169f};
         return YWeight[0] * c[0] + YWeight[1] * c[1] + YWeight[2] * c[2];

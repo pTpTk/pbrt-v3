@@ -61,12 +61,25 @@ void MatteMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
 }
 
 MatteMaterial *CreateMatteMaterial(const TextureParams &mp) {
-    std::shared_ptr<Texture<Spectrum>> Kd =
-        mp.GetSpectrumTexture("Kd", Spectrum(0.5f));
-    std::shared_ptr<Texture<Float>> sigma = mp.GetFloatTexture("sigma", 0.f);
-    std::shared_ptr<Texture<Float>> bumpMap =
-        mp.GetFloatTextureOrNull("bumpmap");
-    return new MatteMaterial(Kd, sigma, bumpMap);
+    Texture<Spectrum>* KdPtr = mp.GetSpectrumTexture("Kd", Spectrum(0.5f)).get();
+    Texture<Float>* sigmaPtr = mp.GetFloatTexture("sigma", 0.f).get();
+    Texture<Float>* bumpMapPtr = mp.GetFloatTextureOrNull("bumpmap").get();
+    
+    if(KdPtr)
+        cudaHostRegister(KdPtr, sizeof(Texture<Spectrum>), cudaHostRegisterDefault);
+    Texture<Spectrum>* Kd = KdPtr;
+
+    if(sigmaPtr)
+        cudaHostRegister(sigmaPtr, sizeof(Texture<Float>), cudaHostRegisterDefault);
+    Texture<Float>* sigma = sigmaPtr;
+
+    if(bumpMapPtr)
+        cudaHostRegister(bumpMapPtr, sizeof(Texture<Float>), cudaHostRegisterDefault);
+    Texture<Float>* bumpMap = bumpMapPtr;
+
+    void* ptr;
+    cudaMallocManaged(&ptr, sizeof(MatteMaterial));
+    return new(ptr) MatteMaterial(Kd, sigma, bumpMap);
 }
 
 }  // namespace pbrt

@@ -42,7 +42,7 @@ namespace pbrt {
 DiffuseAreaLight::DiffuseAreaLight(const Transform &LightToWorld,
                                    const MediumInterface &mediumInterface,
                                    const Spectrum &Lemit, int nSamples,
-                                   const std::shared_ptr<Shape> &shape,
+                                   Shape* const shape,
                                    bool twoSided)
     : AreaLight(LightToWorld, mediumInterface, nSamples),
       Lemit(Lemit),
@@ -52,7 +52,7 @@ DiffuseAreaLight::DiffuseAreaLight(const Transform &LightToWorld,
     // Warn if light has transformation with non-uniform scale, though not
     // for Triangles, since this doesn't matter for them.
     if (WorldToLight.HasScale() &&
-        shape.get() == nullptr)
+        shape == nullptr)
         Warning(
             "Scaling detected in world to light transformation! "
             "The system has numerous assumptions, implicit and explicit, "
@@ -131,17 +131,19 @@ void DiffuseAreaLight::Pdf_Le(const Ray &ray, const Normal3f &n, Float *pdfPos,
                        : CosineHemispherePdf(Dot(n, ray.d));
 }
 
-std::shared_ptr<AreaLight> CreateDiffuseAreaLight(
+AreaLight* CreateDiffuseAreaLight(
     const Transform &light2world, const Medium *medium,
-    const ParamSet &paramSet, const std::shared_ptr<Shape> &shape) {
+    const ParamSet &paramSet, Shape * const shape) {
     Spectrum L = paramSet.FindOneSpectrum("L", Spectrum(1.0));
     Spectrum sc = paramSet.FindOneSpectrum("scale", Spectrum(1.0));
     int nSamples = paramSet.FindOneInt("samples",
                                        paramSet.FindOneInt("nsamples", 1));
     bool twoSided = paramSet.FindOneBool("twosided", false);
     if (PbrtOptions.quickRender) nSamples = std::max(1, nSamples / 4);
-    return std::make_shared<DiffuseAreaLight>(light2world, medium, L * sc,
-                                              nSamples, shape, twoSided);
+    void* ptr;
+    cudaMallocManaged(&ptr, sizeof(DiffuseAreaLight));
+    return new(ptr) DiffuseAreaLight(light2world, medium, L * sc,
+                                     nSamples, shape, twoSided);
 }
 
 }  // namespace pbrt

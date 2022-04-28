@@ -71,27 +71,29 @@ void StratifiedSample2D(Point2f *samples, int nx, int ny, RNG &rng,
 void LatinHypercube(Float *samples, int nSamples, int nDim, RNG &rng);
 struct Distribution1D {
     // Distribution1D Public Methods
-    Distribution1D(const Float *f, int n) : func(f, f + n), cdf(n + 1) {
+    __both__
+    Distribution1D(const Float *f, int n) {
         // Compute integral of step function at $x_i$
+        N = n+1;
+        func = (Float*)malloc(N*sizeof(Float));
+        for (int i = 0; i < N; i++) func[i] = *f++;
+        cdf = (Float*)malloc(N*sizeof(Float));
         cdf[0] = 0;
-        for (int i = 1; i < n + 1; ++i) cdf[i] = cdf[i - 1] + func[i - 1] / n;
+        for (int i = 1; i < N; ++i) cdf[i] = cdf[i - 1] + func[i - 1] / n;
 
         // Transform step function integral into CDF
         funcInt = cdf[n];
         if (funcInt == 0) {
-            for (int i = 1; i < n + 1; ++i) cdf[i] = Float(i) / Float(n);
+            for (int i = 1; i < N; ++i) cdf[i] = Float(i) / Float(n);
         } else {
-            for (int i = 1; i < n + 1; ++i) cdf[i] /= funcInt;
+            for (int i = 1; i < N; ++i) cdf[i] /= funcInt;
         }
-        cdf_ptr = cdf.data();
-        func_ptr = func.data();
-        N = (int)func.size();
     }
     __both__
     int Count() const { return N; }
     Float SampleContinuous(Float u, Float *pdf, int *off = nullptr) const {
         // Find surrounding CDF segments and _offset_
-        int offset = FindInterval((int)cdf.size(),
+        int offset = FindInterval((int)N,
                                   [&](int index) { return cdf[index] <= u; });
         if (off) *off = offset;
         // Compute offset along CDF segment
@@ -112,21 +114,21 @@ struct Distribution1D {
     int SampleDiscrete(Float u, Float *pdf = nullptr,
                        Float *uRemapped = nullptr) const {
         // Find surrounding CDF segments and _offset_
-        int offset = FindIntervalSampling(N, cdf_ptr, u);
-        if (pdf) *pdf = (funcInt > 0) ? func_ptr[offset] / (funcInt * Count()) : 0;
+        int offset = FindIntervalSampling(N, cdf, u);
+        if (pdf) *pdf = (funcInt > 0) ? func[offset] / (funcInt * Count()) : 0;
         if (uRemapped)
-            *uRemapped = (u - cdf_ptr[offset]) / (cdf_ptr[offset + 1] - cdf_ptr[offset]);
+            *uRemapped = (u - cdf[offset]) / (cdf[offset + 1] - cdf[offset]);
         if (uRemapped) assert(*uRemapped >= 0.f && *uRemapped <= 1.f);
         return offset;
     }
     Float DiscretePDF(int index) const {
         assert(index >= 0 && index < Count());
-        return func_ptr[index] / (funcInt * Count());
+        return func[index] / (funcInt * Count());
     }
 
     // Distribution1D Public Data
-    std::vector<Float> func, cdf;
-    Float *func_ptr, *cdf_ptr;
+    // std::vector<Float> func, cdf;
+    Float *func, *cdf;
     int N;
     Float funcInt;
 };

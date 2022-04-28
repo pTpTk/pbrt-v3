@@ -51,23 +51,25 @@ class Scene {
   public:
     // Scene Public Methods
     Scene(Primitive* aggregate,
-          shared_ptr<Light>* const lights)
+          Light** const lights)
         : lights(lights), aggregate(aggregate) {
         // Scene Constructor Implementation
         worldBound = aggregate->WorldBound();
         std::size_t count = 0;
         for (auto it = lights; it != nullptr; ++it) {
-            shared_ptr<Light> light = *it;
+            Light* light = *it;
             light->Preprocess(*this);
             if (light->flags & (int)LightFlags::Infinite) {
                 ++count;
             }
         }
         // allocate memory
-        infiniteLights = new shared_ptr<Light>[count];
+        void* ptr;
+        cudaMallocManaged(&ptr, sizeof(Light*) * count);
+        infiniteLights = new(ptr) Light*[count];
         count = 0;
         for (auto it = lights; it != nullptr; ++it) {
-            shared_ptr<Light> light = *it;
+            Light* light = *it;
             // uncomment this line if you see runtime probs
             // light->Preprocess(*this);
             if (light->flags & (int)LightFlags::Infinite) {
@@ -86,14 +88,14 @@ class Scene {
                      Spectrum *transmittance) const;
 
     // Scene Public Data
-    shared_ptr<Light>* lights;
+    Light** lights;
     // Store infinite light sources separately for cases where we only want
     // to loop over them.
-    shared_ptr<Light>* infiniteLights;
+    Light** infiniteLights;
 
   private:
     // Scene Private Data
-    std::shared_ptr<Primitive> aggregate;
+    Primitive* aggregate;
     Bounds3f worldBound;
 };
 

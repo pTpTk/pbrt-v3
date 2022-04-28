@@ -204,7 +204,7 @@ Spectrum BSDF::Sample_f(const Vector3f &woWorld, Vector3f *wiWorld,
         // matchingComps << ", bxdf: " << bxdf->ToString();
 
     // Remap _BxDF_ sample _u_ to $[0,1)^2$
-    Point2f uRemapped(std::min(u[0] * matchingComps - comp, OneMinusEpsilon),
+    Point2f uRemapped(min(u[0] * matchingComps - comp, OneMinusEpsilon),
                       u[1]);
 
     // Sample chosen _BxDF_

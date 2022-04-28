@@ -43,7 +43,7 @@ namespace pbrt {
 // Material Method Definitions
 Material::~Material() {}
 __both__
-void Material::Bump(const shared_ptr<Texture<Float>> &d,
+void Material::Bump(Texture<Float> const * d,
                     SurfaceInteraction *si) {
     // Compute offset positions and evaluate displacement texture
     SurfaceInteraction siEval = *si;

@@ -84,10 +84,8 @@ class Sphere : public Shape {
     const Float thetaMin, thetaMax, phiMax;
 };
 
-std::shared_ptr<Shape> CreateSphereShape(const Transform *o2w,
-                                         const Transform *w2o,
-                                         bool reverseOrientation,
-                                         const ParamSet &params);
+Shape* CreateSphereShape(const Transform *o2w, const Transform *w2o,
+                         bool reverseOrientation, const ParamSet &params);
 
 }  // namespace pbrt
 

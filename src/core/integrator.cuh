@@ -73,8 +73,8 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uShading,
 class SamplerIntegrator : public Integrator {
   public:
     // SamplerIntegrator Public Methods
-    SamplerIntegrator(std::shared_ptr<const Camera> camera,
-                      std::shared_ptr<Sampler> sampler,
+    SamplerIntegrator(const Camera* camera,
+                      Sampler* sampler,
                       const Bounds2i &pixelBounds)
         : camera(camera), sampler(sampler), pixelBounds(pixelBounds) {}
     virtual void Preprocess(const Scene &scene, Sampler &sampler) {}
@@ -86,11 +86,11 @@ class SamplerIntegrator : public Integrator {
 
   protected:
     // SamplerIntegrator Protected Data
-    std::shared_ptr<const Camera> camera;
+    const Camera* camera;
 
   private:
     // SamplerIntegrator Private Data
-    std::shared_ptr<Sampler> sampler;
+    Sampler* sampler;
     const Bounds2i pixelBounds;
 };
 

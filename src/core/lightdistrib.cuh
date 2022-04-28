@@ -57,7 +57,7 @@ class LightDistribution {
     virtual const Distribution1D *Lookup(const Point3f &p) const = 0;
 };
 
-std::unique_ptr<LightDistribution> CreateLightSampleDistribution(
+LightDistribution* CreateLightSampleDistribution(
     const std::string &name, const Scene &scene);
 
 // A spatially-varying light distribution that adjusts the probability of

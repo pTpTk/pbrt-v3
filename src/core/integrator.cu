@@ -68,7 +68,7 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
         lightNum = min((int)(sampler.Get1D() * nLights), nLights - 1);
         lightPdf = Float(1) / nLights;
     }
-    shared_ptr<Light> const &light = scene.lights[lightNum];
+    Light const *light = scene.lights[lightNum];
     Point2f uLight = sampler.Get2D();
     Point2f uScattering = sampler.Get2D();
     return EstimateDirect(it, uScattering, *light, uLight,

@@ -45,10 +45,11 @@ namespace pbrt {
 
 LightDistribution::~LightDistribution() {}
 
-std::unique_ptr<LightDistribution> CreateLightSampleDistribution(
+LightDistribution* CreateLightSampleDistribution(
     const std::string &name, const Scene &scene) {
-        return std::unique_ptr<LightDistribution>{
-            new SpatialLightDistribution(scene)};
+        void* ptr;
+        cudaMallocManaged(&ptr, sizeof(SpatialLightDistribution));
+        return new(ptr) SpatialLightDistribution(scene);
 }
 
 ///////////////////////////////////////////////////////////////////////////

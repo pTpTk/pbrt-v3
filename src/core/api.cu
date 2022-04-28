@@ -60,8 +60,8 @@ Options PbrtOptions;
 
 // API Local Classes
 PBRT_CONSTEXPR int MaxTransforms = 2;
-PBRT_CONSTEXPR int StartTransformBits = 1 << 0;
-PBRT_CONSTEXPR int EndTransformBits = 1 << 1;
+// PBRT_CONSTEXPR int StartTransformBits = 1 << 0;
+// PBRT_CONSTEXPR int EndTransformBits = 1 << 1;
 PBRT_CONSTEXPR int AllTransformsBits = (1 << MaxTransforms) - 1;
 struct TransformSet {
     // TransformSet Public Methods
@@ -111,11 +111,11 @@ struct RenderOptions {
     std::string CameraName = "perspective";
     ParamSet CameraParams;
     TransformSet CameraToWorld;
-    std::map<std::string, std::shared_ptr<Medium>> namedMedia;
-    std::vector<std::shared_ptr<Light>> lights;
-    std::vector<std::shared_ptr<Primitive>> primitives;
-    std::map<std::string, std::vector<std::shared_ptr<Primitive>>> instances;
-    std::vector<std::shared_ptr<Primitive>> *currentInstance = nullptr;
+    std::map<std::string, Medium*> namedMedia;
+    std::vector<Light*> lights;
+    std::vector<Primitive*> primitives;
+    std::map<std::string, std::vector<Primitive*>> instances;
+    std::vector<Primitive*> *currentInstance = nullptr;
     bool haveScatteringMedia = false;
 };
 
@@ -124,27 +124,32 @@ struct RenderOptions {
 // different parameters from the shape).
 struct MaterialInstance {
     MaterialInstance() = default;
-    MaterialInstance(const std::string &name, const std::shared_ptr<Material> &mtl,
+    MaterialInstance(const std::string &name, Material *mtl,
                      ParamSet params)
-        : name(name), material(mtl), params(std::move(params)) {}
+        : name(name), params(std::move(params)) 
+    {
+        material = mtl;
+    }
 
     std::string name;
-    std::shared_ptr<Material> material;
+    Material* material;
     ParamSet params;
 };
 
 struct GraphicsState {
     // Graphics State Methods
     GraphicsState()
-        : floatTextures(std::make_shared<FloatTextureMap>()),
-          spectrumTextures(std::make_shared<SpectrumTextureMap>()),
-          namedMaterials(std::make_shared<NamedMaterialMap>()) {
+    // FIXME: would it be host?
+    {
+        floatTextures = new FloatTextureMap();
+        spectrumTextures = new SpectrumTextureMap();
+        namedMaterials = new NamedMaterialMap();
         ParamSet empty;
         TextureParams tp(empty, empty, *floatTextures, *spectrumTextures);
-        std::shared_ptr<Material> mtl(CreateMatteMaterial(tp));
-        currentMaterial = std::make_shared<MaterialInstance>("matte", mtl, ParamSet());
+        Material* mtl(CreateMatteMaterial(tp));
+        currentMaterial = new MaterialInstance("matte", mtl, ParamSet());
     }
-    std::shared_ptr<Material> GetMaterialForShape(const ParamSet &geomParams);
+    Material* GetMaterialForShape(const ParamSet &geomParams);
     MediumInterface CreateMediumInterface();
 
     // Graphics State
@@ -157,18 +162,18 @@ struct GraphicsState {
     // maps, but instead record that each one is shared.  Only if an item
     // is added to one is a unique copy actually made.
     using FloatTextureMap = std::map<std::string, std::shared_ptr<Texture<Float>>>;
-    std::shared_ptr<FloatTextureMap> floatTextures;
+    FloatTextureMap* floatTextures;
     bool floatTexturesShared = false;
 
     using SpectrumTextureMap = std::map<std::string, std::shared_ptr<Texture<Spectrum>>>;
-    std::shared_ptr<SpectrumTextureMap> spectrumTextures;
+    SpectrumTextureMap* spectrumTextures;
     bool spectrumTexturesShared = false;
 
     using NamedMaterialMap = std::map<std::string, std::shared_ptr<MaterialInstance>>;
-    std::shared_ptr<NamedMaterialMap> namedMaterials;
+    NamedMaterialMap* namedMaterials;
     bool namedMaterialsShared = false;
 
-    std::shared_ptr<MaterialInstance> currentMaterial;
+    MaterialInstance* currentMaterial;
     ParamSet areaLightParams;
     std::string areaLight;
     bool reverseOrientation = false;
@@ -307,7 +312,7 @@ static TransformCache transformCache;
 int catIndentCount = 0;
 
 // API Forward Declarations
-std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
+std::vector<Shape*> MakeShapes(const std::string &name,
                                                const Transform *ObjectToWorld,
                                                const Transform *WorldToObject,
                                                bool reverseOrientation,
@@ -358,13 +363,13 @@ std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
     } while (false) /* swallow trailing semicolon */
 
 // Object Creation Function Definitions
-std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
+std::vector<Shape*> MakeShapes(const std::string &name,
                                                const Transform *object2world,
                                                const Transform *world2object,
                                                bool reverseOrientation,
                                                const ParamSet &paramSet) {
-    std::vector<std::shared_ptr<Shape>> shapes;
-    std::shared_ptr<Shape> s;
+    std::vector<Shape*> shapes;
+    Shape* s;
     if (name == "sphere")
         s = CreateSphereShape(object2world, world2object, reverseOrientation,
                               paramSet);
@@ -377,8 +382,7 @@ std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name,
 
 STAT_COUNTER("Scene/Materials created", nMaterialsCreated);
 
-std::shared_ptr<Material> MakeMaterial(const std::string &name,
-                                       const TextureParams &mp) {
+Material* MakeMaterial(const std::string &name, const TextureParams &mp) {
     Material *material = nullptr;
     if (name == "" || name == "none")
         return nullptr;
@@ -401,15 +405,15 @@ std::shared_ptr<Material> MakeMaterial(const std::string &name,
     mp.ReportUnused();
     if (!material) Error("Unable to create material \"%s\"", name.c_str());
     else ++nMaterialsCreated;
-    return std::shared_ptr<Material>(material);
+    return material;
 }
 
-std::shared_ptr<AreaLight> MakeAreaLight(const std::string &name,
+AreaLight* MakeAreaLight(const std::string &name,
                                          const Transform &light2world,
                                          const MediumInterface &mediumInterface,
                                          const ParamSet &paramSet,
-                                         const std::shared_ptr<Shape> &shape) {
-    std::shared_ptr<AreaLight> area;
+                                         const Shape* shape) {
+    AreaLight* area;
     if (name == "area" || name == "diffuse")
         area = CreateDiffuseAreaLight(light2world, mediumInterface.outside,
                                       paramSet, shape);
@@ -419,15 +423,17 @@ std::shared_ptr<AreaLight> MakeAreaLight(const std::string &name,
     return area;
 }
 
-std::shared_ptr<Primitive> MakeAccelerator(
+Primitive* MakeAccelerator(
     const std::string &name,
-    std::vector<std::shared_ptr<Primitive>> prims,
+    std::vector<Primitive*> prims,
     const ParamSet &paramSet) {
-    std::shared_ptr<Primitive> accel;
+    Primitive* accel;
     if (name == "bvh")
         accel = CreateBVHAccelerator(std::move(prims), paramSet);
-    else
+    else{
         Warning("Accelerator \"%s\" unknown.", name.c_str());
+        exit(0);
+    }
     paramSet.ReportUnused();
     return accel;
 }
@@ -454,7 +460,7 @@ Camera *MakeCamera(const std::string &name, const ParamSet &paramSet,
     return camera;
 }
 
-std::shared_ptr<Sampler> MakeSampler(const std::string &name,
+Sampler* MakeSampler(const std::string &name,
                                      const ParamSet &paramSet,
                                      const Film *film) {
     Sampler *sampler = nullptr;
@@ -463,7 +469,7 @@ std::shared_ptr<Sampler> MakeSampler(const std::string &name,
     else
         Warning("Sampler \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();
-    return std::shared_ptr<Sampler>(sampler);
+    return sampler;
 }
 
 std::unique_ptr<Filter> MakeFilter(const std::string &name,
@@ -642,9 +648,8 @@ void pbrtMaterial(const std::string &name, const ParamSet &params) {
     ParamSet emptyParams;
     TextureParams mp(params, emptyParams, *graphicsState.floatTextures,
                      *graphicsState.spectrumTextures);
-    std::shared_ptr<Material> mtl = MakeMaterial(name, mp);
-    graphicsState.currentMaterial =
-        std::make_shared<MaterialInstance>(name, mtl, params);
+    Material* mtl = MakeMaterial(name, mp);
+    graphicsState.currentMaterial = new MaterialInstance(name, mtl, params);
 
     if (PbrtOptions.cat || PbrtOptions.toPly) {
         printf("%*sMaterial \"%s\" ", catIndentCount, "", name.c_str());
@@ -666,8 +671,8 @@ void pbrtAreaLightSource(const std::string &name, const ParamSet &params) {
 
 void pbrtShape(const std::string &name, const ParamSet &params) {
     VERIFY_WORLD("Shape");
-    std::vector<std::shared_ptr<Primitive>> prims;
-    std::vector<std::shared_ptr<AreaLight>> areaLights;
+    std::vector<Primitive*> prims;
+    std::vector<AreaLight*> areaLights;
     if (PbrtOptions.cat || (PbrtOptions.toPly && name != "trianglemesh")) {
         printf("%*sShape \"%s\" ", catIndentCount, "", name.c_str());
         params.Print(catIndentCount);
@@ -680,24 +685,28 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
         // Create shapes for shape _name_
         Transform *ObjToWorld = transformCache.Lookup(curTransform[0]);
         Transform *WorldToObj = transformCache.Lookup(Inverse(curTransform[0]));
-        std::vector<std::shared_ptr<Shape>> shapes =
+        std::vector<Shape*> shapes =
             MakeShapes(name, ObjToWorld, WorldToObj,
                        graphicsState.reverseOrientation, params);
         if (shapes.empty()) return;
-        std::shared_ptr<Material> mtl = graphicsState.GetMaterialForShape(params);
+        Material* mtl = graphicsState.GetMaterialForShape(params);
         params.ReportUnused();
         MediumInterface mi = graphicsState.CreateMediumInterface();
         prims.reserve(shapes.size());
+        GeometricPrimitive* ptr;
+        cudaMallocManaged(&ptr, sizeof(GeometricPrimitive) * shapes.size());
         for (auto s : shapes) {
             // Possibly create area light for shape
-            std::shared_ptr<AreaLight> area;
+            AreaLight* area;
             if (graphicsState.areaLight != "") {
+
                 area = MakeAreaLight(graphicsState.areaLight, curTransform[0],
                                      mi, graphicsState.areaLightParams, s);
                 if (area) areaLights.push_back(area);
             }
             prims.push_back(
-                std::make_shared<GeometricPrimitive>(s, mtl, area, mi));
+                new(ptr) GeometricPrimitive(s, mtl, area, mi));
+            ptr++;
         }
     } else {
         printf("Animated Scene not supported.\n");
@@ -775,7 +784,7 @@ bool shapeMaySetMaterialParameters(const ParamSet &ps) {
     return false;
 }
 
-std::shared_ptr<Material> GraphicsState::GetMaterialForShape(
+Material* GraphicsState::GetMaterialForShape(
     const ParamSet &shapeParams) {
     CHECK(currentMaterial);
     if (shapeMaySetMaterialParameters(shapeParams)) {
@@ -794,7 +803,7 @@ MediumInterface GraphicsState::CreateMediumInterface() {
     if (currentInsideMedium != "") {
         if (renderOptions->namedMedia.find(currentInsideMedium) !=
             renderOptions->namedMedia.end())
-            m.inside = renderOptions->namedMedia[currentInsideMedium].get();
+            m.inside = renderOptions->namedMedia[currentInsideMedium];
         else
             Error("Named medium \"%s\" undefined.",
                   currentInsideMedium.c_str());
@@ -802,7 +811,7 @@ MediumInterface GraphicsState::CreateMediumInterface() {
     if (currentOutsideMedium != "") {
         if (renderOptions->namedMedia.find(currentOutsideMedium) !=
             renderOptions->namedMedia.end())
-            m.outside = renderOptions->namedMedia[currentOutsideMedium].get();
+            m.outside = renderOptions->namedMedia[currentOutsideMedium];
         else
             Error("Named medium \"%s\" undefined.",
                   currentOutsideMedium.c_str());
@@ -876,14 +885,10 @@ void pbrtWorldEnd() {
 }
 
 Scene *RenderOptions::MakeScene() {
-    std::shared_ptr<Primitive> accelerator =
+    Primitive* accelerator =
         MakeAccelerator(AcceleratorName, std::move(primitives), AcceleratorParams);
-    if (!accelerator) accelerator = std::make_shared<BVHAccel>(primitives);
-    std::vector<shared_ptr<Light>>light_ptrs(lights.size());
-    for(int i = 0; i < lights.size(); i++){
-        light_ptrs[i] = shared_ptr<Light>(lights[i]);
-    }
-    Scene *scene = new Scene(accelerator.get(), light_ptrs.data());
+    // if (!accelerator) accelerator = std::make_shared<BVHAccel>(primitives);
+    Scene *scene = new Scene(accelerator, lights.data());
     // Erase primitives and lights from _RenderOptions_
     primitives.clear();
     lights.clear();
@@ -891,13 +896,13 @@ Scene *RenderOptions::MakeScene() {
 }
 
 Integrator *RenderOptions::MakeIntegrator() const {
-    std::shared_ptr<const Camera> camera(MakeCamera());
+    const Camera* camera(MakeCamera());
     if (!camera) {
         Error("Unable to create camera");
         return nullptr;
     }
 
-    std::shared_ptr<Sampler> sampler =
+    Sampler* sampler =
         MakeSampler(SamplerName, SamplerParams, camera->film);
     if (!sampler) {
         Error("Unable to create sampler.");

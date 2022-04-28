@@ -180,36 +180,36 @@ static void RadixSort(std::vector<MortonPrimitive> *v) {
 }
 
 // BVHAccel Method Definitions
-BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
+BVHAccel::BVHAccel(std::vector<Primitive*> p,
                    int maxPrimsInNode, SplitMethod splitMethod)
     : maxPrimsInNode(std::min(255, maxPrimsInNode)),
       splitMethod(splitMethod),
-      primitives(std::move(p)) {
+      primitives_v(std::move(p)) {
     ProfilePhase _(Prof::AccelConstruction);
-    if (primitives.empty()) return;
+    if (primitives_v.empty()) return;
     // Build BVH from _primitives_
 
     // Initialize _primitiveInfo_ array for primitives
-    std::vector<BVHPrimitiveInfo> primitiveInfo(primitives.size());
-    for (size_t i = 0; i < primitives.size(); ++i)
-        primitiveInfo[i] = {i, primitives[i]->WorldBound()};
+    std::vector<BVHPrimitiveInfo> primitiveInfo(primitives_v.size());
+    for (size_t i = 0; i < primitives_v.size(); ++i)
+        primitiveInfo[i] = {i, primitives_v[i]->WorldBound()};
 
     // Build BVH tree for primitives using _primitiveInfo_
     MemoryArena arena(1024 * 1024);
     int totalNodes = 0;
-    std::vector<std::shared_ptr<Primitive>> orderedPrims;
-    orderedPrims.reserve(primitives.size());
+    std::vector<Primitive*> orderedPrims;
+    orderedPrims.reserve(primitives_v.size());
     BVHBuildNode *root;
     if (splitMethod == SplitMethod::HLBVH)
         root = HLBVHBuild(arena, primitiveInfo, &totalNodes, orderedPrims);
     else
-        root = recursiveBuild(arena, primitiveInfo, 0, primitives.size(),
+        root = recursiveBuild(arena, primitiveInfo, 0, primitives_v.size(),
                               &totalNodes, orderedPrims);
-    primitives.swap(orderedPrims);
+    primitives_v.swap(orderedPrims);
     primitiveInfo.resize(0);
     LOG(INFO) << StringPrintf("BVH created with %d nodes for %d "
                               "primitives (%.2f MB), arena allocated %.2f MB",
-                              totalNodes, (int)primitives.size(),
+                              totalNodes, (int)primitives_v.size(),
                               float(totalNodes * sizeof(LinearBVHNode)) /
                               (1024.f * 1024.f),
                               float(arena.TotalAllocated()) /
@@ -217,11 +217,16 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
 
     // Compute representation of depth-first traversal of BVH tree
     treeBytes += totalNodes * sizeof(LinearBVHNode) + sizeof(*this) +
-                 primitives.size() * sizeof(primitives[0]);
-    nodes = AllocAligned<LinearBVHNode>(totalNodes);
+                 primitives_v.size() * sizeof(primitives_v[0]);
+    cudaMallocManaged(&nodes, sizeof(LinearBVHNode)*totalNodes);
     int offset = 0;
     flattenBVHTree(root, &offset);
     CHECK_EQ(totalNodes, offset);
+    void* ptr;
+    cudaMallocManaged(&ptr, sizeof(Primitive*)*primitives_v.size());
+    primitives = (Primitive**)ptr;
+    for(int i = 0; i < primitives_v.size(); i++)
+        primitives[i] = primitives_v[i];
 }
 __both__
 Bounds3f BVHAccel::WorldBound() const {
@@ -236,7 +241,7 @@ struct BucketInfo {
 BVHBuildNode *BVHAccel::recursiveBuild(
     MemoryArena &arena, std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
     int end, int *totalNodes,
-    std::vector<std::shared_ptr<Primitive>> &orderedPrims) {
+    std::vector<Primitive*> &orderedPrims) {
     CHECK_NE(start, end);
     BVHBuildNode *node = arena.Alloc<BVHBuildNode>();
     (*totalNodes)++;
@@ -250,7 +255,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(
         int firstPrimOffset = orderedPrims.size();
         for (int i = start; i < end; ++i) {
             int primNum = primitiveInfo[i].primitiveNumber;
-            orderedPrims.push_back(primitives[primNum]);
+            orderedPrims.push_back(primitives_v[primNum]);
         }
         node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
         return node;
@@ -268,7 +273,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(
             int firstPrimOffset = orderedPrims.size();
             for (int i = start; i < end; ++i) {
                 int primNum = primitiveInfo[i].primitiveNumber;
-                orderedPrims.push_back(primitives[primNum]);
+                orderedPrims.push_back(primitives_v[primNum]);
             }
             node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
             return node;
@@ -276,7 +281,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(
             // Partition primitives based on _splitMethod_
             switch (splitMethod) {
             case SplitMethod::Middle: {
-                // Partition primitives through node's midpoint
+                // Partition primitives_v through node's midpoint
                 Float pmid =
                     (centroidBounds.pMin[dim] + centroidBounds.pMax[dim]) / 2;
                 BVHPrimitiveInfo *midPtr = std::partition(
@@ -382,7 +387,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(
                         int firstPrimOffset = orderedPrims.size();
                         for (int i = start; i < end; ++i) {
                             int primNum = primitiveInfo[i].primitiveNumber;
-                            orderedPrims.push_back(primitives[primNum]);
+                            orderedPrims.push_back(primitives_v[primNum]);
                         }
                         node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
                         return node;
@@ -404,7 +409,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(
 BVHBuildNode *BVHAccel::HLBVHBuild(
     MemoryArena &arena, const std::vector<BVHPrimitiveInfo> &primitiveInfo,
     int *totalNodes,
-    std::vector<std::shared_ptr<Primitive>> &orderedPrims) const {
+    std::vector<Primitive*> &orderedPrims) const {
     // Compute bounding box of all primitive centroids
     Bounds3f bounds;
     for (const BVHPrimitiveInfo &pi : primitiveInfo)
@@ -448,7 +453,7 @@ BVHBuildNode *BVHAccel::HLBVHBuild(
 
     // Create LBVHs for treelets in parallel
     std::atomic<int> atomicTotal(0), orderedPrimsOffset(0);
-    orderedPrims.resize(primitives.size());
+    orderedPrims.resize(primitives_v.size());
     ParallelFor([&](int i) {
         // Generate _i_th LBVH treelet
         int nodesCreated = 0;
@@ -475,7 +480,7 @@ BVHBuildNode *BVHAccel::emitLBVH(
     BVHBuildNode *&buildNodes,
     const std::vector<BVHPrimitiveInfo> &primitiveInfo,
     MortonPrimitive *mortonPrims, int nPrimitives, int *totalNodes,
-    std::vector<std::shared_ptr<Primitive>> &orderedPrims,
+    std::vector<Primitive*> &orderedPrims,
     std::atomic<int> *orderedPrimsOffset, int bitIndex) const {
     CHECK_GT(nPrimitives, 0);
     if (bitIndex == -1 || nPrimitives < maxPrimsInNode) {
@@ -486,7 +491,7 @@ BVHBuildNode *BVHAccel::emitLBVH(
         int firstPrimOffset = orderedPrimsOffset->fetch_add(nPrimitives);
         for (int i = 0; i < nPrimitives; ++i) {
             int primitiveIndex = mortonPrims[i].primitiveIndex;
-            orderedPrims[firstPrimOffset + i] = primitives[primitiveIndex];
+            orderedPrims[firstPrimOffset + i] = primitives_v[primitiveIndex];
             bounds = Union(bounds, primitiveInfo[primitiveIndex].bounds);
         }
         node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
@@ -737,8 +742,8 @@ bool BVHAccel::IntersectP(const Ray &ray) const {
     return false;
 }
 
-std::shared_ptr<BVHAccel> CreateBVHAccelerator(
-    std::vector<std::shared_ptr<Primitive>> prims, const ParamSet &ps) {
+BVHAccel* CreateBVHAccelerator(
+    std::vector<Primitive*> prims, const ParamSet &ps) {
     std::string splitMethodName = ps.FindOneString("splitmethod", "sah");
     BVHAccel::SplitMethod splitMethod;
     if (splitMethodName == "sah")
@@ -756,7 +761,9 @@ std::shared_ptr<BVHAccel> CreateBVHAccelerator(
     }
 
     int maxPrimsInNode = ps.FindOneInt("maxnodeprims", 4);
-    return std::make_shared<BVHAccel>(std::move(prims), maxPrimsInNode, splitMethod);
+    void* ptr;
+    cudaMallocManaged(&ptr, sizeof(BVHAccel));
+    return new(ptr) BVHAccel(std::move(prims), maxPrimsInNode, splitMethod);
 }
 
 }  // namespace pbrt

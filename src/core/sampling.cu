@@ -77,7 +77,7 @@ void LatinHypercube(Float *samples, int nSamples, int nDim, RNG &rng) {
         }
     }
 }
-__both__
+
 Point2f RejectionSampleDisk(RNG &rng) {
     Point2f p;
     do {

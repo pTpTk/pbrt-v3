@@ -80,9 +80,9 @@ class GeometricPrimitive : public Primitive {
     __both__
     virtual bool IntersectP(const Ray &r) const;
     __both__
-    GeometricPrimitive(const std::shared_ptr<Shape> &shape,
-                       const std::shared_ptr<Material> &material,
-                       const std::shared_ptr<AreaLight> &areaLight,
+    GeometricPrimitive(Shape*     const shape,
+                       Material*  const material,
+                       AreaLight* const areaLight,
                        const MediumInterface &mediumInterface);
     __both__
     const AreaLight *GetAreaLight() const;
@@ -95,9 +95,9 @@ class GeometricPrimitive : public Primitive {
 
   private:
     // GeometricPrimitive Private Data
-    shared_ptr<Shape> shape;
-    shared_ptr<Material> material;
-    shared_ptr<AreaLight> areaLight;
+    Shape* shape;
+    Material* material;
+    AreaLight* areaLight;
     MediumInterface mediumInterface;
 };
 

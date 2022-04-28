@@ -48,10 +48,14 @@ namespace pbrt {
 class MatteMaterial : public Material {
   public:
     // MatteMaterial Public Methods
-    MatteMaterial(const std::shared_ptr<Texture<Spectrum>> &Kd,
-                  const std::shared_ptr<Texture<Float>> &sigma,
-                  const std::shared_ptr<Texture<Float>> &bumpMap)
-        : Kd(Kd), sigma(sigma), bumpMap(bumpMap) {}
+    MatteMaterial(Texture<Spectrum> const *Kd,
+                  Texture<Float>    const *sigma,
+                  Texture<Float>    const *bumpMap)
+    {
+        Kd = Kd;
+        sigma = sigma;
+        bumpMap = bumpMap;
+    }
     __both__
     void ComputeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
                                     TransportMode mode,
@@ -59,8 +63,8 @@ class MatteMaterial : public Material {
 
   private:
     // MatteMaterial Private Data
-    shared_ptr<Texture<Spectrum>> Kd;
-    shared_ptr<Texture<Float>> sigma, bumpMap;
+    Texture<Spectrum>* Kd;
+    Texture<Float> *sigma, *bumpMap;
 };
 
 MatteMaterial *CreateMatteMaterial(const TextureParams &mp);

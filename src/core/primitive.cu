@@ -59,9 +59,9 @@ void Aggregate::ComputeScatteringFunctions(SurfaceInteraction *isect,
 }
 
 // GeometricPrimitive Method Definitions
-GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape> &shape,
-                                       const std::shared_ptr<Material> &material,
-                                       const std::shared_ptr<AreaLight> &areaLight,
+GeometricPrimitive::GeometricPrimitive(Shape*     const shape,
+                                       Material*  const material,
+                                       AreaLight* const areaLight,
                                        const MediumInterface &mediumInterface)
     : shape(shape),
     material(material),
@@ -96,12 +96,12 @@ bool GeometricPrimitive::Intersect(const Ray &r,
 
 __both__
 const AreaLight *GeometricPrimitive::GetAreaLight() const {
-    return areaLight.get();
+    return areaLight;
 }
 
 __both__
 const Material *GeometricPrimitive::GetMaterial() const {
-    return material.get();
+    return material;
 }
 __both__
 void GeometricPrimitive::ComputeScatteringFunctions(
