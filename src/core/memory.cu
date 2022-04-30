@@ -41,18 +41,18 @@ void *AllocAligned(size_t size) {
 #if defined(PBRT_HAVE__ALIGNED_MALLOC)
     void * ptr = _aligned_malloc(size, PBRT_L1_CACHE_LINE_SIZE);
     if (ptr) cudaHostRegister(ptr, size, cudaHostRegisterDefault);
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return ptr;
 #elif defined(PBRT_HAVE_POSIX_MEMALIGN)
     void *ptr;
     if (posix_memalign(&ptr, PBRT_L1_CACHE_LINE_SIZE, size) != 0) ptr = nullptr;
     if (ptr) cudaHostRegister(ptr, size, cudaHostRegisterDefault);
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return ptr;
 #else
     void * ptr = memalign(PBRT_L1_CACHE_LINE_SIZE, size);
     if(ptr) cudaHostRegister(ptr, size, cudaHostRegisterDefault);
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return ptr;
 #endif
 }

@@ -63,6 +63,7 @@ endif()
 
 FIND_PACKAGE ( Sanitizers )
 FIND_PACKAGE ( Threads )
+FIND_PACKAGE ( CUDAToolkit )
 
 IF(CMAKE_BUILD_TYPE MATCHES RELEASE)
   ADD_DEFINITIONS (-DNDEBUG)
@@ -87,23 +88,34 @@ ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/usr/local/cuda/lib64 -lcudart")
-set(CUDA_SEPARABLE_COMPILATION ON)
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} 
--arch=all
--code=all
-# -arch=sm_61 
+#-arch=all
+#-code=all
+-arch=sm_61 
 #-gencode=arch=compute_50,code=sm_50  
 #-gencode=arch=compute_52,code=sm_52  
 #-gencode=arch=compute_60,code=sm_60  
-# -gencode=arch=compute_61,code=sm_61" 
+-gencode=arch=compute_61,code=sm_61
 #-gencode=arch=compute_70,code=sm_70  
 #-gencode=arch=compute_75,code=sm_75 
-#-gencode=arch=compute_75,code=compute_75"
-# --expt-relaxed-constexpr
+#-gencode=arch=compute_75,code=compute_75
+#--expt-relaxed-constexpr
+-rdc=true
+"
 )
+IF(CMAKE_BUILD_TYPE MATCHES DEBUG)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} 
+  -G -rdynamic"
+  )
+ENDIF()
 #set_target_properties(tgt PROPERTIES CUDA_ARCHITECTURES "61")
+
+#SET(CMAKE_CUDA_FLAGS_DEBUG "-G -g -rdc=true -lineinfo -rdynamic")
+list(APPEND CUDA_NVCC_FLAGS "-G -g -rdc=true -lineinfo -rdynamic")
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-SET(CMAE_C_COMPILER gcc)
+SET(CMAKE_C_COMPILER gcc)
 
   FIND_PROGRAM(XIAR xiar)
   IF(XIAR)
@@ -505,6 +517,9 @@ FILE ( GLOB PBRT_SOURCE
 
 INCLUDE_DIRECTORIES ( src )
 INCLUDE_DIRECTORIES ( src/core )
+include_directories(/usr/local/cuda/targets/x86_64-linux/include)
+
+# link_libraries(cudart cuda cublas curand cudadevrt)
 
 # Visual Studio source folders
 SOURCE_GROUP (core REGULAR_EXPRESSION src/core/.*)
@@ -523,7 +538,7 @@ SOURCE_GROUP (media REGULAR_EXPRESSION src/media/.*)
 ###########################################################################
 # pbrt libraries and executables
 
-ADD_LIBRARY ( pbrt STATIC
+ADD_LIBRARY ( pbrt SHARED
   ${PBRT_YACC_LEX_SOURCE}
   ${PBRT_CORE_CXX_SOURCE}
   ${PBRT_CORE_HEADERS}
@@ -551,7 +566,9 @@ SET ( PBRT_CXX11_FEATURES
 TARGET_COMPILE_FEATURES ( pbrt PRIVATE ${PBRT_CXX11_FEATURES} )
 TARGET_COMPILE_FEATURES ( pbrt_cuda PRIVATE ${PBRT_CXX11_FEATURES} )
 set_target_properties(pbrt PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET pbrt PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 set_target_properties(pbrt_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET pbrt_cuda PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 IF (WIN32)
   # Avoid a name clash when building on Visual Studio
@@ -559,7 +576,8 @@ IF (WIN32)
   SET_TARGET_PROPERTIES ( pbrt_cuda PROPERTIES OUTPUT_NAME libpbrt )
 ENDIF()
 
-target_link_libraries(pbrt_cuda PRIVATE pbrt)
+set(CUDA_RUNTIME_LIBRARY shared)
+target_link_libraries(pbrt_cuda pbrt ${CUDA_LIBRARIES} cudart cuda cublas curand cudadevrt)
 
 SET(ALL_PBRT_LIBS
   pbrt
@@ -569,6 +587,7 @@ SET(ALL_PBRT_LIBS
   glog
   Ptex_static
   ${ZLIB_LIBRARY}
+  ${CUDA_LIBRARIES}
 )
 
 # Main renderer
@@ -577,20 +596,20 @@ ADD_SANITIZERS ( pbrt_exe )
 
 SET_TARGET_PROPERTIES ( pbrt_exe PROPERTIES OUTPUT_NAME pbrt )
 TARGET_COMPILE_FEATURES ( pbrt_exe PRIVATE ${PBRT_CXX11_FEATURES} )
-TARGET_LINK_LIBRARIES ( pbrt_exe ${ALL_PBRT_LIBS} )
+TARGET_LINK_LIBRARIES ( pbrt_exe ${ALL_PBRT_LIBS} cudart cuda cublas curand cudadevrt)
 
 # Tools
-ADD_EXECUTABLE ( imgtool src/tools/imgtool.cpp )
-ADD_SANITIZERS ( imgtool )
-TARGET_COMPILE_FEATURES ( imgtool PRIVATE ${PBRT_CXX11_FEATURES} )
-TARGET_LINK_LIBRARIES ( imgtool ${ALL_PBRT_LIBS} )
+#ADD_EXECUTABLE ( imgtool src/tools/imgtool.cpp )
+#ADD_SANITIZERS ( imgtool )
+#TARGET_COMPILE_FEATURES ( imgtool PRIVATE ${PBRT_CXX11_FEATURES} )
+#TARGET_LINK_LIBRARIES ( imgtool ${ALL_PBRT_LIBS} )
 
-ADD_EXECUTABLE ( obj2pbrt src/tools/obj2pbrt.cpp )
-TARGET_COMPILE_FEATURES ( obj2pbrt PRIVATE ${PBRT_CXX11_FEATURES} )
-ADD_SANITIZERS ( obj2pbrt )
+#ADD_EXECUTABLE ( obj2pbrt src/tools/obj2pbrt.cpp )
+#TARGET_COMPILE_FEATURES ( obj2pbrt PRIVATE ${PBRT_CXX11_FEATURES} )
+#ADD_SANITIZERS ( obj2pbrt )
 
-ADD_EXECUTABLE ( cyhair2pbrt src/tools/cyhair2pbrt.cpp )
-ADD_SANITIZERS ( cyhair2pbrt )
+#ADD_EXECUTABLE ( cyhair2pbrt src/tools/cyhair2pbrt.cpp )
+#ADD_SANITIZERS ( cyhair2pbrt )
 
 # Unit test
 
@@ -610,9 +629,9 @@ ADD_SANITIZERS ( cyhair2pbrt )
 
 INSTALL ( TARGETS
   pbrt_exe
-  imgtool
-  obj2pbrt
-  cyhair2pbrt
+  # imgtool
+  # obj2pbrt
+  # cyhair2pbrt
   DESTINATION
   bin
   )

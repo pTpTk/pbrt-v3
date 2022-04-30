@@ -68,7 +68,7 @@ class Scene {
         // allocate memory
         void* ptr;
         cudaMallocManaged(&ptr, sizeof(Light*) * count);
-        LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+        // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
         infiniteLights = new(ptr) Light*[count];
         count = 0;
         for (int i = 0; i < lights_v.size(); i++) {
@@ -79,8 +79,9 @@ class Scene {
                 infiniteLights[count++] = light;
             }
         }
-
-        lights = (Light**)lights_v.data();
+        
+        cudaMallocManaged(&lights, sizeof(Light*) * lights_v.size());
+        for (int i = 0; i < lights_v.size(); i++) lights[i] = lights_v[i];
         lights_size = lights_v.size();
 
 

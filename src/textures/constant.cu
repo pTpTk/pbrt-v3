@@ -41,7 +41,7 @@ ConstantTexture<Float> *CreateConstantFloatTexture(const Transform &tex2world,
                                                    const TextureParams &tp) {
     void* ptr;
     cudaMallocManaged(&ptr, sizeof(ConstantTexture<Float>));
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // // // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(ptr) ConstantTexture<Float>(tp.FindFloat("value", 1.f));
 }
 
@@ -49,7 +49,7 @@ ConstantTexture<Spectrum> *CreateConstantSpectrumTexture(
     const Transform &tex2world, const TextureParams &tp) {
     void* ptr;
     cudaMallocManaged(&ptr, sizeof(ConstantTexture<Spectrum>));
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(ptr) ConstantTexture<Spectrum>(
         tp.FindSpectrum("value", Spectrum(1.f)));
 }

@@ -55,6 +55,109 @@
 #include <stdio.h>
 
 namespace pbrt {
+__device__
+Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
+                            Sampler &sampler, MemoryArena &arena,
+                            int depth) const {
+    // ProfilePhase p(Prof::SamplerIntegratorLi);
+    Spectrum L(0.f), beta(1.f);
+    RayDifferential ray(r);
+    bool specularBounce = false;
+    int bounces;
+    // Added after book publication: etaScale tracks the accumulated effect
+    // of radiance scaling due to rays passing through refractive
+    // boundaries (see the derivation on p. 527 of the third edition). We
+    // track this value in order to remove it from beta when we apply
+    // Russian roulette; this is worthwhile, since it lets us sometimes
+    // avoid terminating refracted rays that are about to be refracted back
+    // out of a medium and thus have their beta value increased.
+    Float etaScale = 1;
+
+    for (bounces = 0;; ++bounces) {
+        // Find next path vertex and accumulate contribution
+
+        // Intersect _ray_ with scene and store intersection in _isect_
+        SurfaceInteraction isect;
+        bool foundIntersection = scene.Intersect(ray, &isect);
+
+        // Possibly add emitted light at intersection
+        if (bounces == 0 || specularBounce) {
+            // Add emitted light at path vertex or from the environment
+            if (foundIntersection) {
+                L += beta * isect.Le(-ray.d);
+                // VLOG(2) << "Added Le -> L = " << L;
+            } else {
+                for (int i = 0; i < scene.infiniteLights_size; ++i) {
+                    const auto &light = scene.infiniteLights[i];
+                    L += beta * light->Le(ray);
+                }
+                // VLOG(2) << "Added infinite area lights -> L = " << L;
+            }
+        }
+
+        // Terminate path if ray escaped or _maxDepth_ was reached
+        if (!foundIntersection || bounces >= maxDepth) break;
+
+        // Compute scattering functions and skip over medium boundaries
+        isect.ComputeScatteringFunctions(ray, arena, true);
+        if (!isect.bsdf) {
+            // VLOG(2) << "Skipping intersection due to null bsdf";
+            ray = isect.SpawnRay(ray.d);
+            bounces--;
+            continue;
+        }
+
+        const Distribution1D *distrib = lightDistribution->Lookup(isect.p);
+
+        // Sample illumination from lights to find path contribution.
+        // (But skip this for perfectly specular BSDFs.)
+        if (isect.bsdf->NumComponents(BxDFType(BSDF_ALL & ~BSDF_SPECULAR)) >
+            0) {
+            // ++totalPaths;
+            Spectrum Ld = beta * UniformSampleOneLight(isect, scene, arena,
+                                                       sampler, false, distrib);
+            // VLOG(2) << "Sampled direct lighting Ld = " << Ld;
+            // if (Ld.IsBlack()) ++zeroRadiancePaths;
+            // CHECK_GE(Ld.y(), 0.f);
+            L += Ld;
+        }
+
+        // Sample BSDF to get new path direction
+        Vector3f wo = -ray.d, wi;
+        Float pdf;
+        BxDFType flags;
+        Spectrum f = isect.bsdf->Sample_f(wo, &wi, sampler.Get2D(), &pdf,
+                                          BSDF_ALL, &flags);
+        // VLOG(2) << "Sampled BSDF, f = " << f << ", pdf = " << pdf;
+        if (f.IsBlack() || pdf == 0.f) break;
+        beta *= f * AbsDot(wi, isect.shading.n) / pdf;
+        // VLOG(2) << "Updated beta = " << beta;
+        // CHECK_GE(beta.y(), 0.f);
+        // DCHECK(!std::isinf(beta.y()));
+        specularBounce = (flags & BSDF_SPECULAR) != 0;
+        if ((flags & BSDF_SPECULAR) && (flags & BSDF_TRANSMISSION)) {
+            Float eta = isect.bsdf->eta;
+            // Update the term that tracks radiance scaling for refraction
+            // depending on whether the ray is entering or leaving the
+            // medium.
+            etaScale *= (Dot(wo, isect.n) > 0) ? (eta * eta) : 1 / (eta * eta);
+        }
+        ray = isect.SpawnRay(wi);
+
+        // Possibly terminate the path with Russian roulette.
+        // Factor out radiance scaling due to refraction in rrBeta.
+        Spectrum rrBeta = beta * etaScale;
+        if (rrBeta.MaxComponentValue() < rrThreshold && bounces > 3) {
+            Float q = max((Float).05, 1 - rrBeta.MaxComponentValue());
+            if (sampler.Get1D() < q) break;
+            beta /= 1 - q;
+            // DCHECK(!std::isinf(beta.y()));
+        }
+    }
+    //ReportValue(pathLength, bounces);
+    return L;
+}
+
 __global__
 void dummy_kernel(int i, int* j, Scene* s){
     // printf("Hello World\n");
@@ -66,9 +169,10 @@ void CallLiKernel(Scene* s){
     printf("here\n");
     int* j;
     cudaMallocManaged(&j, sizeof(int));
+    cudaDeviceSynchronize();
     *j = 5;
     dummy_kernel<<<1,1>>>(10, j, s);
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     cudaDeviceSynchronize();
     if(*j == 10){printf("success!\n"); exit(0);}
     if(*j == 5){printf("NOOOOOOO!\n"); exit(0);}
@@ -76,24 +180,25 @@ void CallLiKernel(Scene* s){
 }
 
 __global__
-void LiKernel(Spectrum* Ls, SamplerIntegrator* integrator,
+void LiKernel(Spectrum* Ls, PathIntegrator* integrator,
               const RayDifferential* rays, const Float* rayWeights,
               const Scene &scene, Sampler** tileSamplers,
               MemoryArena &arena) {
     int sampleNum = threadIdx.x;
-    Ls[sampleNum] = 150.f;
+    Ls[sampleNum] = 0.f;
     
-    printf("Device: Ls[%d], c[0]: %f\n", sampleNum, Ls[sampleNum][0]);
-    assert(Ls != nullptr);
-    // if (rayWeights[sampleNum] > 0)
-    //     Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
+    if (rayWeights[sampleNum] > 0){
+        printf("integrator[%p], scene[%p], tileSampler[%p], arena[%p]\n", 
+              integrator, &scene, tileSamplers[sampleNum], &arena);
+        // printf("integrator.Li[%p]\n", &integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0));
+        Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0);
+    }
 }
 
 STAT_COUNTER("Integrator/Camera rays traced", nCameraRays);
 
 //__noinline__
 void Render(Integrator *i, Scene *s){
-    //Integrator &integrator = *i;
     PathIntegrator* integrator = dynamic_cast<PathIntegrator*>(i);
     Scene &scene = *s;
     printf("hereherehere\n");
@@ -114,11 +219,13 @@ void Render(Integrator *i, Scene *s){
             // Render section of image corresponding to _tile_
 
             // Allocate _MemoryArena_ for tile
-            MemoryArena arena;
+            void* arenaPtr;
+            cudaMallocManaged(&arenaPtr, sizeof(MemoryArena));
+            cudaDeviceSynchronize();
+            MemoryArena* arena = new(arenaPtr) MemoryArena;
 
             // Get sampler instance for tile
             int seed = tile.y * nTiles.x + tile.x;
-            std::vector<Sampler*> tileSamplers;
 
             // Compute sample bounds for tile
             int x0 = sampleBounds.pMin.x + tile.x * tileSize;
@@ -133,23 +240,31 @@ void Render(Integrator *i, Scene *s){
                 integrator->camera->film->GetFilmTile(tileBounds);
 
             // Creating unified objects for calculations
+            int samplesPerPixel = integrator->sampler->samplesPerPixel;
+            void* tileSamplersPtr;
+            Sampler** tileSamplers;
             CameraSample* cameraSamples;
             RayDifferential* rays;
             Float* rayWeights;
             Spectrum* Ls;
+            cudaMallocManaged(&tileSamplersPtr, sizeof(*tileSamplers)
+                              * samplesPerPixel);
             cudaMallocManaged(&cameraSamples, sizeof(CameraSample) 
-                              * integrator->sampler->samplesPerPixel);
+                              * samplesPerPixel);
             cudaMallocManaged(&rays,          sizeof(RayDifferential) 
-                              * integrator->sampler->samplesPerPixel); 
+                              * samplesPerPixel); 
             cudaMallocManaged(&rayWeights,    sizeof(Float) 
-                              * integrator->sampler->samplesPerPixel); 
+                              * samplesPerPixel); 
             cudaMallocManaged(&Ls,            sizeof(Spectrum) 
-                              * integrator->sampler->samplesPerPixel); 
+                              * samplesPerPixel); 
+            
+            cudaDeviceSynchronize();
+            new(cameraSamples) CameraSample[samplesPerPixel];
+            new(rays)          RayDifferential[samplesPerPixel];
+            new(rayWeights)    Float[samplesPerPixel];
+            new(Ls)            Spectrum[samplesPerPixel];
 
-            new(cameraSamples) CameraSample[integrator->sampler->samplesPerPixel];
-            new(rays)          RayDifferential[integrator->sampler->samplesPerPixel];
-            new(rayWeights)    Float[integrator->sampler->samplesPerPixel];
-            new(Ls)            Spectrum[integrator->sampler->samplesPerPixel];
+            tileSamplers = (Sampler**)tileSamplersPtr;
 
             // Loop over pixels in tile to render them
             for (Point2i pixel : tileBounds) {
@@ -157,10 +272,10 @@ void Render(Integrator *i, Scene *s){
                     continue;
 
                 for(int64_t sampleNum = 0; 
-                    sampleNum < integrator->sampler->samplesPerPixel; 
+                    sampleNum < samplesPerPixel; 
                     sampleNum++) {
 
-                    tileSamplers.push_back(integrator->sampler->Clone(seed));
+                    tileSamplers[sampleNum] = integrator->sampler->Clone(seed);
                     {
                         ProfilePhase pp(Prof::StartPixel);
                         tileSamplers[sampleNum]->StartPixel(pixel);
@@ -182,15 +297,16 @@ void Render(Integrator *i, Scene *s){
                 
                 // Evaluate radiance along camera ray
                 // CallLiKernel(s);
+                
                 cudaDeviceSynchronize();
-                LiKernel<<<1, integrator->sampler->samplesPerPixel>>>
-                    (Ls, integrator, rays, rayWeights, scene, tileSamplers.data(), arena);
+                LiKernel<<<1, samplesPerPixel>>>
+                    (Ls, integrator, rays, rayWeights, scene, tileSamplers, *arena);
                 cudaDeviceSynchronize();
 
-                LOG(ERROR) << cudaGetErrorString(cudaGetLastError()) << std::endl;
+                // LOG(ERROR) << cudaGetErrorString(cudaGetLastError()) << std::endl;
 
                 for(int64_t sampleNum = 0; 
-                    sampleNum < integrator->sampler->samplesPerPixel; 
+                    sampleNum < samplesPerPixel; 
                     sampleNum++) {
                     
                     // Ls[sampleNum] = 0.f;
@@ -199,9 +315,9 @@ void Render(Integrator *i, Scene *s){
                     //         Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
 
                     // Issue warning if unexpected radiance value returned
-                    if (Ls[sampleNum] != Spectrum(20.0)) {
-                        LOG(ERROR) << "kernel may not be running\n";
-                    }
+                    // if (Ls[sampleNum] != Spectrum(20.0)) {
+                    //     // LOG(ERROR) << "kernel may not be running\n";
+                    // }
 
                     if (Ls[sampleNum].HasNaNs()) {
                         LOG(ERROR) << StringPrintf(
@@ -235,7 +351,7 @@ void Render(Integrator *i, Scene *s){
 
                     // Free _MemoryArena_ memory from computing image sample
                     // value
-                    arena.Reset();
+                    arena->Reset();
                 }
             }
             LOG(INFO) << "Finished image tile " << tileBounds;
@@ -423,7 +539,8 @@ class TransformCache {
             ++nTransformCacheHits;
         else {
             cudaMallocManaged(&tCached, sizeof(Transform));
-            LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+            cudaDeviceSynchronize();
+            // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
             // tCached = arena.Alloc<Transform>();
             *tCached = t;
             Insert(tCached);
@@ -898,7 +1015,8 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
         prims.reserve(shapes.size());
         GeometricPrimitive* ptr;
         cudaMallocManaged(&ptr, sizeof(GeometricPrimitive) * shapes.size());
-        LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+        cudaDeviceSynchronize();
+        // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
         for (auto s : shapes) {
             // Possibly create area light for shape
             AreaLight* area;
@@ -1095,14 +1213,14 @@ Scene *RenderOptions::MakeScene() {
     Primitive* accelerator =
         MakeAccelerator(AcceleratorName, std::move(primitives), AcceleratorParams);
     // if (!accelerator) accelerator = std::make_shared<BVHAccel>(primitives);
-    Scene *scene;
-    cudaMallocManaged(&scene, sizeof(Scene));
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
-    new(scene) Scene(accelerator, lights);
+    void* scenePtr;
+    // printf("sizeof scene: %d\n", sizeof(Scene));
+    cudaMallocManaged(&scenePtr, sizeof(Scene));
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    return new(scenePtr) Scene(accelerator, lights);
     // Erase primitives and lights from _RenderOptions_
-    primitives.clear();
-    lights.clear();
-    return scene;
+//     primitives.clear();
+//     lights.clear();
 }
 
 Integrator *RenderOptions::MakeIntegrator() const {

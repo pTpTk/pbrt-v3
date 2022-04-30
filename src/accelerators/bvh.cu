@@ -219,13 +219,15 @@ BVHAccel::BVHAccel(std::vector<Primitive*> p,
     treeBytes += totalNodes * sizeof(LinearBVHNode) + sizeof(*this) +
                  primitives_v.size() * sizeof(primitives_v[0]);
     cudaMallocManaged(&nodes, sizeof(LinearBVHNode)*totalNodes);
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    cudaDeviceSynchronize();
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     int offset = 0;
     flattenBVHTree(root, &offset);
     CHECK_EQ(totalNodes, offset);
     void* ptr;
     cudaMallocManaged(&ptr, sizeof(Primitive*)*primitives_v.size());
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    cudaDeviceSynchronize();
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     primitives = (Primitive**)ptr;
     for(int i = 0; i < primitives_v.size(); i++)
         primitives[i] = primitives_v[i];
@@ -765,7 +767,8 @@ BVHAccel* CreateBVHAccelerator(
     int maxPrimsInNode = ps.FindOneInt("maxnodeprims", 4);
     void* ptr;
     cudaMallocManaged(&ptr, sizeof(BVHAccel));
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    cudaDeviceSynchronize();
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(ptr) BVHAccel(std::move(prims), maxPrimsInNode, splitMethod);
 }
 

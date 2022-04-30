@@ -66,11 +66,11 @@ MatteMaterial *CreateMatteMaterial(const TextureParams &mp) {
     Texture<Float>* bumpMap;// = mp.GetFloatTextureOrNull("bumpmap").get();
     
     cudaMallocManaged(&Kd, sizeof(Texture<Spectrum>));
-    std::cout << "Error matte.cu: 69: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // std::cout << "Error matte.cu: 69: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
     cudaMallocManaged(&sigma, sizeof(Texture<Float>));
-    std::cout << "Error matte.cu: 71: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // std::cout << "Error matte.cu: 71: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
     cudaMallocManaged(&bumpMap, sizeof(Texture<Float>));
-    std::cout << "Error matte.cu: 73: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // std::cout << "Error matte.cu: 73: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
 
     *Kd = *mp.GetSpectrumTexture("Kd", Spectrum(0.5f));
     *sigma = *mp.GetFloatTexture("sigma", 0.f);
@@ -78,7 +78,7 @@ MatteMaterial *CreateMatteMaterial(const TextureParams &mp) {
 
     void* ptr;
     cudaMallocManaged(&ptr, sizeof(MatteMaterial));
-    std::cout << "Error matte.cu: 81: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // std::cout << "Error matte.cu: 81: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(ptr) MatteMaterial(Kd, sigma, bumpMap);
 }
 

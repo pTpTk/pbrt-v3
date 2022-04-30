@@ -79,27 +79,27 @@ class SamplerIntegrator : public Integrator {
         : camera(camera), sampler(sampler), pixelBounds(pixelBounds) {}
     virtual void Preprocess(const Scene &scene, Sampler &sampler) {}
     // Render();
-    __device__
-    virtual Spectrum Li(const RayDifferential &ray, const Scene &scene,
-                        Sampler &sampler, MemoryArena &arena,
-                        int depth = 0) const = 0;
+    // __device__
+    // virtual Spectrum Li(const RayDifferential &ray, const Scene &scene,
+    //                     Sampler &sampler, MemoryArena &arena,
+    //                     int depth = 0) const = 0;
 
     const Camera* camera;
     Sampler* sampler;
     const Bounds2i pixelBounds;
 };
 
-__global__// __noinline__
-void LiKernel(Spectrum* Ls, SamplerIntegrator* integrator,
-              const RayDifferential* rays, const Float* rayWeights,
-              const Scene &scene, Sampler** tileSamplers, MemoryArena &arena);
+// __global__// __noinline__
+// void LiKernel(Spectrum* Ls, SamplerIntegrator* integrator,
+              // const RayDifferential* rays, const Float* rayWeights,
+              // const Scene &scene, Sampler** tileSamplers, MemoryArena &arena);
 
 // void CallLiKernel();
 
 // __global__ __noinline__
 // void LiKernel(int i, int* j);
 
- void Render(Integrator *i, Scene *s);
+//  void Render(Integrator *i, Scene *s);
 
 }  // namespace pbrt
 

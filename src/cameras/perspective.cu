@@ -270,6 +270,7 @@ PerspectiveCamera *CreatePerspectiveCamera(const ParamSet &params,
         fov = 2.f * halffov;
     void* ptr;
     cudaMallocManaged(&ptr, sizeof(PerspectiveCamera));
+    cudaDeviceSynchronize();
     return new(ptr) PerspectiveCamera(cam2world, screen, shutteropen, shutterclose,
                                  lensradius, focaldistance, fov, film, medium);
 }

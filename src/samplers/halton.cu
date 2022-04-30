@@ -130,7 +130,7 @@ Float HaltonSampler::SampleDimension(int64_t index, int dim) const {
 Sampler* HaltonSampler::Clone(int seed) {
     void* samplerAddress;
     cudaMallocManaged(&samplerAddress, sizeof(HaltonSampler));
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(samplerAddress) HaltonSampler(*this);
 }
 
@@ -141,7 +141,7 @@ HaltonSampler *CreateHaltonSampler(const ParamSet &params,
     bool sampleAtCenter = params.FindOneBool("samplepixelcenter", false);
     void* ptr;
     cudaMallocManaged(&ptr, sizeof(HaltonSampler));
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(ptr) HaltonSampler(nsamp, sampleBounds, sampleAtCenter);
 }
 
