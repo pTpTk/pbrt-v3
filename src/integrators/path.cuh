@@ -53,7 +53,7 @@ class PathIntegrator : public SamplerIntegrator {
                    Sampler* sampler,
                    const Bounds2i &pixelBounds, Float rrThreshold = 1,
                    const std::string &lightSampleStrategy = "spatial");
-
+    ~PathIntegrator(){printf("destruction my ass.");}
     void Preprocess(const Scene &scene, Sampler &sampler);
     __device__
     Spectrum Li(const RayDifferential &ray, const Scene &scene,

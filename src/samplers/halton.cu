@@ -129,7 +129,8 @@ Float HaltonSampler::SampleDimension(int64_t index, int dim) const {
 
 Sampler* HaltonSampler::Clone(int seed) {
     void* samplerAddress;
-    cudaMallocHost(&samplerAddress, sizeof(HaltonSampler));
+    cudaMallocManaged(&samplerAddress, sizeof(HaltonSampler));
+    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(samplerAddress) HaltonSampler(*this);
 }
 
@@ -138,7 +139,10 @@ HaltonSampler *CreateHaltonSampler(const ParamSet &params,
     int nsamp = params.FindOneInt("pixelsamples", 16);
     if (PbrtOptions.quickRender) nsamp = 1;
     bool sampleAtCenter = params.FindOneBool("samplepixelcenter", false);
-    return new HaltonSampler(nsamp, sampleBounds, sampleAtCenter);
+    void* ptr;
+    cudaMallocManaged(&ptr, sizeof(HaltonSampler));
+    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    return new(ptr) HaltonSampler(nsamp, sampleBounds, sampleAtCenter);
 }
 
 }  // namespace pbrt

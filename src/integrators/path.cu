@@ -184,7 +184,8 @@ PathIntegrator *CreatePathIntegrator(const ParamSet &params,
     std::string lightStrategy =
         params.FindOneString("lightsamplestrategy", "spatial");
     void* ptr;
-    cudaMallocHost(&ptr, sizeof(PathIntegrator));
+    cudaMallocManaged(&ptr, sizeof(PathIntegrator));
+    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(ptr) PathIntegrator(maxDepth, camera, sampler, pixelBounds,
                               rrThreshold, lightStrategy);
 }

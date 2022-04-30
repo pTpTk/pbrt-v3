@@ -247,7 +247,9 @@ Film *CreateFilm(const ParamSet &params, std::unique_ptr<Filter> filter) {
     Float diagonal = params.FindOneFloat("diagonal", 35.);
     Float maxSampleLuminance = params.FindOneFloat("maxsampleluminance",
                                                    Infinity);
-    return new Film(Point2i(xres, yres), crop, std::move(filter), diagonal,
+    void* ptr;
+    cudaMallocManaged(&ptr, sizeof(Film));
+    return new(ptr) Film(Point2i(xres, yres), crop, std::move(filter), diagonal,
                     filename, scale, maxSampleLuminance);
 }
 

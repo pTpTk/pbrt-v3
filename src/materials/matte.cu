@@ -61,24 +61,24 @@ void MatteMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
 }
 
 MatteMaterial *CreateMatteMaterial(const TextureParams &mp) {
-    Texture<Spectrum>* KdPtr = mp.GetSpectrumTexture("Kd", Spectrum(0.5f)).get();
-    Texture<Float>* sigmaPtr = mp.GetFloatTexture("sigma", 0.f).get();
-    Texture<Float>* bumpMapPtr = mp.GetFloatTextureOrNull("bumpmap").get();
+    Texture<Spectrum>* Kd;// = mp.GetSpectrumTexture("Kd", Spectrum(0.5f)).get();
+    Texture<Float>* sigma;// = mp.GetFloatTexture("sigma", 0.f).get();
+    Texture<Float>* bumpMap;// = mp.GetFloatTextureOrNull("bumpmap").get();
     
-    if(KdPtr)
-        cudaHostRegister(KdPtr, sizeof(Texture<Spectrum>), cudaHostRegisterDefault);
-    Texture<Spectrum>* Kd = KdPtr;
+    cudaMallocManaged(&Kd, sizeof(Texture<Spectrum>));
+    std::cout << "Error matte.cu: 69: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    cudaMallocManaged(&sigma, sizeof(Texture<Float>));
+    std::cout << "Error matte.cu: 71: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    cudaMallocManaged(&bumpMap, sizeof(Texture<Float>));
+    std::cout << "Error matte.cu: 73: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
 
-    if(sigmaPtr)
-        cudaHostRegister(sigmaPtr, sizeof(Texture<Float>), cudaHostRegisterDefault);
-    Texture<Float>* sigma = sigmaPtr;
-
-    if(bumpMapPtr)
-        cudaHostRegister(bumpMapPtr, sizeof(Texture<Float>), cudaHostRegisterDefault);
-    Texture<Float>* bumpMap = bumpMapPtr;
+    *Kd = *mp.GetSpectrumTexture("Kd", Spectrum(0.5f));
+    *sigma = *mp.GetFloatTexture("sigma", 0.f);
+    *bumpMap = *mp.GetFloatTextureOrNull("bumpmap");
 
     void* ptr;
-    cudaMallocHost(&ptr, sizeof(MatteMaterial));
+    cudaMallocManaged(&ptr, sizeof(MatteMaterial));
+    std::cout << "Error matte.cu: 81: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(ptr) MatteMaterial(Kd, sigma, bumpMap);
 }
 

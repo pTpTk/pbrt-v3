@@ -48,7 +48,8 @@ LightDistribution::~LightDistribution() {}
 LightDistribution* CreateLightSampleDistribution(
     const std::string &name, const Scene &scene) {
         void* ptr;
-        cudaMallocHost(&ptr, sizeof(SpatialLightDistribution));
+        cudaMallocManaged(&ptr, sizeof(SpatialLightDistribution));
+        LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
         return new(ptr) SpatialLightDistribution(scene);
 }
 
@@ -82,7 +83,8 @@ SpatialLightDistribution::SpatialLightDistribution(const Scene &scene,
     }
 
     hashTableSize = 4 * nVoxels[0] * nVoxels[1] * nVoxels[2];
-    cudaMallocHost(&hashTable, sizeof(HashEntry) * hashTableSize);
+    cudaMallocManaged(&hashTable, sizeof(HashEntry) * hashTableSize);
+    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     new(hashTable) HashEntry[hashTableSize];
     for (int i = 0; i < hashTableSize; ++i) {
         hashTable[i].packedPos = invalidPackedPos;
@@ -103,6 +105,7 @@ SpatialLightDistribution::~SpatialLightDistribution() {
             delete entry.distribution;
     }
     cudaFree(hashTable);
+    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
 }
 
 __device__

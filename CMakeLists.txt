@@ -89,15 +89,17 @@ ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/usr/local/cuda/lib64 -lcudart")
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} 
--arch=sm_61 
+-arch=all
+-code=all
+# -arch=sm_61 
 #-gencode=arch=compute_50,code=sm_50  
 #-gencode=arch=compute_52,code=sm_52  
 #-gencode=arch=compute_60,code=sm_60  
--gencode=arch=compute_61,code=sm_61" 
+# -gencode=arch=compute_61,code=sm_61" 
 #-gencode=arch=compute_70,code=sm_70  
 #-gencode=arch=compute_75,code=sm_75 
 #-gencode=arch=compute_75,code=compute_75"
---expt-relaxed-constexpr
+# --expt-relaxed-constexpr
 )
 #set_target_properties(tgt PROPERTIES CUDA_ARCHITECTURES "61")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -521,7 +523,7 @@ SOURCE_GROUP (media REGULAR_EXPRESSION src/media/.*)
 ###########################################################################
 # pbrt libraries and executables
 
-ADD_LIBRARY ( pbrt STATIC
+ADD_LIBRARY ( pbrt SHARED
   ${PBRT_YACC_LEX_SOURCE}
   ${PBRT_CORE_CXX_SOURCE}
   ${PBRT_CORE_CUDA_SOURCE}

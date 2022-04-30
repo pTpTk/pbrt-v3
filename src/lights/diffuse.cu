@@ -141,7 +141,8 @@ AreaLight* CreateDiffuseAreaLight(
     bool twoSided = paramSet.FindOneBool("twosided", false);
     if (PbrtOptions.quickRender) nSamples = std::max(1, nSamples / 4);
     void* ptr;
-    cudaMallocHost(&ptr, sizeof(DiffuseAreaLight));
+    cudaMallocManaged(&ptr, sizeof(DiffuseAreaLight));
+    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
     return new(ptr) DiffuseAreaLight(light2world, medium, L * sc,
                                      nSamples, shape, twoSided);
 }

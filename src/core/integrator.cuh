@@ -94,10 +94,15 @@ class SamplerIntegrator : public Integrator {
     const Bounds2i pixelBounds;
 };
 
-__global__
-void LiKernel(Spectrum* Ls, SamplerIntegrator* integrator,
-              const RayDifferential* rays, const Float* rayWeights,
-              const Scene &scene, Sampler** tileSamplers, MemoryArena &arena);
+// __global__ __noinline__
+// void LiKernel(Spectrum* Ls, SamplerIntegrator* integrator,
+//               const RayDifferential* rays, const Float* rayWeights,
+//               const Scene &scene, Sampler** tileSamplers, MemoryArena &arena);
+
+// void CallLiKernel();
+
+// __global__ __noinline__
+// void LiKernel(int i, int* j);
 
 }  // namespace pbrt
 

@@ -268,7 +268,9 @@ PerspectiveCamera *CreatePerspectiveCamera(const ParamSet &params,
     if (halffov > 0.f)
         // hack for structure synth, which exports half of the full fov
         fov = 2.f * halffov;
-    return new PerspectiveCamera(cam2world, screen, shutteropen, shutterclose,
+    void* ptr;
+    cudaMallocManaged(&ptr, sizeof(PerspectiveCamera));
+    return new(ptr) PerspectiveCamera(cam2world, screen, shutteropen, shutterclose,
                                  lensradius, focaldistance, fov, film, medium);
 }
 

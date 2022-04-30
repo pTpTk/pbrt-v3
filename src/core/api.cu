@@ -55,6 +55,25 @@
 
 namespace pbrt {
 
+// __global__
+// void LiKernel(int i, int* j){
+//     // printf("Hello World\n");
+//     *j = i;
+// }
+
+// void CallLiKernel(){
+//     printf("here\n");
+//     int* j;
+//     cudaMallocManaged(&j, sizeof(int));
+//     *j = 5;
+//     LiKernel<<<1,1>>>(10, j);
+//     LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+//     cudaDeviceSynchronize();
+//     if(*j == 10){printf("success!\n"); exit(0);}
+//     if(*j == 5){printf("NOOOOOOO!\n"); exit(0);}
+//     printf("here here\n");
+// }
+
 // API Global Variables
 Options PbrtOptions;
 
@@ -221,7 +240,8 @@ class TransformCache {
         if (tCached)
             ++nTransformCacheHits;
         else {
-            cudaMallocHost(&tCached, sizeof(Transform));
+            cudaMallocManaged(&tCached, sizeof(Transform));
+            LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
             // tCached = arena.Alloc<Transform>();
             *tCached = t;
             Insert(tCached);
@@ -695,7 +715,8 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
         MediumInterface mi = graphicsState.CreateMediumInterface();
         prims.reserve(shapes.size());
         GeometricPrimitive* ptr;
-        cudaMallocHost(&ptr, sizeof(GeometricPrimitive) * shapes.size());
+        cudaMallocManaged(&ptr, sizeof(GeometricPrimitive) * shapes.size());
+        LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
         for (auto s : shapes) {
             // Possibly create area light for shape
             AreaLight* area;
@@ -841,10 +862,10 @@ void pbrtWorldEnd() {
     if (PbrtOptions.cat || PbrtOptions.toPly) {
         printf("%*sWorldEnd\n", catIndentCount, "");
     } else {
-        std::unique_ptr<Integrator> integrator(renderOptions->MakeIntegrator());
+        Integrator* integrator(renderOptions->MakeIntegrator());
         printf("light.size() = %d\n", renderOptions->lights.size());
-        std::unique_ptr<Scene> scene(renderOptions->MakeScene());
-
+        Scene* scene(renderOptions->MakeScene());
+        // CallLiKernel();
         // This is kind of ugly; we directly override the current profiler
         // state to switch from parsing/scene construction related stuff to
         // rendering stuff and then switch it back below. The underlying
@@ -890,8 +911,10 @@ Scene *RenderOptions::MakeScene() {
     Primitive* accelerator =
         MakeAccelerator(AcceleratorName, std::move(primitives), AcceleratorParams);
     // if (!accelerator) accelerator = std::make_shared<BVHAccel>(primitives);
-    Scene *scene = new Scene(accelerator, lights);
-    cudaHostRegister(scene, sizeof(Scene), cudaHostRegisterDefault);
+    Scene *scene;
+    cudaMallocManaged(&scene, sizeof(Scene));
+    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    new(scene) Scene(accelerator, lights);
     // Erase primitives and lights from _RenderOptions_
     primitives.clear();
     lights.clear();

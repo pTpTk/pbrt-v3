@@ -39,6 +39,25 @@
 #include <glog/logging.h>
 
 // using namespace pbrt;
+// __global__
+// void LiKernel(int i, int* j){
+//     // printf("Hello World\n");
+//     *j = i;
+// }
+
+// void CallLiKernel(){
+//     printf("here\n");
+//     int* j;
+//     cudaMallocManaged(&j, sizeof(int));
+//     *j = 5;
+//     LiKernel<<<1,1>>>(10, j);
+//     LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+//     cudaDeviceSynchronize();
+//     if(*j == 10){printf("success!\n"); exit(0);}
+//     if(*j == 5){printf("NOOOOOOO!\n"); exit(0);}
+//     printf("here here\n");
+// }
+
 
 static void usage(const char *msg = nullptr) {
     if (msg)
@@ -168,6 +187,7 @@ int main(int argc, char *argv[]) {
         for (const std::string &f : filenames)
             pbrt::pbrtParseFile(f);
     }
+    // CallLiKernel();
     pbrt::pbrtCleanup();
     return 0;
 }
