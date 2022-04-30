@@ -79,6 +79,9 @@ inline int isnan(double x){
    #endif
 }
 
+__both__
+inline bool isnan(int x){return false;}
+
 }  // namespace math
 
 template<class T>
@@ -140,8 +143,6 @@ inline bool isinf(int x){return false;}
 //    return ( ieee754.u & 0x7fffffff >  0x7f800000 );
 // }
 
-__both__
-inline bool isnan(int x){return false;}
 
 
 template <class T> class numeric_limits{

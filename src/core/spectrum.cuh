@@ -90,8 +90,11 @@ class CoefficientSpectrum {
     // CoefficientSpectrum Public Methods
     __both__
     CoefficientSpectrum(Float v = 0.f) {
-        for (int i = 0; i < nSpectrumSamples; ++i) c[i] = v;
-        assert(!HasNaNs());
+        for (int i = 0; i < nSpectrumSamples; ++i) {
+            c[i] = v;
+        }
+
+        //assert(!HasNaNs());
     }
 #ifdef DEBUG
     CoefficientSpectrum(const CoefficientSpectrum &s) {
@@ -187,7 +190,7 @@ class CoefficientSpectrum {
     __both__
     CoefficientSpectrum &operator/=(Float a) {
         assert(a != 0);
-        assert(!isnan(a));
+        assert(!pbrt::math::isnan(a));
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] /= a;
         return *this;
     }

@@ -523,15 +523,19 @@ SOURCE_GROUP (media REGULAR_EXPRESSION src/media/.*)
 ###########################################################################
 # pbrt libraries and executables
 
-ADD_LIBRARY ( pbrt SHARED
+ADD_LIBRARY ( pbrt STATIC
   ${PBRT_YACC_LEX_SOURCE}
   ${PBRT_CORE_CXX_SOURCE}
-  ${PBRT_CORE_CUDA_SOURCE}
   ${PBRT_CORE_HEADERS}
   ${PBRT_SOURCE}
-  ${PBRT_CUDA_SOURCE}
   )
 ADD_SANITIZERS ( pbrt )
+
+ADD_LIBRARY ( pbrt_cuda SHARED
+  ${PBRT_CORE_CUDA_SOURCE}
+  ${PBRT_CUDA_SOURCE}
+)
+ADD_SANITIZERS ( pbrt_cuda )
 
 # A non-exhaustive but pretty representative set..
 # Note that we work-around shoddy c++11 support in MSVC2013
@@ -545,14 +549,21 @@ SET ( PBRT_CXX11_FEATURES
   cxx_static_assert
 )
 TARGET_COMPILE_FEATURES ( pbrt PRIVATE ${PBRT_CXX11_FEATURES} )
+TARGET_COMPILE_FEATURES ( pbrt_cuda PRIVATE ${PBRT_CXX11_FEATURES} )
+set_target_properties(pbrt PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(pbrt_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 IF (WIN32)
   # Avoid a name clash when building on Visual Studio
   SET_TARGET_PROPERTIES ( pbrt PROPERTIES OUTPUT_NAME libpbrt )
+  SET_TARGET_PROPERTIES ( pbrt_cuda PROPERTIES OUTPUT_NAME libpbrt )
 ENDIF()
+
+target_link_libraries(pbrt_cuda PRIVATE pbrt)
 
 SET(ALL_PBRT_LIBS
   pbrt
+  pbrt_cuda
   ${CMAKE_THREAD_LIBS_INIT}
   ${OPENEXR_LIBS}
   glog

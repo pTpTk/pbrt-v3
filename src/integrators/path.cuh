@@ -59,7 +59,6 @@ class PathIntegrator : public SamplerIntegrator {
     Spectrum Li(const RayDifferential &ray, const Scene &scene,
                 Sampler &sampler, MemoryArena &arena, int depth) const;
 
-  private:
     // PathIntegrator Private Data
     const int maxDepth;
     const Float rrThreshold;

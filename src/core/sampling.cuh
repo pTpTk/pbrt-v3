@@ -102,7 +102,7 @@ struct Distribution1D {
             assert(cdf[offset + 1] > cdf[offset]);
             du /= (cdf[offset + 1] - cdf[offset]);
         }
-        assert(!isnan(du));
+        assert(!pbrt::math::isnan(du));
 
         // Compute PDF for sampled offset
         if (pdf) *pdf = (funcInt > 0) ? func[offset] / funcInt : 0;

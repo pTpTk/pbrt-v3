@@ -49,30 +49,212 @@
 #include "materials/matte.cuh"
 #include "samplers/halton.cuh"
 #include "shapes/sphere.cuh"
+#include "progressreporter.cuh"
 
 #include <map>
 #include <stdio.h>
 
 namespace pbrt {
+__global__
+void dummy_kernel(int i, int* j, Scene* s){
+    // printf("Hello World\n");
+    *j = i;
+    Scene& scene = *s;
+}
 
-// __global__
-// void LiKernel(int i, int* j){
-//     // printf("Hello World\n");
-//     *j = i;
-// }
+void CallLiKernel(Scene* s){
+    printf("here\n");
+    int* j;
+    cudaMallocManaged(&j, sizeof(int));
+    *j = 5;
+    dummy_kernel<<<1,1>>>(10, j, s);
+    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    cudaDeviceSynchronize();
+    if(*j == 10){printf("success!\n"); exit(0);}
+    if(*j == 5){printf("NOOOOOOO!\n"); exit(0);}
+    printf("here here\n");
+}
 
-// void CallLiKernel(){
-//     printf("here\n");
-//     int* j;
-//     cudaMallocManaged(&j, sizeof(int));
-//     *j = 5;
-//     LiKernel<<<1,1>>>(10, j);
-//     LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
-//     cudaDeviceSynchronize();
-//     if(*j == 10){printf("success!\n"); exit(0);}
-//     if(*j == 5){printf("NOOOOOOO!\n"); exit(0);}
-//     printf("here here\n");
-// }
+__global__
+void LiKernel(Spectrum* Ls, SamplerIntegrator* integrator,
+              const RayDifferential* rays, const Float* rayWeights,
+              const Scene &scene, Sampler** tileSamplers,
+              MemoryArena &arena) {
+    int sampleNum = threadIdx.x;
+    Ls[sampleNum] = 150.f;
+    
+    printf("Device: Ls[%d], c[0]: %f\n", sampleNum, Ls[sampleNum][0]);
+    assert(Ls != nullptr);
+    // if (rayWeights[sampleNum] > 0)
+    //     Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
+}
+
+STAT_COUNTER("Integrator/Camera rays traced", nCameraRays);
+
+//__noinline__
+void Render(Integrator *i, Scene *s){
+    //Integrator &integrator = *i;
+    PathIntegrator* integrator = dynamic_cast<PathIntegrator*>(i);
+    Scene &scene = *s;
+    printf("hereherehere\n");
+    //CallLiKernel();
+
+    integrator->Preprocess(scene, *(integrator->sampler));
+    // Render image tiles in parallel
+
+    // Compute number of tiles, _nTiles_, to use for parallel rendering
+    Bounds2i sampleBounds = integrator->camera->film->GetSampleBounds();
+    Vector2i sampleExtent = sampleBounds.Diagonal();
+    const int tileSize = 16;
+    Point2i nTiles((sampleExtent.x + tileSize - 1) / tileSize,
+                   (sampleExtent.y + tileSize - 1) / tileSize);
+    ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
+    {
+        ParallelFor2D([&](Point2i tile) {
+            // Render section of image corresponding to _tile_
+
+            // Allocate _MemoryArena_ for tile
+            MemoryArena arena;
+
+            // Get sampler instance for tile
+            int seed = tile.y * nTiles.x + tile.x;
+            std::vector<Sampler*> tileSamplers;
+
+            // Compute sample bounds for tile
+            int x0 = sampleBounds.pMin.x + tile.x * tileSize;
+            int x1 = std::min(x0 + tileSize, sampleBounds.pMax.x);
+            int y0 = sampleBounds.pMin.y + tile.y * tileSize;
+            int y1 = std::min(y0 + tileSize, sampleBounds.pMax.y);
+            Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
+            LOG(INFO) << "Starting image tile " << tileBounds;
+
+            // Get _FilmTile_ for tile
+            std::unique_ptr<FilmTile> filmTile =
+                integrator->camera->film->GetFilmTile(tileBounds);
+
+            // Creating unified objects for calculations
+            CameraSample* cameraSamples;
+            RayDifferential* rays;
+            Float* rayWeights;
+            Spectrum* Ls;
+            cudaMallocManaged(&cameraSamples, sizeof(CameraSample) 
+                              * integrator->sampler->samplesPerPixel);
+            cudaMallocManaged(&rays,          sizeof(RayDifferential) 
+                              * integrator->sampler->samplesPerPixel); 
+            cudaMallocManaged(&rayWeights,    sizeof(Float) 
+                              * integrator->sampler->samplesPerPixel); 
+            cudaMallocManaged(&Ls,            sizeof(Spectrum) 
+                              * integrator->sampler->samplesPerPixel); 
+
+            new(cameraSamples) CameraSample[integrator->sampler->samplesPerPixel];
+            new(rays)          RayDifferential[integrator->sampler->samplesPerPixel];
+            new(rayWeights)    Float[integrator->sampler->samplesPerPixel];
+            new(Ls)            Spectrum[integrator->sampler->samplesPerPixel];
+
+            // Loop over pixels in tile to render them
+            for (Point2i pixel : tileBounds) {
+                if (!InsideExclusive(pixel, integrator->pixelBounds))
+                    continue;
+
+                for(int64_t sampleNum = 0; 
+                    sampleNum < integrator->sampler->samplesPerPixel; 
+                    sampleNum++) {
+
+                    tileSamplers.push_back(integrator->sampler->Clone(seed));
+                    {
+                        ProfilePhase pp(Prof::StartPixel);
+                        tileSamplers[sampleNum]->StartPixel(pixel);
+                    }
+                    tileSamplers[sampleNum]->SetSampleNumber(sampleNum);
+                
+                    // Initialize _CameraSample_ for current sample
+                    cameraSamples[sampleNum] =
+                        tileSamplers[sampleNum]->GetCameraSample(pixel);
+
+                    // Generate camera ray for current sample
+                    
+                    rayWeights[sampleNum] =
+                        integrator->camera->GenerateRayDifferential(cameraSamples[sampleNum], &rays[sampleNum]);
+                    rays[sampleNum].ScaleDifferentials(
+                        1 / std::sqrt((Float)tileSamplers[sampleNum]->samplesPerPixel));
+                    ++nCameraRays;
+                }
+                
+                // Evaluate radiance along camera ray
+                // CallLiKernel(s);
+                cudaDeviceSynchronize();
+                LiKernel<<<1, integrator->sampler->samplesPerPixel>>>
+                    (Ls, integrator, rays, rayWeights, scene, tileSamplers.data(), arena);
+                cudaDeviceSynchronize();
+
+                LOG(ERROR) << cudaGetErrorString(cudaGetLastError()) << std::endl;
+
+                for(int64_t sampleNum = 0; 
+                    sampleNum < integrator->sampler->samplesPerPixel; 
+                    sampleNum++) {
+                    
+                    // Ls[sampleNum] = 0.f;
+                    // if (rayWeights[sampleNum] > 0) 
+                    //     Ls[sampleNum] = 
+                    //         Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
+
+                    // Issue warning if unexpected radiance value returned
+                    if (Ls[sampleNum] != Spectrum(20.0)) {
+                        LOG(ERROR) << "kernel may not be running\n";
+                    }
+
+                    if (Ls[sampleNum].HasNaNs()) {
+                        LOG(ERROR) << StringPrintf(
+                            "Not-a-number radiance value returned "
+                            "for pixel (%d, %d), sample %d. Setting to black.",
+                            pixel.x, pixel.y,
+                            (int)tileSamplers[sampleNum]->CurrentSampleNumber());
+                        Ls[sampleNum] = Spectrum(0.f);
+                    } else if (Ls[sampleNum].y() < -1e-5) {
+                        LOG(ERROR) << StringPrintf(
+                            "Negative luminance value, %f, returned "
+                            "for pixel (%d, %d), sample %d. Setting to black.",
+                            Ls[sampleNum].y(), pixel.x, pixel.y,
+                            (int)tileSamplers[sampleNum]->CurrentSampleNumber());
+                        Ls[sampleNum] = Spectrum(0.f);
+                    } else if (std::isinf(Ls[sampleNum].y())) {
+                          LOG(ERROR) << StringPrintf(
+                            "Infinite luminance value returned "
+                            "for pixel (%d, %d), sample %d. Setting to black.",
+                            pixel.x, pixel.y,
+                            (int)tileSamplers[sampleNum]->CurrentSampleNumber());
+                        Ls[sampleNum] = Spectrum(0.f);
+                    }
+                    VLOG(1) << "Camera sample: " << cameraSamples[sampleNum] 
+                            << " -> ray: " << rays[sampleNum]
+                            << " -> Ls[sampleNum] = " << Ls[sampleNum];
+
+                    // Add camera ray's contribution to image
+                    filmTile->AddSample(cameraSamples[sampleNum].pFilm, 
+                                        Ls[sampleNum], rayWeights[sampleNum]);
+
+                    // Free _MemoryArena_ memory from computing image sample
+                    // value
+                    arena.Reset();
+                }
+            }
+            LOG(INFO) << "Finished image tile " << tileBounds;
+
+            // Merge image tile into _Film_
+            integrator->camera->film->MergeFilmTile(std::move(filmTile));
+            reporter.Update();
+            cudaFree(cameraSamples);
+            cudaFree(rays);
+            cudaFree(rayWeights);
+            cudaFree(Ls);
+        }, nTiles);
+        reporter.Done();
+    }
+    LOG(INFO) << "Rendering finished";
+
+    // Save final image after rendering
+    integrator->camera->film->WriteImage();
+}
 
 // API Global Variables
 Options PbrtOptions;
@@ -865,7 +1047,9 @@ void pbrtWorldEnd() {
         Integrator* integrator(renderOptions->MakeIntegrator());
         printf("light.size() = %d\n", renderOptions->lights.size());
         Scene* scene(renderOptions->MakeScene());
-        // CallLiKernel();
+        // CallLiKernel(scene);
+        // Render(integrator, scene);
+        Render(integrator, scene);
         // This is kind of ugly; we directly override the current profiler
         // state to switch from parsing/scene construction related stuff to
         // rendering stuff and then switch it back below. The underlying
@@ -875,7 +1059,7 @@ void pbrtWorldEnd() {
         CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::SceneConstruction));
         ProfilerState = ProfToBits(Prof::IntegratorRender);
 
-        if (scene && integrator) integrator->Render(*scene);
+        // if (scene && integrator) integrator->Render(scene);
 
         CHECK_EQ(CurrentProfilerState(), ProfToBits(Prof::IntegratorRender));
         ProfilerState = ProfToBits(Prof::SceneConstruction);

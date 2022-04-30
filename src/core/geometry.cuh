@@ -48,7 +48,7 @@ namespace pbrt {
 template <typename T>
 __both__
 inline bool isNaN(const T x) {
-    return isnan(x);
+    return pbrt::math::isnan(x);
 }
 template <>
 __both__

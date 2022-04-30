@@ -45,29 +45,7 @@
 
 namespace pbrt {
 
-__global__
-void LiKernel(int i, int* j){
-    // printf("Hello World\n");
-    *j = i;
-}
 
-void CallLiKernel(){
-    printf("here\n");
-    int* j;
-    cudaMallocManaged(&j, sizeof(int));
-    *j = 5;
-    LiKernel<<<1,1>>>(10, j);
-    LOG(ERROR) << cudaGetLastError() << std::endl;
-    // LOG(ERROR) << cudaGetErrorString(cudaGetLastError()) << std::endl;
-    cudaDeviceSynchronize();
-    if(*j == 10){printf("success!\n"); exit(0);}
-    if(*j == 5){printf("NOOOOOOO!\n"); exit(0);}
-    printf("here here\n");
-}
-
-
-
-STAT_COUNTER("Integrator/Camera rays traced", nCameraRays);
 
 // Integrator Method Definitions
 Integrator::~Integrator() {
@@ -185,171 +163,173 @@ Spectrum EstimateDirect(const Interaction &it, const Point2f &uScattering,
 }
 
 // SamplerIntegrator Method Definitions
-void SamplerIntegrator::Render(const Scene &scene) {
-    CallLiKernel();
-    Preprocess(scene, *sampler);
-    // Render image tiles in parallel
+// void SamplerIntegrator::Render(Scene *s) {
+//     Scene& scene = *s;
+//     CallLiKernel();
+//     Preprocess(scene, *sampler);
+//     // Render image tiles in parallel
 
-    // Compute number of tiles, _nTiles_, to use for parallel rendering
-    Bounds2i sampleBounds = camera->film->GetSampleBounds();
-    Vector2i sampleExtent = sampleBounds.Diagonal();
-    const int tileSize = 16;
-    Point2i nTiles((sampleExtent.x + tileSize - 1) / tileSize,
-                   (sampleExtent.y + tileSize - 1) / tileSize);
-    LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
-    CallLiKernel();
-    // ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
-    // {
-    //     printf("here\n");
-    //     LiKernel<<<1,1>>>();
-    //     std::cout << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
-    //     // ParallelFor2D([&](Point2i tile) {
-    //     //     // Render section of image corresponding to _tile_
+//     // Compute number of tiles, _nTiles_, to use for parallel rendering
+//     Bounds2i sampleBounds = camera->film->GetSampleBounds();
+//     Vector2i sampleExtent = sampleBounds.Diagonal();
+//     const int tileSize = 16;
+//     Point2i nTiles((sampleExtent.x + tileSize - 1) / tileSize,
+//                    (sampleExtent.y + tileSize - 1) / tileSize);
+//     LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+//     CallLiKernel();
+//     // ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
+//     // {
+//     //     printf("here\n");
+//     //     LiKernel<<<1,1>>>();
+//     //     std::cout << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+//     //     // ParallelFor2D([&](Point2i tile) {
+//     //     //     // Render section of image corresponding to _tile_
 
-    //     //     // Allocate _MemoryArena_ for tile
-    //     //     MemoryArena arena;
+//     //     //     // Allocate _MemoryArena_ for tile
+//     //     //     MemoryArena arena;
 
-    //     //     // Get sampler instance for tile
-    //     //     int seed = tile.y * nTiles.x + tile.x;
-    //     //     std::vector<Sampler*> tileSamplers;
+//     //     //     // Get sampler instance for tile
+//     //     //     int seed = tile.y * nTiles.x + tile.x;
+//     //     //     std::vector<Sampler*> tileSamplers;
 
-    //     //     // Compute sample bounds for tile
-    //     //     int x0 = sampleBounds.pMin.x + tile.x * tileSize;
-    //     //     int x1 = std::min(x0 + tileSize, sampleBounds.pMax.x);
-    //     //     int y0 = sampleBounds.pMin.y + tile.y * tileSize;
-    //     //     int y1 = std::min(y0 + tileSize, sampleBounds.pMax.y);
-    //     //     Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
-    //     //     LOG(INFO) << "Starting image tile " << tileBounds;
+//     //     //     // Compute sample bounds for tile
+//     //     //     int x0 = sampleBounds.pMin.x + tile.x * tileSize;
+//     //     //     int x1 = std::min(x0 + tileSize, sampleBounds.pMax.x);
+//     //     //     int y0 = sampleBounds.pMin.y + tile.y * tileSize;
+//     //     //     int y1 = std::min(y0 + tileSize, sampleBounds.pMax.y);
+//     //     //     Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
+//     //     //     LOG(INFO) << "Starting image tile " << tileBounds;
 
-    //     //     // Get _FilmTile_ for tile
-    //     //     std::unique_ptr<FilmTile> filmTile =
-    //     //         camera->film->GetFilmTile(tileBounds);
+//     //     //     // Get _FilmTile_ for tile
+//     //     //     std::unique_ptr<FilmTile> filmTile =
+//     //     //         camera->film->GetFilmTile(tileBounds);
 
-    //     //     // Creating unified objects for calculations
-    //     //     CameraSample* cameraSamples;
-    //     //     RayDifferential* rays;
-    //     //     Float* rayWeights;
-    //     //     Spectrum* Ls;
-    //     //     cudaMallocManaged(&cameraSamples, sizeof(CameraSample) 
-    //     //                       * sampler->samplesPerPixel);
-    //     //     cudaMallocManaged(&rays,          sizeof(RayDifferential) 
-    //     //                       * sampler->samplesPerPixel); 
-    //     //     cudaMallocManaged(&rayWeights,    sizeof(Float) 
-    //     //                       * sampler->samplesPerPixel); 
-    //     //     cudaMallocManaged(&Ls,            sizeof(Spectrum) 
-    //     //                       * sampler->samplesPerPixel); 
+//     //     //     // Creating unified objects for calculations
+//     //     //     CameraSample* cameraSamples;
+//     //     //     RayDifferential* rays;
+//     //     //     Float* rayWeights;
+//     //     //     Spectrum* Ls;
+//     //     //     cudaMallocManaged(&cameraSamples, sizeof(CameraSample) 
+//     //     //                       * sampler->samplesPerPixel);
+//     //     //     cudaMallocManaged(&rays,          sizeof(RayDifferential) 
+//     //     //                       * sampler->samplesPerPixel); 
+//     //     //     cudaMallocManaged(&rayWeights,    sizeof(Float) 
+//     //     //                       * sampler->samplesPerPixel); 
+//     //     //     cudaMallocManaged(&Ls,            sizeof(Spectrum) 
+//     //     //                       * sampler->samplesPerPixel); 
 
-    //     //     new(cameraSamples) CameraSample[sampler->samplesPerPixel];
-    //     //     new(rays)         RayDifferential[sampler->samplesPerPixel];
-    //     //     new(rayWeights)   Float[sampler->samplesPerPixel];
-    //     //     new(Ls)           Spectrum[sampler->samplesPerPixel];
+//     //     //     new(cameraSamples) CameraSample[sampler->samplesPerPixel];
+//     //     //     new(rays)         RayDifferential[sampler->samplesPerPixel];
+//     //     //     new(rayWeights)   Float[sampler->samplesPerPixel];
+//     //     //     new(Ls)           Spectrum[sampler->samplesPerPixel];
 
-    //     //     // Loop over pixels in tile to render them
-    //     //     for (Point2i pixel : tileBounds) {
-    //     //         if (!InsideExclusive(pixel, pixelBounds))
-    //     //             continue;
+//     //     //     // Loop over pixels in tile to render them
+//     //     //     for (Point2i pixel : tileBounds) {
+//     //     //         if (!InsideExclusive(pixel, pixelBounds))
+//     //     //             continue;
 
-    //     //         for(int64_t sampleNum = 0; 
-    //     //             sampleNum < sampler->samplesPerPixel; 
-    //     //             sampleNum++) {
+//     //     //         for(int64_t sampleNum = 0; 
+//     //     //             sampleNum < sampler->samplesPerPixel; 
+//     //     //             sampleNum++) {
 
-    //     //             tileSamplers.push_back(sampler->Clone(seed));
-    //     //             {
-    //     //                 ProfilePhase pp(Prof::StartPixel);
-    //     //                 tileSamplers[sampleNum]->StartPixel(pixel);
-    //     //             }
-    //     //             tileSamplers[sampleNum]->SetSampleNumber(sampleNum);
+//     //     //             tileSamplers.push_back(sampler->Clone(seed));
+//     //     //             {
+//     //     //                 ProfilePhase pp(Prof::StartPixel);
+//     //     //                 tileSamplers[sampleNum]->StartPixel(pixel);
+//     //     //             }
+//     //     //             tileSamplers[sampleNum]->SetSampleNumber(sampleNum);
                 
-    //     //             // Initialize _CameraSample_ for current sample
-    //     //             cameraSamples[sampleNum] =
-    //     //                 tileSamplers[sampleNum]->GetCameraSample(pixel);
+//     //     //             // Initialize _CameraSample_ for current sample
+//     //     //             cameraSamples[sampleNum] =
+//     //     //                 tileSamplers[sampleNum]->GetCameraSample(pixel);
 
-    //     //             // Generate camera ray for current sample
+//     //     //             // Generate camera ray for current sample
                     
-    //     //             rayWeights[sampleNum] =
-    //     //                 camera->GenerateRayDifferential(cameraSamples[sampleNum], &rays[sampleNum]);
-    //     //             rays[sampleNum].ScaleDifferentials(
-    //     //                 1 / std::sqrt((Float)tileSamplers[sampleNum]->samplesPerPixel));
-    //     //             ++nCameraRays;
-    //     //             // printf("Host: Ls[%d] address: %x\n", sampleNum, &Ls[sampleNum]);
-    //     //         }
+//     //     //             rayWeights[sampleNum] =
+//     //     //                 camera->GenerateRayDifferential(cameraSamples[sampleNum], &rays[sampleNum]);
+//     //     //             rays[sampleNum].ScaleDifferentials(
+//     //     //                 1 / std::sqrt((Float)tileSamplers[sampleNum]->samplesPerPixel));
+//     //     //             ++nCameraRays;
+//     //     //             // printf("Host: Ls[%d] address: %x\n", sampleNum, &Ls[sampleNum]);
+//     //     //         }
                 
-    //     //         // Evaluate radiance along camera ray
-    //     //         LiKernel<<<1, sampler->samplesPerPixel>>>
-    //     //             (Ls, this, rays, rayWeights, scene, tileSamplers.data(), arena);
-    //     //         cudaDeviceSynchronize();
+//     //     //         // Evaluate radiance along camera ray
+//     //     //         LiKernel<<<1, sampler->samplesPerPixel>>>
+//     //     //             (Ls, this, rays, rayWeights, scene, tileSamplers.data(), arena);
+//     //     //         cudaDeviceSynchronize();
 
-    //     //         for(int64_t sampleNum = 0; 
-    //     //             sampleNum < sampler->samplesPerPixel; 
-    //     //             sampleNum++) {
+//     //     //         for(int64_t sampleNum = 0; 
+//     //     //             sampleNum < sampler->samplesPerPixel; 
+//     //     //             sampleNum++) {
                     
-    //     //             // Ls[sampleNum] = 0.f;
-    //     //             // if (rayWeights[sampleNum] > 0) 
-    //     //             //     Ls[sampleNum] = 
-    //     //             //         Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
+//     //     //             // Ls[sampleNum] = 0.f;
+//     //     //             // if (rayWeights[sampleNum] > 0) 
+//     //     //             //     Ls[sampleNum] = 
+//     //     //             //         Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
 
-    //     //             // Issue warning if unexpected radiance value returned
-    //     //             // if(Ls[sampleNum] != Spectrum(20.0)){
-    //     //             //     LOG(ERROR) << StringPrintf(
-    //     //             //         "Error for pixel (%d, %d), sample %d.",
-    //     //             //         pixel.x, pixel.y,
-    //     //             //         (int)tileSamplers[sampleNum]->CurrentSampleNumber())
-    //     //             //         <<" Ls[sampleNum] = " << Ls[sampleNum];
-    //     //             // }
+//     //     //             // Issue warning if unexpected radiance value returned
+//     //     //             // if(Ls[sampleNum] != Spectrum(20.0)){
+//     //     //             //     LOG(ERROR) << StringPrintf(
+//     //     //             //         "Error for pixel (%d, %d), sample %d.",
+//     //     //             //         pixel.x, pixel.y,
+//     //     //             //         (int)tileSamplers[sampleNum]->CurrentSampleNumber())
+//     //     //             //         <<" Ls[sampleNum] = " << Ls[sampleNum];
+//     //     //             // }
 
-    //     //             if (Ls[sampleNum].HasNaNs()) {
-    //     //                 LOG(ERROR) << StringPrintf(
-    //     //                     "Not-a-number radiance value returned "
-    //     //                     "for pixel (%d, %d), sample %d. Setting to black.",
-    //     //                     pixel.x, pixel.y,
-    //     //                     (int)tileSamplers[sampleNum]->CurrentSampleNumber());
-    //     //                 Ls[sampleNum] = Spectrum(0.f);
-    //     //             } else if (Ls[sampleNum].y() < -1e-5) {
-    //     //                 LOG(ERROR) << StringPrintf(
-    //     //                     "Negative luminance value, %f, returned "
-    //     //                     "for pixel (%d, %d), sample %d. Setting to black.",
-    //     //                     Ls[sampleNum].y(), pixel.x, pixel.y,
-    //     //                     (int)tileSamplers[sampleNum]->CurrentSampleNumber());
-    //     //                 Ls[sampleNum] = Spectrum(0.f);
-    //     //             } else if (std::isinf(Ls[sampleNum].y())) {
-    //     //                   LOG(ERROR) << StringPrintf(
-    //     //                     "Infinite luminance value returned "
-    //     //                     "for pixel (%d, %d), sample %d. Setting to black.",
-    //     //                     pixel.x, pixel.y,
-    //     //                     (int)tileSamplers[sampleNum]->CurrentSampleNumber());
-    //     //                 Ls[sampleNum] = Spectrum(0.f);
-    //     //             }
-    //     //             VLOG(1) << "Camera sample: " << cameraSamples[sampleNum] 
-    //     //                     << " -> ray: " << rays[sampleNum]
-    //     //                     << " -> Ls[sampleNum] = " << Ls[sampleNum];
+//     //     //             if (Ls[sampleNum].HasNaNs()) {
+//     //     //                 LOG(ERROR) << StringPrintf(
+//     //     //                     "Not-a-number radiance value returned "
+//     //     //                     "for pixel (%d, %d), sample %d. Setting to black.",
+//     //     //                     pixel.x, pixel.y,
+//     //     //                     (int)tileSamplers[sampleNum]->CurrentSampleNumber());
+//     //     //                 Ls[sampleNum] = Spectrum(0.f);
+//     //     //             } else if (Ls[sampleNum].y() < -1e-5) {
+//     //     //                 LOG(ERROR) << StringPrintf(
+//     //     //                     "Negative luminance value, %f, returned "
+//     //     //                     "for pixel (%d, %d), sample %d. Setting to black.",
+//     //     //                     Ls[sampleNum].y(), pixel.x, pixel.y,
+//     //     //                     (int)tileSamplers[sampleNum]->CurrentSampleNumber());
+//     //     //                 Ls[sampleNum] = Spectrum(0.f);
+//     //     //             } else if (std::isinf(Ls[sampleNum].y())) {
+//     //     //                   LOG(ERROR) << StringPrintf(
+//     //     //                     "Infinite luminance value returned "
+//     //     //                     "for pixel (%d, %d), sample %d. Setting to black.",
+//     //     //                     pixel.x, pixel.y,
+//     //     //                     (int)tileSamplers[sampleNum]->CurrentSampleNumber());
+//     //     //                 Ls[sampleNum] = Spectrum(0.f);
+//     //     //             }
+//     //     //             VLOG(1) << "Camera sample: " << cameraSamples[sampleNum] 
+//     //     //                     << " -> ray: " << rays[sampleNum]
+//     //     //                     << " -> Ls[sampleNum] = " << Ls[sampleNum];
 
-    //     //             // Add camera ray's contribution to image
-    //     //             filmTile->AddSample(cameraSamples[sampleNum].pFilm, 
-    //     //                                 Ls[sampleNum], rayWeights[sampleNum]);
+//     //     //             // Add camera ray's contribution to image
+//     //     //             filmTile->AddSample(cameraSamples[sampleNum].pFilm, 
+//     //     //                                 Ls[sampleNum], rayWeights[sampleNum]);
 
-    //     //             // Free _MemoryArena_ memory from computing image sample
-    //     //             // value
-    //     //             arena.Reset();
-    //     //         }
-    //     //     }
-    //     //     LOG(INFO) << "Finished image tile " << tileBounds;
+//     //     //             // Free _MemoryArena_ memory from computing image sample
+//     //     //             // value
+//     //     //             arena.Reset();
+//     //     //         }
+//     //     //     }
+//     //     //     LOG(INFO) << "Finished image tile " << tileBounds;
 
-    //     //     // Merge image tile into _Film_
-    //     //     camera->film->MergeFilmTile(std::move(filmTile));
-    //     //     reporter.Update();
-    //     //     cudaFree(cameraSamples);
-    //     //     cudaFree(rays);
-    //     //     cudaFree(rayWeights);
-    //     //     cudaFree(Ls);
-    //     // }, nTiles);
-    //     reporter.Done();
-    // }
-    // LOG(INFO) << "Rendering finished";
+//     //     //     // Merge image tile into _Film_
+//     //     //     camera->film->MergeFilmTile(std::move(filmTile));
+//     //     //     reporter.Update();
+//     //     //     cudaFree(cameraSamples);
+//     //     //     cudaFree(rays);
+//     //     //     cudaFree(rayWeights);
+//     //     //     cudaFree(Ls);
+//     //     // }, nTiles);
+//     //     reporter.Done();
+//     // }
+//     // LOG(INFO) << "Rendering finished";
 
-    // Save final image after rendering
-    camera->film->WriteImage();
+//     // Save final image after rendering
+//     camera->film->WriteImage();
 
-}
+// }
+
 // __global__
 // void LiKernel(Spectrum* Ls, SamplerIntegrator* integrator,
 //               const RayDifferential* rays, const Float* rayWeights,
@@ -367,5 +347,10 @@ void SamplerIntegrator::Render(const Scene &scene) {
 //     // printf("Hello World\n");
 //     *j = i;
 // }
+
+// void Render(Integrator *i, Scene *s){
+
+
+
 
 }  // namespace pbrt
