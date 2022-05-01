@@ -647,7 +647,7 @@ std::shared_ptr<Texture<Spectrum>> TextureParams::GetSpectrumTexture(
     if (tex)
         return tex;
     else
-        return std::make_shared<ConstantTexture<Spectrum>>(def);
+        return std::make_shared<Texture<Spectrum>>(def);
 }
 
 std::shared_ptr<Texture<Spectrum>> TextureParams::GetSpectrumTextureOrNull(
@@ -661,7 +661,7 @@ std::shared_ptr<Texture<Spectrum>> TextureParams::GetSpectrumTextureOrNull(
             if (count > 1)
                 Warning("Ignoring excess values provided with parameter \"%s\"",
                         n.c_str());
-            return std::make_shared<ConstantTexture<Spectrum>>(*s);
+            return std::make_shared<Texture<Spectrum>>(*s);
         }
 
         name = materialParams.FindTexture(n);
@@ -672,7 +672,7 @@ std::shared_ptr<Texture<Spectrum>> TextureParams::GetSpectrumTextureOrNull(
                 if (count > 1)
                     Warning("Ignoring excess values provided with parameter \"%s\"",
                             n.c_str());
-                return std::make_shared<ConstantTexture<Spectrum>>(*s);
+                return std::make_shared<Texture<Spectrum>>(*s);
             }
         }
 
@@ -697,7 +697,7 @@ std::shared_ptr<Texture<Float>> TextureParams::GetFloatTexture(
     if (tex)
         return tex;
     else
-        return std::make_shared<ConstantTexture<Float>>(def);
+        return std::make_shared<Texture<Float>>(def);
 }
 
 std::shared_ptr<Texture<Float>> TextureParams::GetFloatTextureOrNull(
@@ -711,7 +711,7 @@ std::shared_ptr<Texture<Float>> TextureParams::GetFloatTextureOrNull(
             if (count > 1)
                 Warning("Ignoring excess values provided with parameter \"%s\"",
                         n.c_str());
-            return std::make_shared<ConstantTexture<Float>>(*s);
+            return std::make_shared<Texture<Float>>(*s);
         }
 
         name = materialParams.FindTexture(n);
@@ -722,7 +722,7 @@ std::shared_ptr<Texture<Float>> TextureParams::GetFloatTextureOrNull(
                 if (count > 1)
                     Warning("Ignoring excess values provided with parameter \"%s\"",
                             n.c_str());
-                return std::make_shared<ConstantTexture<Float>>(*s);
+                return std::make_shared<Texture<Float>>(*s);
             }
         }
 

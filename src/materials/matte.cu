@@ -42,25 +42,25 @@
 namespace pbrt {
 
 // MatteMaterial Method Definitions
-__both__
-void MatteMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
-                                               MemoryArena &arena,
-                                               TransportMode mode,
-                                               bool allowMultipleLobes) const {
-    // Perform bump mapping with _bumpMap_, if present
-    if (bumpMap) Bump(bumpMap, si);
+// __both__
+// void Material::ComputeScatteringFunctions(SurfaceInteraction *si,
+//                                                MemoryArena &arena,
+//                                                TransportMode mode,
+//                                                bool allowMultipleLobes) const {
+//     // Perform bump mapping with _bumpMap_, if present
+//     if (bumpMap) Bump(bumpMap, si);
 
-    // Evaluate textures for _MatteMaterial_ material and allocate BRDF
-    si->bsdf = new BSDF(*si);
-    Spectrum r = Kd->Evaluate(*si).Clamp();
-    Float sig = Clamp(sigma->Evaluate(*si), 0, 90);
-    if (!r.IsBlack()) {
-        if (sig == 0)
-            si->bsdf->Add(new LambertianReflection(r));
-    }
-}
+//     // Evaluate textures for _MatteMaterial_ material and allocate BRDF
+//     si->bsdf = new BSDF(*si);
+//     Spectrum r = Kd->Evaluate(*si).Clamp();
+//     Float sig = Clamp(sigma->Evaluate(*si), 0, 90);
+//     if (!r.IsBlack()) {
+//         if (sig == 0)
+//             si->bsdf->Add(new LambertianReflection(r));
+//     }
+// }
 
-MatteMaterial *CreateMatteMaterial(const TextureParams &mp) {
+Material *CreateMatteMaterial(const TextureParams &mp) {
     Texture<Spectrum>* Kd;// = mp.GetSpectrumTexture("Kd", Spectrum(0.5f)).get();
     Texture<Float>* sigma;// = mp.GetFloatTexture("sigma", 0.f).get();
     Texture<Float>* bumpMap;// = mp.GetFloatTextureOrNull("bumpmap").get();
@@ -77,9 +77,9 @@ MatteMaterial *CreateMatteMaterial(const TextureParams &mp) {
     *bumpMap = *mp.GetFloatTextureOrNull("bumpmap");
 
     void* ptr;
-    cudaMallocManaged(&ptr, sizeof(MatteMaterial));
+    cudaMallocManaged(&ptr, sizeof(Material));
     // std::cout << "Error matte.cu: 81: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
-    return new(ptr) MatteMaterial(Kd, sigma, bumpMap);
+    return new(ptr) Material(Kd, sigma, bumpMap);
 }
 
 }  // namespace pbrt

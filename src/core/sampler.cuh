@@ -43,6 +43,7 @@
 #include "geometry.cuh"
 #include "rng.cuh"
 #include <inttypes.h>
+#include "lowdiscrepancy.cuh"
 
 namespace pbrt {
 
@@ -50,27 +51,33 @@ namespace pbrt {
 class Sampler {
   public:
     // Sampler Interface
-    virtual ~Sampler();
+    ~Sampler();
     Sampler(int64_t samplesPerPixel);
-    virtual void StartPixel(const Point2i &p);
+    Sampler(int nsamp, const Bounds2i &sampleBounds,
+            bool sampleAtCenter = false);
+    void StartPixel(const Point2i &p);
     __both__
-    virtual Float Get1D() = 0;
+    Float Get1D();
     __both__
-    virtual Point2f Get2D() = 0;
+    Point2f Get2D();
     CameraSample GetCameraSample(const Point2i &pRaster);
     void Request1DArray(int n);
     void Request2DArray(int n);
-    virtual int RoundCount(int n) const { return n; }
+    int RoundCount(int n) const { return n; }
     const Float *Get1DArray(int n);
     const Point2f *Get2DArray(int n);
-    virtual bool StartNextSample();
-    virtual Sampler* Clone(int seed) = 0;
-    virtual bool SetSampleNumber(int64_t sampleNum);
+    bool StartNextSample();
+    Sampler* Clone(int seed);
+    bool SetSampleNumber(int64_t sampleNum);
     std::string StateString() const {
       return StringPrintf("(%d,%d), sample %" PRId64, currentPixel.x,
                           currentPixel.y, currentPixelSampleIndex);
     }
     int64_t CurrentSampleNumber() const { return currentPixelSampleIndex; }
+
+    int64_t GetIndexForSample(int64_t sampleNum) const;
+    __both__
+    Float SampleDimension(int64_t index, int dimension) const;
 
     // Sampler Public Data
     const int64_t samplesPerPixel;
@@ -86,30 +93,55 @@ class Sampler {
   private:
     // Sampler Private Data
     size_t array1DOffset, array2DOffset;
-};
-
-class GlobalSampler : public Sampler {
-  public:
-    // GlobalSampler Public Methods
-    bool StartNextSample();
-    void StartPixel(const Point2i &);
-    bool SetSampleNumber(int64_t sampleNum);
-    __both__
-    Float Get1D();
-    __both__
-    Point2f Get2D();
-    GlobalSampler(int64_t samplesPerPixel) : Sampler(samplesPerPixel) {}
-    virtual int64_t GetIndexForSample(int64_t sampleNum) const = 0;
-    __both__
-    virtual Float SampleDimension(int64_t index, int dimension) const = 0;
-
-  private:
+    
     // GlobalSampler Private Data
     int dimension;
     int64_t intervalSampleIndex;
     static const int arrayStartDim = 5;
     int arrayEndDim;
+
+    // HaltonSampler Private Data
+    static std::vector<uint16_t> radicalInversePermutations;
+    uint16_t* radicalInversePermutations_ptr;
+    Point2i baseScales, baseExponents;
+    int sampleStride;
+    int multInverse[2];
+    mutable Point2i pixelForOffset = Point2i(numeric_limits<int>::max(),
+                                             numeric_limits<int>::max());
+    mutable int64_t offsetForCurrentPixel;
+    // Added after book publication: force all image samples to be at the
+    // center of the pixel area.
+    bool sampleAtPixelCenter;
+
+    // HaltonSampler Private Methods
+    __both__
+    const uint16_t *PermutationForDimension(int dim) const {
+        return &radicalInversePermutations_ptr[PrimeSums[dim]];
+    }
 };
+
+// class GlobalSampler : public Sampler {
+//   public:
+//     // GlobalSampler Public Methods
+//     bool StartNextSample();
+//     void StartPixel(const Point2i &);
+//     bool SetSampleNumber(int64_t sampleNum);
+//     __both__
+//     Float Get1D();
+//     __both__
+//     Point2f Get2D();
+//     GlobalSampler(int64_t samplesPerPixel) : Sampler(samplesPerPixel) {}
+//     virtual int64_t GetIndexForSample(int64_t sampleNum) const = 0;
+//     __both__
+//     virtual Float SampleDimension(int64_t index, int dimension) const = 0;
+
+//   private:
+//     // GlobalSampler Private Data
+//     int dimension;
+//     int64_t intervalSampleIndex;
+//     static const int arrayStartDim = 5;
+//     int arrayEndDim;
+// };
 
 }  // namespace pbrt
 

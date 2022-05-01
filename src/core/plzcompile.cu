@@ -250,7 +250,7 @@ Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
     // Ignore any alpha textures used for trimming the shape when performing
     // this intersection. Hack for the "San Miguel" scene, where this is used
     // to make an invisible area light.
-    if (!Intersect(ray, &tHit, &isectLight, false)) return 0;
+    if (!Intersect(ray, &tHit, &isectLight)) return 0;
 
     // Convert light sample weight to solid angle measure
     Float pdf = DistanceSquared(ref.p, isectLight.p) /
@@ -266,7 +266,7 @@ Float UniformConePdf(Float cosThetaMax) {
 
 // primitive
 __both__
-const AreaLight *Aggregate::GetAreaLight() const {
+const Light *Aggregate::GetAreaLight() const {
     return nullptr;
 }
 __both__
@@ -541,13 +541,9 @@ bool Scene::Intersect(const Ray &ray, SurfaceInteraction *isect) const {
 // interaction
 __both__
 Spectrum SurfaceInteraction::Le(const Vector3f &w) const {
-    const AreaLight *area = primitive->GetAreaLight();
+    const Light *area = primitive->GetAreaLight();
     return area ? area->L(*this, w) : Spectrum(0.f);
 }
-
-
-
-
 
 __global__
 void LiKernel(Spectrum* Ls, PathIntegrator* integrator,
@@ -868,34 +864,34 @@ Spectrum BxDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
     return f(wo, *wi);
 }
 
-Spectrum BxDF::rho(const Vector3f &w, int nSamples, const Point2f *u) const {
-    Spectrum r(0.);
-    for (int i = 0; i < nSamples; ++i) {
-        // Estimate one term of $\rho_\roman{hd}$
-        Vector3f wi;
-        Float pdf = 0;
-        Spectrum f = Sample_f(w, &wi, u[i], &pdf);
-        if (pdf > 0) r += f * AbsCosTheta(wi) / pdf;
-    }
-    return r / nSamples;
-}
+// Spectrum BxDF::rho(const Vector3f &w, int nSamples, const Point2f *u) const {
+//     Spectrum r(0.);
+//     for (int i = 0; i < nSamples; ++i) {
+//         // Estimate one term of $\rho_\roman{hd}$
+//         Vector3f wi;
+//         Float pdf = 0;
+//         Spectrum f = Sample_f(w, &wi, u[i], &pdf);
+//         if (pdf > 0) r += f * AbsCosTheta(wi) / pdf;
+//     }
+//     return r / nSamples;
+// }
 
-Spectrum BxDF::rho(int nSamples, const Point2f *u1, const Point2f *u2) const {
-    Spectrum r(0.f);
-    for (int i = 0; i < nSamples; ++i) {
-        // Estimate one term of $\rho_\roman{hh}$
-        Vector3f wo, wi;
-        wo = UniformSampleHemisphere(u1[i]);
-        Float pdfo = UniformHemispherePdf(), pdfi = 0;
-        Spectrum f = Sample_f(wo, &wi, u2[i], &pdfi);
-        if (pdfi > 0)
-            r += f * AbsCosTheta(wi) * AbsCosTheta(wo) / (pdfo * pdfi);
-    }
-    return r / (Pi * nSamples);
-}
+// Spectrum BxDF::rho(int nSamples, const Point2f *u1, const Point2f *u2) const {
+//     Spectrum r(0.f);
+//     for (int i = 0; i < nSamples; ++i) {
+//         // Estimate one term of $\rho_\roman{hh}$
+//         Vector3f wo, wi;
+//         wo = UniformSampleHemisphere(u1[i]);
+//         Float pdfo = UniformHemispherePdf(), pdfi = 0;
+//         Spectrum f = Sample_f(wo, &wi, u2[i], &pdfi);
+//         if (pdfi > 0)
+//             r += f * AbsCosTheta(wi) * AbsCosTheta(wo) / (pdfo * pdfi);
+//     }
+//     return r / (Pi * nSamples);
+// }
 
 // BxDF Method Definitions
-Spectrum LambertianReflection::f(const Vector3f &wo, const Vector3f &wi) const {
+Spectrum BxDF::f(const Vector3f &wo, const Vector3f &wi) const {
     return R * InvPi;
 }
 
@@ -939,14 +935,14 @@ void Material::Bump(Texture<Float> const * d,
                            false);
 }
 
-Float GlobalSampler::Get1D() {
+Float Sampler::Get1D() {
     // ProfilePhase _(Prof::GetSample);
     if (dimension >= arrayStartDim && dimension < arrayEndDim)
         dimension = arrayEndDim;
     return SampleDimension(intervalSampleIndex, dimension++);
 }
 
-Point2f GlobalSampler::Get2D() {
+Point2f Sampler::Get2D() {
     // ProfilePhase _(Prof::GetSample);
     if (dimension + 1 >= arrayStartDim && dimension < arrayEndDim)
         dimension = arrayEndDim;

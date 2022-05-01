@@ -98,7 +98,7 @@ Spectrum FrConductor(Float cosThetaI, const Spectrum &etai,
 //     return R * InvPi;
 // }
 
-std::string LambertianReflection::ToString() const {
+std::string BxDF::ToString() const {
     return std::string("[ LambertianReflection R: ") + R.ToString() +
            std::string(" ]");
 }

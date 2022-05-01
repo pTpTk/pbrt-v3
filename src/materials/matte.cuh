@@ -45,29 +45,29 @@
 namespace pbrt {
 
 // MatteMaterial Declarations
-class MatteMaterial : public Material {
-  public:
-    // MatteMaterial Public Methods
-    MatteMaterial(Texture<Spectrum> const *Kd,
-                  Texture<Float>    const *sigma,
-                  Texture<Float>    const *bumpMap)
-    {
-        Kd = Kd;
-        sigma = sigma;
-        bumpMap = bumpMap;
-    }
-    __both__
-    void ComputeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
-                                    TransportMode mode,
-                                    bool allowMultipleLobes) const;
+// class MatteMaterial : public Material {
+//   public:
+//     // MatteMaterial Public Methods
+//     MatteMaterial(Texture<Spectrum> const *Kd,
+//                   Texture<Float>    const *sigma,
+//                   Texture<Float>    const *bumpMap)
+//     {
+//         Kd = Kd;
+//         sigma = sigma;
+//         bumpMap = bumpMap;
+//     }
+//     __both__
+//     void ComputeScatteringFunctions(SurfaceInteraction *si, MemoryArena &arena,
+//                                     TransportMode mode,
+//                                     bool allowMultipleLobes) const;
 
-  private:
-    // MatteMaterial Private Data
-    Texture<Spectrum>* Kd;
-    Texture<Float> *sigma, *bumpMap;
-};
+//   private:
+//     // MatteMaterial Private Data
+//     Texture<Spectrum>* Kd;
+//     Texture<Float> *sigma, *bumpMap;
+// };
 
-MatteMaterial *CreateMatteMaterial(const TextureParams &mp);
+Material *CreateMatteMaterial(const TextureParams &mp);
 
 }  // namespace pbrt
 

@@ -48,7 +48,7 @@ Primitive::~Primitive() {}
 // GeometricPrimitive Method Definitions
 GeometricPrimitive::GeometricPrimitive(Shape*     const shape,
                                        Material*  const material,
-                                       AreaLight* const areaLight,
+                                       Light* const areaLight,
                                        const MediumInterface &mediumInterface)
     : shape(shape),
     material(material),
@@ -82,7 +82,7 @@ bool GeometricPrimitive::Intersect(const Ray &r,
 }
 
 __both__
-const AreaLight *GeometricPrimitive::GetAreaLight() const {
+const Light *GeometricPrimitive::GetAreaLight() const {
     return areaLight;
 }
 

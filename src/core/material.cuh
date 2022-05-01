@@ -51,15 +51,28 @@ enum class TransportMode { Radiance, Importance };
 class Material {
   public:
     // Material Interface
+    Material(Texture<Spectrum> const *Kd,
+             Texture<Float>    const *sigma,
+             Texture<Float>    const *bumpMap)
+    {
+        Kd = Kd;
+        sigma = sigma;
+        bumpMap = bumpMap;
+    }
     __both__
-    virtual void ComputeScatteringFunctions(SurfaceInteraction *si,
+    void ComputeScatteringFunctions(SurfaceInteraction *si,
                                             MemoryArena &arena,
                                             TransportMode mode,
-                                            bool allowMultipleLobes) const = 0;
-    virtual ~Material();
+                                            bool allowMultipleLobes) const;
+    ~Material();
     __both__
     static void Bump(Texture<Float> const *d,
                      SurfaceInteraction *si);
+
+  private:
+    // MatteMaterial Private Data
+    Texture<Spectrum>* Kd;
+    Texture<Float> *sigma, *bumpMap;
 };
 
 }  // namespace pbrt

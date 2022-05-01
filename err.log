@@ -1,0 +1,63 @@
+gmake: Warning: File `Makefile' has modification time 58 s in the future
+gmake[1]: Warning: File `CMakeFiles/Makefile2' has modification time 58 s in the future
+gmake[2]: Warning: File `CMakeFiles/pbrt.dir/progress.make' has modification time 58 s in the future
+Consolidate compiler generated dependencies of target pbrt
+gmake[2]: warning:  Clock skew detected.  Your build may be incomplete.
+gmake[2]: Warning: File `CMakeFiles/pbrt.dir/progress.make' has modification time 58 s in the future
+[  1%] Building CUDA object CMakeFiles/pbrt.dir/src/core/api.cu.o
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/material.cuh(66): error: pure specifier ("= 0") allowed only on virtual functions
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/shape.cuh(60): error: a delegating constructor cannot have other mem-initializers
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/shape.cuh(66): error: "pbrt::Shape::Shape(const pbrt::Transform *, const pbrt::Transform *, __nv_bool, pbrt::Float, pbrt::Float, pbrt::Float, pbrt::Float)" provides no initializer for:
+            const member "pbrt::Shape::reverseOrientation"
+            const member "pbrt::Shape::transformSwapsHandedness"
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/light.cuh(80): error: pure specifier ("= 0") allowed only on virtual functions
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/light.cuh(81): error: pure specifier ("= 0") allowed only on virtual functions
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/light.cuh(87): error: pure specifier ("= 0") allowed only on virtual functions
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/light.cuh(90): error: pure specifier ("= 0") allowed only on virtual functions
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/light.cuh(92): error: pure specifier ("= 0") allowed only on virtual functions
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/light.cuh(94): error: pure specifier ("= 0") allowed only on virtual functions
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/reflection.cuh(254): error: a delegating constructor cannot have other mem-initializers
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/reflection.cuh(254): error: "pbrt::BxDF::BxDF(const pbrt::Spectrum &)" provides no initializer for:
+            const member "pbrt::BxDF::type"
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/sampler.cuh(59): error: pure specifier ("= 0") allowed only on virtual functions
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/sampler.cuh(61): error: pure specifier ("= 0") allowed only on virtual functions
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/sampler.cuh(118): error: identifier "PrimeSums" is undefined
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/materials/matte.cuh(70): error: identifier "MatteMaterial" is undefined
+
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/api.cu(63): warning #177-D: variable "scene" was declared but never referenced
+
+/usr/include/c++/4.8.2/bits/stl_algobase.h(335): error: a value of type "pbrt::AreaLight *" cannot be assigned to an entity of type "pbrt::Light *"
+          detected during:
+            instantiation of "_OI std::__copy_move<false, false, std::random_access_iterator_tag>::__copy_m(_II, _II, _OI) [with _II=pbrt::AreaLight **, _OI=pbrt::Light **]" 
+(390): here
+            instantiation of "_OI std::__copy_move_a<_IsMove,_II,_OI>(_II, _II, _OI) [with _IsMove=false, _II=pbrt::AreaLight **, _OI=pbrt::Light **]" 
+(428): here
+            instantiation of "_OI std::__copy_move_a2<_IsMove,_II,_OI>(_II, _II, _OI) [with _IsMove=false, _II=__gnu_cxx::__normal_iterator<pbrt::AreaLight **, std::vector<pbrt::AreaLight *, std::allocator<pbrt::AreaLight *>>>, _OI=__gnu_cxx::__normal_iterator<pbrt::Light **, std::vector<pbrt::Light *, std::allocator<pbrt::Light *>>>]" 
+(460): here
+            instantiation of "_OI std::copy(_II, _II, _OI) [with _II=__gnu_cxx::__normal_iterator<pbrt::AreaLight **, std::vector<pbrt::AreaLight *, std::allocator<pbrt::AreaLight *>>>, _OI=__gnu_cxx::__normal_iterator<pbrt::Light **, std::vector<pbrt::Light *, std::allocator<pbrt::Light *>>>]" 
+/usr/include/c++/4.8.2/bits/vector.tcc(629): here
+            instantiation of "void std::vector<_Tp, _Alloc>::_M_range_insert(std::vector<_Tp, _Alloc>::iterator, _ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _Tp=pbrt::Light *, _Alloc=std::allocator<pbrt::Light *>, _ForwardIterator=__gnu_cxx::__normal_iterator<pbrt::AreaLight **, std::vector<pbrt::AreaLight *, std::allocator<pbrt::AreaLight *>>>]" 
+/usr/include/c++/4.8.2/bits/stl_vector.h(1291): here
+            instantiation of "void std::vector<_Tp, _Alloc>::_M_insert_dispatch(std::vector<_Tp, _Alloc>::iterator, _InputIterator, _InputIterator, std::__false_type) [with _Tp=pbrt::Light *, _Alloc=std::allocator<pbrt::Light *>, _InputIterator=__gnu_cxx::__normal_iterator<pbrt::AreaLight **, std::vector<pbrt::AreaLight *, std::allocator<pbrt::AreaLight *>>>]" 
+/usr/include/c++/4.8.2/bits/stl_vector.h(1046): here
+            instantiation of "void std::vector<_Tp, _Alloc>::insert(std::vector<_Tp, _Alloc>::iterator, _InputIterator, _InputIterator) [with _Tp=pbrt::Light *, _Alloc=std::allocator<pbrt::Light *>, _InputIterator=__gnu_cxx::__normal_iterator<pbrt::AreaLight **, std::vector<pbrt::AreaLight *, std::allocator<pbrt::AreaLight *>>>, <unnamed>=void]" 
+/p/cs458/zxu44/tmp/pbrt-v3/src/core/api.cu(752): here
+
+16 errors detected in the compilation of "/p/cs458/zxu44/tmp/pbrt-v3/src/core/api.cu".
+gmake[2]: *** [CMakeFiles/pbrt.dir/src/core/api.cu.o] Error 1
+gmake[1]: *** [CMakeFiles/pbrt.dir/all] Error 2
+gmake: *** [all] Error 2

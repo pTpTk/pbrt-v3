@@ -433,12 +433,12 @@ Material* MakeMaterial(const std::string &name, const TextureParams &mp) {
     return material;
 }
 
-AreaLight* MakeAreaLight(const std::string &name,
+Light* MakeAreaLight(const std::string &name,
                                          const Transform &light2world,
                                          const MediumInterface &mediumInterface,
                                          const ParamSet &paramSet,
                                          Shape* const shape) {
-    AreaLight* area;
+    Light* area;
     if (name == "area" || name == "diffuse")
         area = CreateDiffuseAreaLight(light2world, mediumInterface.outside,
                                       paramSet, shape);
@@ -697,7 +697,7 @@ void pbrtAreaLightSource(const std::string &name, const ParamSet &params) {
 void pbrtShape(const std::string &name, const ParamSet &params) {
     VERIFY_WORLD("Shape");
     std::vector<Primitive*> prims;
-    std::vector<AreaLight*> areaLights;
+    std::vector<Light*> areaLights;
     if (PbrtOptions.cat || (PbrtOptions.toPly && name != "trianglemesh")) {
         printf("%*sShape \"%s\" ", catIndentCount, "", name.c_str());
         params.Print(catIndentCount);
@@ -724,7 +724,7 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
         // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
         for (auto s : shapes) {
             // Possibly create area light for shape
-            AreaLight* area;
+            Light* area;
             if (graphicsState.areaLight != "") {
 
                 area = MakeAreaLight(graphicsState.areaLight, curTransform[0],

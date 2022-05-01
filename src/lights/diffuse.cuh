@@ -46,41 +46,41 @@
 namespace pbrt {
 
 // DiffuseAreaLight Declarations
-class DiffuseAreaLight : public AreaLight {
-  public:
-    // DiffuseAreaLight Public Methods
-    DiffuseAreaLight(const Transform &LightToWorld,
-                     const MediumInterface &mediumInterface, const Spectrum &Le,
-                     int nSamples, Shape * const shape,
-                     bool twoSided = false);
-    __both__
-    Spectrum L(const Interaction &intr, const Vector3f &w) const {
-        return (twoSided || Dot(intr.n, w) > 0) ? Lemit : Spectrum(0.f);
-    }
-    Spectrum Power() const;
-    __both__
-    Spectrum Sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wo,
-                       Float *pdf, VisibilityTester *vis) const;
-    __both__
-    Float Pdf_Li(const Interaction &, const Vector3f &) const;
-    Spectrum Sample_Le(const Point2f &u1, const Point2f &u2, Float time,
-                       Ray *ray, Normal3f *nLight, Float *pdfPos,
-                       Float *pdfDir) const;
-    void Pdf_Le(const Ray &, const Normal3f &, Float *pdfPos,
-                Float *pdfDir) const;
+// class DiffuseAreaLight : public Light {
+//   public:
+//     // DiffuseAreaLight Public Methods
+//     DiffuseAreaLight(const Transform &LightToWorld,
+//                      const MediumInterface &mediumInterface, const Spectrum &Le,
+//                      int nSamples, Shape * const shape,
+//                      bool twoSided = false);
+//     __both__
+//     Spectrum L(const Interaction &intr, const Vector3f &w) const {
+//         return (twoSided || Dot(intr.n, w) > 0) ? Lemit : Spectrum(0.f);
+//     }
+//     Spectrum Power() const;
+//     __both__
+//     Spectrum Sample_Li(const Interaction &ref, const Point2f &u, Vector3f *wo,
+//                        Float *pdf, VisibilityTester *vis) const;
+//     __both__
+//     Float Pdf_Li(const Interaction &, const Vector3f &) const;
+//     Spectrum Sample_Le(const Point2f &u1, const Point2f &u2, Float time,
+//                        Ray *ray, Normal3f *nLight, Float *pdfPos,
+//                        Float *pdfDir) const;
+//     void Pdf_Le(const Ray &, const Normal3f &, Float *pdfPos,
+//                 Float *pdfDir) const;
 
-  protected:
-    // DiffuseAreaLight Protected Data
-    const Spectrum Lemit;
-    Shape* shape;
-    // Added after book publication: by default, DiffuseAreaLights still
-    // only emit in the hemimsphere around the surface normal.  However,
-    // this behavior can now be overridden to give emission on both sides.
-    const bool twoSided;
-    const Float area;
-};
+//   protected:
+//     // DiffuseAreaLight Protected Data
+//     const Spectrum Lemit;
+//     Shape* shape;
+//     // Added after book publication: by default, DiffuseAreaLights still
+//     // only emit in the hemimsphere around the surface normal.  However,
+//     // this behavior can now be overridden to give emission on both sides.
+//     const bool twoSided;
+//     const Float area;
+// };
 
-AreaLight* CreateDiffuseAreaLight(
+Light* CreateDiffuseAreaLight(
     const Transform &light2world, const Medium *medium,
     const ParamSet &paramSet, Shape* const shape);
 

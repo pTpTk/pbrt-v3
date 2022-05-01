@@ -59,7 +59,7 @@ class Primitive {
     __both__
     virtual bool IntersectP(const Ray &r) const = 0;
     __both__
-    virtual const AreaLight *GetAreaLight() const = 0;
+    virtual const Light *GetAreaLight() const = 0;
     __both__
     virtual const Material *GetMaterial() const = 0;
     __both__
@@ -82,10 +82,10 @@ class GeometricPrimitive : public Primitive {
     __both__
     GeometricPrimitive(Shape*     const shape,
                        Material*  const material,
-                       AreaLight* const areaLight,
+                       Light* const areaLight,
                        const MediumInterface &mediumInterface);
     __both__
-    const AreaLight *GetAreaLight() const;
+    const Light *GetAreaLight() const;
     __both__
     const Material *GetMaterial() const;
     __both__
@@ -97,7 +97,7 @@ class GeometricPrimitive : public Primitive {
     // GeometricPrimitive Private Data
     Shape* shape;
     Material* material;
-    AreaLight* areaLight;
+    Light* areaLight;
     MediumInterface mediumInterface;
 };
 
@@ -106,7 +106,7 @@ class Aggregate : public Primitive {
   public:
     // Aggregate Public Methods
     __both__
-    const AreaLight *GetAreaLight() const;
+    const Light *GetAreaLight() const;
     __both__
     const Material *GetMaterial() const;
     __both__
