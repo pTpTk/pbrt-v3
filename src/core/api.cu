@@ -718,8 +718,8 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
         params.ReportUnused();
         MediumInterface mi = graphicsState.CreateMediumInterface();
         prims.reserve(shapes.size());
-        GeometricPrimitive* ptr;
-        cudaMallocManaged(&ptr, sizeof(GeometricPrimitive) * shapes.size());
+        Primitive* ptr;
+        cudaMallocManaged(&ptr, sizeof(Primitive) * shapes.size());
         cudaDeviceSynchronize();
         // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
         for (auto s : shapes) {
@@ -732,7 +732,7 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
                 if (area) areaLights.push_back(area);
             }
             prims.push_back(
-                new(ptr) GeometricPrimitive(s, mtl, area, mi));
+                new(ptr) Primitive(s, mtl, area, mi));
             ptr++;
         }
     } else {

@@ -46,83 +46,83 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
 
         // Intersect _ray_ with scene and store intersection in _isect_
         SurfaceInteraction isect;
-        printf("isect[%p]\n", &isect);
-        printf("scene[%p]\n", &scene);
+        //printf("isect[%p]\n", &isect);
+        //printf("scene[%p]\n", &scene);
         bool foundIntersection = scene.Intersect(ray, &isect);
 
-        // // Possibly add emitted light at intersection
-        // if (bounces == 0 || specularBounce) {
-        //     // Add emitted light at path vertex or from the environment
-        //     if (foundIntersection) {
-        //         L += beta * isect.Le(-ray.d);
-        //         // VLOG(2) << "Added Le -> L = " << L;
-        //     } else {
-        //         for (int i = 0; i < scene.infiniteLights_size; ++i) {
-        //             const auto &light = scene.infiniteLights[i];
-        //             L += beta * light->Le(ray);
-        //         }
-        //         // VLOG(2) << "Added infinite area lights -> L = " << L;
-        //     }
-        // }
+        // Possibly add emitted light at intersection
+        if (bounces == 0 || specularBounce) {
+            // Add emitted light at path vertex or from the environment
+            if (foundIntersection) {
+                L += beta * isect.Le(-ray.d);
+                // VLOG(2) << "Added Le -> L = " << L;
+            } else {
+                for (int i = 0; i < scene.infiniteLights_size; ++i) {
+                    const auto &light = scene.infiniteLights[i];
+                    L += beta * light->Le(ray);
+                }
+                // VLOG(2) << "Added infinite area lights -> L = " << L;
+            }
+        }
 
-        // // Terminate path if ray escaped or _maxDepth_ was reached
-        // if (!foundIntersection || bounces >= maxDepth) break;
+        // Terminate path if ray escaped or _maxDepth_ was reached
+        if (!foundIntersection || bounces >= maxDepth) break;
 
-        // // Compute scattering functions and skip over medium boundaries
-        // isect.ComputeScatteringFunctions(ray, arena, true);
-        // if (!isect.bsdf) {
-        //     // VLOG(2) << "Skipping intersection due to null bsdf";
-        //     ray = isect.SpawnRay(ray.d);
-        //     bounces--;
-        //     continue;
-        // }
+        // Compute scattering functions and skip over medium boundaries
+        isect.ComputeScatteringFunctions(ray, arena, true);
+        if (!isect.bsdf) {
+            // VLOG(2) << "Skipping intersection due to null bsdf";
+            ray = isect.SpawnRay(ray.d);
+            bounces--;
+            continue;
+        }
 
-        // const Distribution1D *distrib = lightDistribution->Lookup(isect.p);
+        const Distribution1D *distrib = lightDistribution->Lookup(isect.p);
 
-        // // Sample illumination from lights to find path contribution.
-        // // (But skip this for perfectly specular BSDFs.)
-        // if (isect.bsdf->NumComponents(BxDFType(BSDF_ALL & ~BSDF_SPECULAR)) >
-        //     0) {
-        //     // ++totalPaths;
-        //     Spectrum Ld = beta * UniformSampleOneLight(isect, scene, arena,
-        //                                                sampler, false, distrib);
-        //     // VLOG(2) << "Sampled direct lighting Ld = " << Ld;
-        //     // if (Ld.IsBlack()) ++zeroRadiancePaths;
-        //     // CHECK_GE(Ld.y(), 0.f);
-        //     L += Ld;
-        // }
+        // Sample illumination from lights to find path contribution.
+        // (But skip this for perfectly specular BSDFs.)
+        if (isect.bsdf->NumComponents(BxDFType(BSDF_ALL & ~BSDF_SPECULAR)) >
+            0) {
+            // ++totalPaths;
+            Spectrum Ld = beta * UniformSampleOneLight(isect, scene, arena,
+                                                       sampler, false, distrib);
+            // VLOG(2) << "Sampled direct lighting Ld = " << Ld;
+            // if (Ld.IsBlack()) ++zeroRadiancePaths;
+            // CHECK_GE(Ld.y(), 0.f);
+            L += Ld;
+        }
 
-        // // Sample BSDF to get new path direction
-        // Vector3f wo = -ray.d, wi;
-        // Float pdf;
-        // BxDFType flags;
-        // Spectrum f = isect.bsdf->Sample_f(wo, &wi, sampler.Get2D(), &pdf,
-        //                                   BSDF_ALL, &flags);
-        // // VLOG(2) << "Sampled BSDF, f = " << f << ", pdf = " << pdf;
-        // if (f.IsBlack() || pdf == 0.f) break;
-        // beta *= f * AbsDot(wi, isect.shading.n) / pdf;
-        // // VLOG(2) << "Updated beta = " << beta;
-        // // CHECK_GE(beta.y(), 0.f);
-        // // DCHECK(!std::isinf(beta.y()));
-        // specularBounce = (flags & BSDF_SPECULAR) != 0;
-        // if ((flags & BSDF_SPECULAR) && (flags & BSDF_TRANSMISSION)) {
-        //     Float eta = isect.bsdf->eta;
-        //     // Update the term that tracks radiance scaling for refraction
-        //     // depending on whether the ray is entering or leaving the
-        //     // medium.
-        //     etaScale *= (Dot(wo, isect.n) > 0) ? (eta * eta) : 1 / (eta * eta);
-        // }
-        // ray = isect.SpawnRay(wi);
+        // Sample BSDF to get new path direction
+        Vector3f wo = -ray.d, wi;
+        Float pdf;
+        BxDFType flags;
+        Spectrum f = isect.bsdf->Sample_f(wo, &wi, sampler.Get2D(), &pdf,
+                                          BSDF_ALL, &flags);
+        // VLOG(2) << "Sampled BSDF, f = " << f << ", pdf = " << pdf;
+        if (f.IsBlack() || pdf == 0.f) break;
+        beta *= f * AbsDot(wi, isect.shading.n) / pdf;
+        // VLOG(2) << "Updated beta = " << beta;
+        // CHECK_GE(beta.y(), 0.f);
+        // DCHECK(!std::isinf(beta.y()));
+        specularBounce = (flags & BSDF_SPECULAR) != 0;
+        if ((flags & BSDF_SPECULAR) && (flags & BSDF_TRANSMISSION)) {
+            Float eta = isect.bsdf->eta;
+            // Update the term that tracks radiance scaling for refraction
+            // depending on whether the ray is entering or leaving the
+            // medium.
+            etaScale *= (Dot(wo, isect.n) > 0) ? (eta * eta) : 1 / (eta * eta);
+        }
+        ray = isect.SpawnRay(wi);
 
-        // // Possibly terminate the path with Russian roulette.
-        // // Factor out radiance scaling due to refraction in rrBeta.
-        // Spectrum rrBeta = beta * etaScale;
-        // if (rrBeta.MaxComponentValue() < rrThreshold && bounces > 3) {
-        //     Float q = max((Float).05, 1 - rrBeta.MaxComponentValue());
-        //     if (sampler.Get1D() < q) break;
-        //     beta /= 1 - q;
-        //     // DCHECK(!std::isinf(beta.y()));
-        // }
+        // Possibly terminate the path with Russian roulette.
+        // Factor out radiance scaling due to refraction in rrBeta.
+        Spectrum rrBeta = beta * etaScale;
+        if (rrBeta.MaxComponentValue() < rrThreshold && bounces > 3) {
+            Float q = max((Float).05, 1 - rrBeta.MaxComponentValue());
+            if (sampler.Get1D() < q) break;
+            beta /= 1 - q;
+            // DCHECK(!std::isinf(beta.y()));
+        }
     }
     //ReportValue(pathLength, bounces);
     return L;
@@ -262,23 +262,6 @@ Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
 __both__
 Float UniformConePdf(Float cosThetaMax) {
     return 1 / (2 * Pi * (1 - cosThetaMax));
-}
-
-// primitive
-__both__
-const AreaLight *Aggregate::GetAreaLight() const {
-    return nullptr;
-}
-__both__
-const Material *Aggregate::GetMaterial() const {
-    return nullptr;
-}
-
-__both__
-void Aggregate::ComputeScatteringFunctions(SurfaceInteraction *isect,
-                                           MemoryArena &arena,
-                                           TransportMode mode,
-                                           bool allowMultipleLobes) const {
 }
 
 __both__
@@ -480,58 +463,13 @@ Spectrum UniformSampleOneLight(const Interaction &it, const Scene &scene,
                           scene, sampler, arena, handleMedia) / lightPdf;
 }
 
-__both__
-bool BVHAccel::Intersect(const Ray &ray, SurfaceInteraction *isect) const {
-    // printf("nodes[%p]\n", nodes);
-    // if (!nodes) return false;
-
-    // // ProfilePhase p(Prof::AccelIntersect);
-    // bool hit = false;
-    // Vector3f invDir(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
-    // int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
-    // // Follow ray through BVH nodes to find primitive intersections
-    // int toVisitOffset = 0, currentNodeIndex = 0;
-    // int nodesToVisit[64];
-    // while (true) {
-    //     const LinearBVHNode *node = &nodes[currentNodeIndex];
-    //     // Check ray against BVH node
-    //     if (node->bounds.IntersectP(ray, invDir, dirIsNeg)) {
-    //         if (node->nPrimitives > 0) {
-    //             // Intersect ray with primitives in leaf BVH node
-    //             for (int i = 0; i < node->nPrimitives; ++i)
-    //                 if (primitives[node->primitivesOffset + i]->Intersect(
-    //                         ray, isect))
-    //                     hit = true;
-    //             if (toVisitOffset == 0) break;
-    //             currentNodeIndex = nodesToVisit[--toVisitOffset];
-    //         } else {
-    //             // Put far BVH node on _nodesToVisit_ stack, advance to near
-    //             // node
-    //             if (dirIsNeg[node->axis]) {
-    //                 nodesToVisit[toVisitOffset++] = currentNodeIndex + 1;
-    //                 currentNodeIndex = node->secondChildOffset;
-    //             } else {
-    //                 nodesToVisit[toVisitOffset++] = node->secondChildOffset;
-    //                 currentNodeIndex = currentNodeIndex + 1;
-    //             }
-    //         }
-    //     } else {
-    //         if (toVisitOffset == 0) break;
-    //         currentNodeIndex = nodesToVisit[--toVisitOffset];
-    //     }
-    // }
-    //return hit;
-    return false;
-}
-
-
 // scene
 __both__
 bool Scene::Intersect(const Ray &ray, SurfaceInteraction *isect) const {
     // ++nIntersectionTests;
     assert(ray.d != Vector3f(0,0,0));
-    printf("ray.d[%p]\n", &(ray.d));
-    printf("aggregate[%p]\n", aggregate);
+    //printf("ray.d[%p]\n", &(ray.d));
+    //printf("aggregate[%p]\n", aggregate);
     //return false;
     //printf("aggregate->Intersect[%p]\n", &(aggregate->Intersect));
     //return aggregate->Intersect(ray, isect);
@@ -558,8 +496,8 @@ void LiKernel(Spectrum* Ls, PathIntegrator* integrator,
     Ls[sampleNum] = 0.f;
     
     if (rayWeights[sampleNum] > 0){
-        printf("integrator[%p], scene[%p], tileSampler[%p], arena[%p]\n", 
-              integrator, &scene, tileSamplers[sampleNum], &arena);
+        //printf("integrator[%p], scene[%p], tileSampler[%p], arena[%p]\n", 
+        //      integrator, &scene, tileSamplers[sampleNum], &arena);
         // printf("integrator.Li[%p]\n", &integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0));
         Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0);
     }
@@ -571,7 +509,7 @@ STAT_COUNTER("Integrator/Camera rays traced", nCameraRays);
 void Render(Integrator *i, Scene *s){
     PathIntegrator* integrator = dynamic_cast<PathIntegrator*>(i);
     Scene &scene = *s;
-    printf("hereherehere\n");
+    //printf("hereherehere\n");
     //CallLiKernel();
 
     integrator->Preprocess(scene, *(integrator->sampler));
