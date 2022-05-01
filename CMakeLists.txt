@@ -101,18 +101,18 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}
 #-gencode=arch=compute_75,code=sm_75 
 #-gencode=arch=compute_75,code=compute_75
 #--expt-relaxed-constexpr
--rdc=true
+#-rdc=true
 "
 )
 IF(CMAKE_BUILD_TYPE MATCHES DEBUG)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} 
-  -G -rdynamic"
+  -lineinfo -rdynamic"
   )
 ENDIF()
 #set_target_properties(tgt PROPERTIES CUDA_ARCHITECTURES "61")
 
-#SET(CMAKE_CUDA_FLAGS_DEBUG "-G -g -rdc=true -lineinfo -rdynamic")
-list(APPEND CUDA_NVCC_FLAGS "-G -g -rdc=true -lineinfo -rdynamic")
+SET(CMAKE_CUDA_FLAGS_DEBUG "-g -rdc=true -lineinfo -rdynamic")
+#list(APPEND CUDA_NVCC_FLAGS "-G -g -rdc=true -lineinfo -rdynamic")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 SET(CMAKE_C_COMPILER gcc)
@@ -405,114 +405,124 @@ INCLUDE_DIRECTORIES ( src/ext/ptex/src/ptex )
 ###########################################################################
 # On to pbrt...
 
-#SET ( PBRT_CORE_SOURCE
-#  src/core/api.cu
-#  src/core/api.cpp
-#  src/core/bssrdf.cpp
-#  src/core/camera.cpp
-#  src/core/efloat.cpp
-#  src/core/error.cpp
-#  src/core/fileutil.cpp
-#  src/core/film.cpp
-#  src/core/filter.cu
-#  src/core/floatfile.cpp
-#  src/core/geometry.cpp
-#  src/core/imageio.cpp
-#  src/core/integrator.cpp
-#  src/core/interaction.cpp
-#  src/core/interpolation.cpp
-#  src/core/light.cpp
-#  src/core/lightdistrib.cpp
-#  src/core/lowdiscrepancy.cpp
-#  src/core/material.cpp
-#  src/core/medium.cpp
-#  src/core/memory.cpp
-#  src/core/microfacet.cpp
-#  src/core/parallel.cpp
-#  src/core/paramset.cpp
-#  src/core/parser.cpp
-#  src/core/primitive.cpp
-#  src/core/progressreporter.cpp
-#  src/core/quaternion.cpp
-#  src/core/reflection.cpp
-#  src/core/sampler.cpp
-#  src/core/sampling.cpp
-#  src/core/scene.cpp
-#  src/core/shape.cu
-#  src/core/sobolmatrices.cpp
-#  src/core/spectrum.cpp
-#  src/core/stats.cpp
-#  src/core/texture.cpp
-#  src/core/transform.cpp
-#  )
+SET ( PBRT_CORE_SOURCE
+ src/core/api.cu
+ src/core/camera.cu
+ src/core/efloat.cu
+ src/core/error.cu
+ src/core/fileutil.cu
+ src/core/film.cu
+ src/core/filter.cu
+ src/core/floatfile.cu
+ src/core/geometry.cu
+ src/core/imageio.cu
+ src/core/integrator.cu
+ src/core/interaction.cu
+ src/core/interpolation.cu
+ src/core/light.cu
+ src/core/lightdistrib.cu
+ src/core/lowdiscrepancy.cu
+ src/core/material.cu
+ src/core/medium.cu
+ src/core/memory.cu
+ src/core/parallel.cu
+ src/core/paramset.cu
+ src/core/parser.cu
+ src/core/primitive.cu
+ src/core/progressreporter.cu
+ src/core/quaternion.cu
+ src/core/reflection.cu
+ src/core/sampler.cu
+ src/core/sampling.cu
+ src/core/scene.cu
+ src/core/shape.cu
+ src/core/sobolmatrices.cu
+ src/core/spectrum.cu
+ src/core/stats.cu
+ src/core/texture.cu
+ src/core/transform.cu
+ )
 
-FILE ( GLOB PBRT_CORE_CXX_SOURCE
-  src/core/*.cpp
-)
+# FILE ( GLOB PBRT_CORE_CXX_SOURCE
+#   src/core/*.cpp
+# )
 
-FILE ( GLOB PBRT_CORE_CUDA_SOURCE
-  src/core/*.cu
-)
+# FILE ( GLOB PBRT_CORE_CUDA_SOURCE
+#   src/core/*.cu
+# )
 
-FILE ( GLOB PBRT_CORE_HEADERS
-  src/core/*.h
-)
+# FILE ( GLOB PBRT_CORE_HEADERS
+#   src/core/*.h
+# )
 
-#SET ( PBRT_CORE_HEADERS
-#  src/core/api.h
-#  src/core/bssrdf.h
-#  src/core/camera.h
-#  src/core/efloat.h
-#  src/core/error.h
-#  src/core/fileutil.h
-#  src/core/film.h
-#  src/core/filter.h
-#  src/core/floatfile.h
-#  src/core/geometry.h
-#  src/core/imageio.h
-#  src/core/integrator.h
-#  src/core/interaction.h
-#  src/core/interpolation.h
-#  src/core/light.h
-#  src/core/lowdiscrepancy.h
-#  src/core/material.h
-#  src/core/medium.h
-#  src/core/memory.h
-#  src/core/microfacet.h
-#  src/core/mipmap.h
-#  src/core/parallel.h
-#  src/core/paramset.h
-#  src/core/parser.h
-#  src/core/pbrt.h
-#  src/core/primitive.h
-#  src/core/progressreporter.h
-#  src/core/quaternion.h
-#  src/core/reflection.h
-#  src/core/rng.h
-#  src/core/sampler.h
-#  src/core/sampling.h
-#  src/core/scene.h
-#  src/core/shape.h
-#  src/core/sobolmatrices.h
-#  src/core/spectrum.h
-#  src/core/stats.h
-#  src/core/stringprint.h
-#  src/core/texture.h
-#  src/core/transform.h
-#  )
+SET ( PBRT_CORE_HEADERS
+ src/core/api.cuh
+ src/core/camera.cuh
+ src/core/efloat.cuh
+ src/core/error.cuh
+ src/core/fileutil.cuh
+ src/core/film.cuh
+ src/core/filter.cuh
+ src/core/floatfile.cuh
+ src/core/geometry.cuh
+ src/core/imageio.cuh
+ src/core/integrator.cuh
+ src/core/interaction.cuh
+ src/core/interpolation.cuh
+ src/core/light.cuh
+ src/core/lowdiscrepancy.cuh
+ src/core/material.cuh
+ src/core/medium.cuh
+ src/core/memory.cuh
+ src/core/parallel.cuh
+ src/core/paramset.cuh
+ src/core/parser.cuh
+ src/core/pbrt.cuh
+ src/core/primitive.cuh
+ src/core/progressreporter.cuh
+ src/core/quaternion.cuh
+ src/core/reflection.cuh
+ src/core/rng.cuh
+ src/core/sampler.cuh
+ src/core/sampling.cuh
+ src/core/scene.cuh
+ src/core/shape.cuh
+ src/core/sobolmatrices.cuh
+ src/core/spectrum.cuh
+ src/core/stats.cuh
+ src/core/stringprint.cuh
+ src/core/texture.cuh
+ src/core/transform.cuh
+ )
 
 FILE ( GLOB PBRT_SOURCE
-  src/ext/*
-  src/accelerators/*
-  src/cameras/*
-  src/filters/*
-  src/integrators/*
-  src/lights/*
-  src/materials/*
-  src/samplers/*
-  src/shapes/*
-  src/textures/*
-  src/media/*
+  src/ext/*.cpp
+  src/ext/*.h
+  # src/accelerators/*
+  # src/cameras/*
+  # src/filters/*
+  # src/integrators/*
+  # src/lights/*
+  # src/materials/*
+  # src/samplers/*
+  # src/shapes/*
+  # src/textures/*
+  # src/media/*
+  )
+
+  FILE ( GLOB PBRT_CUDA_SOURCE
+  src/ext/*.cu*
+  src/accelerators/*.cu*
+  src/cameras/*.cu*
+  src/filters/*.cu*
+  src/integrators/*.cu*
+  src/lights/*.cu*
+  src/materials/*.cu*
+  src/samplers/*.cu*
+  src/shapes/*.cu*
+  src/textures/*.cu*
+  src/media/*.cu*
+  src/core/plzcompile.cu
   )
 
 INCLUDE_DIRECTORIES ( src )
@@ -542,15 +552,17 @@ ADD_LIBRARY ( pbrt SHARED
   ${PBRT_YACC_LEX_SOURCE}
   ${PBRT_CORE_CXX_SOURCE}
   ${PBRT_CORE_HEADERS}
+  ${PBRT_CORE_SOURCE}
   ${PBRT_SOURCE}
+  ${PBRT_CUDA_SOURCE}
   )
 ADD_SANITIZERS ( pbrt )
 
-ADD_LIBRARY ( pbrt_cuda SHARED
-  ${PBRT_CORE_CUDA_SOURCE}
-  ${PBRT_CUDA_SOURCE}
-)
-ADD_SANITIZERS ( pbrt_cuda )
+# ADD_LIBRARY ( pbrt_cuda SHARED
+#   ${PBRT_CORE_CUDA_SOURCE}
+#   ${PBRT_CUDA_SOURCE}
+# )
+# ADD_SANITIZERS ( pbrt_cuda )
 
 # A non-exhaustive but pretty representative set..
 # Note that we work-around shoddy c++11 support in MSVC2013
@@ -564,24 +576,24 @@ SET ( PBRT_CXX11_FEATURES
   cxx_static_assert
 )
 TARGET_COMPILE_FEATURES ( pbrt PRIVATE ${PBRT_CXX11_FEATURES} )
-TARGET_COMPILE_FEATURES ( pbrt_cuda PRIVATE ${PBRT_CXX11_FEATURES} )
+# TARGET_COMPILE_FEATURES ( pbrt_cuda PRIVATE ${PBRT_CXX11_FEATURES} )
 set_target_properties(pbrt PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET pbrt PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-set_target_properties(pbrt_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_property(TARGET pbrt_cuda PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+# set_target_properties(pbrt_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
+# set_property(TARGET pbrt_cuda PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 IF (WIN32)
   # Avoid a name clash when building on Visual Studio
   SET_TARGET_PROPERTIES ( pbrt PROPERTIES OUTPUT_NAME libpbrt )
-  SET_TARGET_PROPERTIES ( pbrt_cuda PROPERTIES OUTPUT_NAME libpbrt )
+  # SET_TARGET_PROPERTIES ( pbrt_cuda PROPERTIES OUTPUT_NAME libpbrt )
 ENDIF()
 
 set(CUDA_RUNTIME_LIBRARY shared)
-target_link_libraries(pbrt_cuda pbrt ${CUDA_LIBRARIES} cudart cuda cublas curand cudadevrt)
+target_link_libraries(pbrt ${CUDA_LIBRARIES} cudart cuda cublas curand cudadevrt)
 
 SET(ALL_PBRT_LIBS
   pbrt
-  pbrt_cuda
+  # pbrt_cuda
   ${CMAKE_THREAD_LIBS_INIT}
   ${OPENEXR_LIBS}
   glog

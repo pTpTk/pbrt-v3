@@ -50,8 +50,8 @@ Shape::Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
       transformSwapsHandedness(ObjectToWorld->SwapsHandedness()) {
     ++nShapesCreated;
 }
-__both__
-Bounds3f Shape::WorldBound() const { return (*ObjectToWorld)(ObjectBound()); }
+// __both__
+// Bounds3f Shape::WorldBound() const { return (*ObjectToWorld)(ObjectBound()); }
 __both__
 Interaction Shape::Sample(const Interaction &ref, const Point2f &u,
                           Float *pdf) const {
@@ -68,23 +68,23 @@ Interaction Shape::Sample(const Interaction &ref, const Point2f &u,
     }
     return intr;
 }
-__both__
-Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
-    // Intersect sample ray with area light geometry
-    Ray ray = ref.SpawnRay(wi);
-    Float tHit;
-    SurfaceInteraction isectLight;
-    // Ignore any alpha textures used for trimming the shape when performing
-    // this intersection. Hack for the "San Miguel" scene, where this is used
-    // to make an invisible area light.
-    if (!Intersect(ray, &tHit, &isectLight, false)) return 0;
+// __both__
+// Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
+//     // Intersect sample ray with area light geometry
+//     Ray ray = ref.SpawnRay(wi);
+//     Float tHit;
+//     SurfaceInteraction isectLight;
+//     // Ignore any alpha textures used for trimming the shape when performing
+//     // this intersection. Hack for the "San Miguel" scene, where this is used
+//     // to make an invisible area light.
+//     if (!Intersect(ray, &tHit, &isectLight, false)) return 0;
 
-    // Convert light sample weight to solid angle measure
-    Float pdf = DistanceSquared(ref.p, isectLight.p) /
-                (AbsDot(isectLight.n, -wi) * Area());
-    if (isinf(pdf)) pdf = 0.f;
-    return pdf;
-}
+//     // Convert light sample weight to solid angle measure
+//     Float pdf = DistanceSquared(ref.p, isectLight.p) /
+//                 (AbsDot(isectLight.n, -wi) * Area());
+//     if (isinf(pdf)) pdf = 0.f;
+//     return pdf;
+// }
 
 Float Shape::SolidAngle(const Point3f &p, int nSamples) const {
     Interaction ref(p, Normal3f(), Vector3f(), Vector3f(0, 0, 1), 0,

@@ -43,20 +43,7 @@ STAT_MEMORY_COUNTER("Memory/Primitives", primitiveMemory);
 
 // Primitive Method Definitions
 Primitive::~Primitive() {}
-__both__
-const AreaLight *Aggregate::GetAreaLight() const {
-    return nullptr;
-}
-__both__
-const Material *Aggregate::GetMaterial() const {
-    return nullptr;
-}
-__both__
-void Aggregate::ComputeScatteringFunctions(SurfaceInteraction *isect,
-                                           MemoryArena &arena,
-                                           TransportMode mode,
-                                           bool allowMultipleLobes) const {
-}
+
 
 // GeometricPrimitive Method Definitions
 GeometricPrimitive::GeometricPrimitive(Shape*     const shape,

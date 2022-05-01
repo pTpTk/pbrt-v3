@@ -231,19 +231,19 @@ Transform LookAt(const Point3f &pos, const Point3f &look, const Vector3f &up) {
     cameraToWorld.m[3][2] = 0.;
     return Transform(Inverse(cameraToWorld), cameraToWorld);
 }
-__both__
-Bounds3f Transform::operator()(const Bounds3f &b) const {
-    const Transform &M = *this;
-    Bounds3f ret(M(Point3f(b.pMin.x, b.pMin.y, b.pMin.z)));
-    ret = Union(ret, M(Point3f(b.pMax.x, b.pMin.y, b.pMin.z)));
-    ret = Union(ret, M(Point3f(b.pMin.x, b.pMax.y, b.pMin.z)));
-    ret = Union(ret, M(Point3f(b.pMin.x, b.pMin.y, b.pMax.z)));
-    ret = Union(ret, M(Point3f(b.pMin.x, b.pMax.y, b.pMax.z)));
-    ret = Union(ret, M(Point3f(b.pMax.x, b.pMax.y, b.pMin.z)));
-    ret = Union(ret, M(Point3f(b.pMax.x, b.pMin.y, b.pMax.z)));
-    ret = Union(ret, M(Point3f(b.pMax.x, b.pMax.y, b.pMax.z)));
-    return ret;
-}
+// __both__
+// Bounds3f Transform::operator()(const Bounds3f &b) const {
+//     const Transform &M = *this;
+//     Bounds3f ret(M(Point3f(b.pMin.x, b.pMin.y, b.pMin.z)));
+//     ret = Union(ret, M(Point3f(b.pMax.x, b.pMin.y, b.pMin.z)));
+//     ret = Union(ret, M(Point3f(b.pMin.x, b.pMax.y, b.pMin.z)));
+//     ret = Union(ret, M(Point3f(b.pMin.x, b.pMin.y, b.pMax.z)));
+//     ret = Union(ret, M(Point3f(b.pMin.x, b.pMax.y, b.pMax.z)));
+//     ret = Union(ret, M(Point3f(b.pMax.x, b.pMax.y, b.pMin.z)));
+//     ret = Union(ret, M(Point3f(b.pMax.x, b.pMin.y, b.pMax.z)));
+//     ret = Union(ret, M(Point3f(b.pMax.x, b.pMax.y, b.pMax.z)));
+//     return ret;
+// }
 __both__
 Transform Transform::operator*(const Transform &t2) const {
     return Transform(Matrix4x4::Mul(m, t2.m), Matrix4x4::Mul(t2.mInv, mInv));
@@ -255,42 +255,42 @@ bool Transform::SwapsHandedness() const {
                 m.m[0][2] * (m.m[1][0] * m.m[2][1] - m.m[1][1] * m.m[2][0]);
     return det < 0;
 }
-__both__
-SurfaceInteraction Transform::operator()(const SurfaceInteraction &si) const {
-    SurfaceInteraction ret;
-    // Transform _p_ and _pError_ in _SurfaceInteraction_
-    ret.p = (*this)(si.p, si.pError, &ret.pError);
+// __both__
+// SurfaceInteraction Transform::operator()(const SurfaceInteraction &si) const {
+//     SurfaceInteraction ret;
+//     // Transform _p_ and _pError_ in _SurfaceInteraction_
+//     ret.p = (*this)(si.p, si.pError, &ret.pError);
 
-    // Transform remaining members of _SurfaceInteraction_
-    const Transform &t = *this;
-    ret.n = Normalize(t(si.n));
-    ret.wo = Normalize(t(si.wo));
-    ret.time = si.time;
-    ret.mediumInterface = si.mediumInterface;
-    ret.uv = si.uv;
-    ret.shape = si.shape;
-    ret.dpdu = t(si.dpdu);
-    ret.dpdv = t(si.dpdv);
-    ret.dndu = t(si.dndu);
-    ret.dndv = t(si.dndv);
-    ret.shading.n = Normalize(t(si.shading.n));
-    ret.shading.dpdu = t(si.shading.dpdu);
-    ret.shading.dpdv = t(si.shading.dpdv);
-    ret.shading.dndu = t(si.shading.dndu);
-    ret.shading.dndv = t(si.shading.dndv);
-    ret.dudx = si.dudx;
-    ret.dvdx = si.dvdx;
-    ret.dudy = si.dudy;
-    ret.dvdy = si.dvdy;
-    ret.dpdx = t(si.dpdx);
-    ret.dpdy = t(si.dpdy);
-    ret.bsdf = si.bsdf;
-    ret.primitive = si.primitive;
-    //    ret.n = Faceforward(ret.n, ret.shading.n);
-    ret.shading.n = Faceforward(ret.shading.n, ret.n);
-    ret.faceIndex = si.faceIndex;
-    return ret;
-}
+//     // Transform remaining members of _SurfaceInteraction_
+//     const Transform &t = *this;
+//     ret.n = Normalize(t(si.n));
+//     ret.wo = Normalize(t(si.wo));
+//     ret.time = si.time;
+//     ret.mediumInterface = si.mediumInterface;
+//     ret.uv = si.uv;
+//     ret.shape = si.shape;
+//     ret.dpdu = t(si.dpdu);
+//     ret.dpdv = t(si.dpdv);
+//     ret.dndu = t(si.dndu);
+//     ret.dndv = t(si.dndv);
+//     ret.shading.n = Normalize(t(si.shading.n));
+//     ret.shading.dpdu = t(si.shading.dpdu);
+//     ret.shading.dpdv = t(si.shading.dpdv);
+//     ret.shading.dndu = t(si.shading.dndu);
+//     ret.shading.dndv = t(si.shading.dndv);
+//     ret.dudx = si.dudx;
+//     ret.dvdx = si.dvdx;
+//     ret.dudy = si.dudy;
+//     ret.dvdy = si.dvdy;
+//     ret.dpdx = t(si.dpdx);
+//     ret.dpdy = t(si.dpdy);
+//     ret.bsdf = si.bsdf;
+//     ret.primitive = si.primitive;
+//     //    ret.n = Faceforward(ret.n, ret.shading.n);
+//     ret.shading.n = Faceforward(ret.shading.n, ret.n);
+//     ret.faceIndex = si.faceIndex;
+//     return ret;
+// }
 __both__
 Transform Orthographic(Float zNear, Float zFar) {
     return Scale(1, 1, 1 / (zFar - zNear)) * Translate(Vector3f(0, 0, -zNear));

@@ -55,12 +55,12 @@ Light::Light(int flags, const Transform &LightToWorld,
 }
 
 Light::~Light() {}
-__both__
-bool VisibilityTester::Unoccluded(const Scene &scene) const {
-    return !scene.IntersectP(p0.SpawnRayTo(p1));
-}
-__both__
-Spectrum Light::Le(const RayDifferential &ray) const { return Spectrum(0.f); }
+// __both__
+// bool VisibilityTester::Unoccluded(const Scene &scene) const {
+//     return !scene.IntersectP(p0.SpawnRayTo(p1));
+// }
+// __both__
+// Spectrum Light::Le(const RayDifferential &ray) const { return Spectrum(0.f); }
 
 AreaLight::AreaLight(const Transform &LightToWorld, const MediumInterface &medium,
                      int nSamples)
