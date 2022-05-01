@@ -697,7 +697,7 @@ void pbrtShape(const std::string &name, const ParamSet &params) {
                 if (area) areaLights.push_back(area);
             }
             prims.push_back(
-                std::make_shared<GeometricPrimitive>(s, mtl, area, mi));
+                std::make_shared<Primitive>(s, mtl, area, mi));
         }
     } else {
         printf("Animated Scene not supported.\n");
@@ -878,7 +878,7 @@ void pbrtWorldEnd() {
 Scene *RenderOptions::MakeScene() {
     std::shared_ptr<Primitive> accelerator =
         MakeAccelerator(AcceleratorName, std::move(primitives), AcceleratorParams);
-    if (!accelerator) accelerator = std::make_shared<BVHAccel>(primitives);
+    if (!accelerator) accelerator = std::make_shared<Primitive>(primitives);
     Scene *scene = new Scene(accelerator, lights);
     // Erase primitives and lights from _RenderOptions_
     primitives.clear();

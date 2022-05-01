@@ -39,64 +39,103 @@
 #define PBRT_CORE_PRIMITIVE_H
 
 // core/primitive.h*
+#include <atomic>
+#include "accelerators/bvh.h"
 #include "pbrt.h"
 #include "shape.h"
 #include "material.h"
 #include "medium.h"
 #include "transform.h"
 
+#include <cstdint>
+
 namespace pbrt {
+
+struct BVHBuildNode;
+
+// BVHAccel Forward Declarations
+struct BVHPrimitiveInfo;
+struct MortonPrimitive;
+struct LinearBVHNode;
+
+std::shared_ptr<Primitive> CreateBVHAccelerator(
+    std::vector<std::shared_ptr<Primitive>> prims, const ParamSet &ps);
 
 // Primitive Declarations
 class Primitive {
   public:
-    // Primitive Interface
-    virtual ~Primitive();
-    virtual Bounds3f WorldBound() const = 0;
-    virtual bool Intersect(const Ray &r, SurfaceInteraction *) const = 0;
-    virtual bool IntersectP(const Ray &r) const = 0;
-    virtual const AreaLight *GetAreaLight() const = 0;
-    virtual const Material *GetMaterial() const = 0;
-    virtual void ComputeScatteringFunctions(SurfaceInteraction *isect,
-                                            MemoryArena &arena,
-                                            TransportMode mode,
-                                            bool allowMultipleLobes) const = 0;
-};
+    // What type is the Primitive actually? Breaking the polymorphism this way
+    enum class PrimitiveType: std::uint8_t {
+      Aggregate,
+      GeometricPrimitive,
+      BVHAccel,
+      Primitive,
+      Unspecified, // should never be this type
+    };
 
-// GeometricPrimitive Declarations
-class GeometricPrimitive : public Primitive {
-  public:
-    // GeometricPrimitive Public Methods
-    virtual Bounds3f WorldBound() const;
-    virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const;
-    virtual bool IntersectP(const Ray &r) const;
-    GeometricPrimitive(const std::shared_ptr<Shape> &shape,
-                       const std::shared_ptr<Material> &material,
-                       const std::shared_ptr<AreaLight> &areaLight,
-                       const MediumInterface &mediumInterface);
+    // Primitive Interface
+    ~Primitive();
+    Bounds3f WorldBound() const;
+    bool Intersect(const Ray &r, SurfaceInteraction *) const;
+    bool IntersectP(const Ray &r) const;
     const AreaLight *GetAreaLight() const;
     const Material *GetMaterial() const;
     void ComputeScatteringFunctions(SurfaceInteraction *isect,
-                                    MemoryArena &arena, TransportMode mode,
-                                    bool allowMultipleLobes) const;
+                                            MemoryArena &arena,
+                                            TransportMode mode,
+                                            bool allowMultipleLobes) const;
+
+    // GeometricPrimitive Interface
+    // Set type to PrimitiveType::GeometricPrimitive in this constructor
+    Primitive(const std::shared_ptr<Shape> &shape,
+              const std::shared_ptr<Material> &material,
+              const std::shared_ptr<AreaLight> &areaLight,
+              const MediumInterface &mediumInterface);
+
+    // BVHAccel Public Types
+    enum class SplitMethod { SAH, HLBVH, Middle, EqualCounts };
+
+    // BVHAccel Public Methods
+    // Set type to PrimitiveType::BVHAccel in this constructor
+    Primitive(std::vector<std::shared_ptr<Primitive>> p,
+             int maxPrimsInNode = 1,
+             SplitMethod splitMethod = SplitMethod::SAH);
 
   private:
+    // Primitive Private Data
+    PrimitiveType type = PrimitiveType::Primitive;
+
     // GeometricPrimitive Private Data
     std::shared_ptr<Shape> shape;
     std::shared_ptr<Material> material;
     std::shared_ptr<AreaLight> areaLight;
     MediumInterface mediumInterface;
-};
 
-// Aggregate Declarations
-class Aggregate : public Primitive {
-  public:
-    // Aggregate Public Methods
-    const AreaLight *GetAreaLight() const;
-    const Material *GetMaterial() const;
-    void ComputeScatteringFunctions(SurfaceInteraction *isect,
-                                    MemoryArena &arena, TransportMode mode,
-                                    bool allowMultipleLobes) const;
+    // BVHAccel Private Methods
+    BVHBuildNode *recursiveBuild(
+        MemoryArena &arena, std::vector<BVHPrimitiveInfo> &primitiveInfo,
+        int start, int end, int *totalNodes,
+        std::vector<std::shared_ptr<Primitive>> &orderedPrims);
+    BVHBuildNode *HLBVHBuild(
+        MemoryArena &arena, const std::vector<BVHPrimitiveInfo> &primitiveInfo,
+        int *totalNodes,
+        std::vector<std::shared_ptr<Primitive>> &orderedPrims) const;
+    BVHBuildNode *emitLBVH(
+        BVHBuildNode *&buildNodes,
+        const std::vector<BVHPrimitiveInfo> &primitiveInfo,
+        MortonPrimitive *mortonPrims, int nPrimitives, int *totalNodes,
+        std::vector<std::shared_ptr<Primitive>> &orderedPrims,
+        std::atomic<int> *orderedPrimsOffset, int bitIndex) const;
+    BVHBuildNode *buildUpperSAH(MemoryArena &arena,
+                                std::vector<BVHBuildNode *> &treeletRoots,
+                                int start, int end, int *totalNodes) const;
+    int flattenBVHTree(BVHBuildNode *node, int *offset);
+
+    // BVHAccel Private Data
+    int maxPrimsInNode;
+    SplitMethod splitMethod;
+    std::vector<std::shared_ptr<Primitive>> primitives;
+    LinearBVHNode *nodes = nullptr;
 };
 
 }  // namespace pbrt
