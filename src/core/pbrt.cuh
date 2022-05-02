@@ -119,7 +119,7 @@ struct Interaction;
 class SurfaceInteraction;
 class Shape;
 class Primitive;
-class GeometricPrimitive;
+//class GeometricPrimitive;
 template <int nSpectrumSamples>
 class CoefficientSpectrum;
 class RGBSpectrum;
