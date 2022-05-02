@@ -234,42 +234,24 @@ inline std::ostream &operator<<(std::ostream &os, const BSDF &bsdf) {
 class BxDF {
   public:
     // BxDF Interface
-    virtual ~BxDF() {}
+    ~BxDF() {}
     __both__
     BxDF(BxDFType type) : type(type) {}
     __both__
     bool MatchesFlags(BxDFType t) const { return (type & t) == type; }
     __both__
-    virtual Spectrum f(const Vector3f &wo, const Vector3f &wi) const = 0;
-    __both__
-    virtual Spectrum Sample_f(const Vector3f &wo, Vector3f *wi,
+    Spectrum Sample_f(const Vector3f &wo, Vector3f *wi,
                               const Point2f &sample, Float *pdf,
                               BxDFType *sampledType = nullptr) const;
     __both__
-    virtual Spectrum rho(const Vector3f &wo, int nSamples,
-                         const Point2f *samples) const;
-    __both__
-    virtual Spectrum rho(int nSamples, const Point2f *samples1,
-                         const Point2f *samples2) const;
-    __both__
-    virtual Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
-    virtual std::string ToString() const = 0;
+    Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
 
     // BxDF Public Data
     const BxDFType type;
-};
 
-inline std::ostream &operator<<(std::ostream &os, const BxDF &bxdf) {
-    os << bxdf.ToString();
-    return os;
-}
-
-class LambertianReflection : public BxDF {
-  public:
-    // LambertianReflection Public Methods
     __both__
-    LambertianReflection(const Spectrum &R)
-        : BxDF(BxDFType(BSDF_REFLECTION | BSDF_DIFFUSE)), R(R) {}
+    BxDF(const Spectrum &R)
+        : type(BxDFType(BSDF_REFLECTION | BSDF_DIFFUSE)), R(R) {}
     __both__
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
     __both__
@@ -282,6 +264,30 @@ class LambertianReflection : public BxDF {
     // LambertianReflection Private Data
     const Spectrum R;
 };
+
+inline std::ostream &operator<<(std::ostream &os, const BxDF &bxdf) {
+    os << bxdf.ToString();
+    return os;
+}
+
+// class LambertianReflection : public BxDF {
+//   public:
+//     // LambertianReflection Public Methods
+//     __both__
+//     LambertianReflection(const Spectrum &R)
+//         : BxDF(BxDFType(BSDF_REFLECTION | BSDF_DIFFUSE)), R(R) {}
+//     __both__
+//     Spectrum f(const Vector3f &wo, const Vector3f &wi) const;
+//     __both__
+//     Spectrum rho(const Vector3f &, int, const Point2f *) const { return R; }
+//     __both__
+//     Spectrum rho(int, const Point2f *, const Point2f *) const { return R; }
+//     std::string ToString() const;
+
+//   private:
+//     // LambertianReflection Private Data
+//     const Spectrum R;
+// };
 
 // BSDF Inline Method Definitions
 __both__

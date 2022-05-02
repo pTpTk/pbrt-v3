@@ -43,14 +43,12 @@
 
 namespace pbrt {
 
-LightDistribution::~LightDistribution() {}
-
 LightDistribution* CreateLightSampleDistribution(
     const std::string &name, const Scene &scene) {
         void* ptr;
-        cudaMallocManaged(&ptr, sizeof(SpatialLightDistribution));
+        cudaMallocManaged(&ptr, sizeof(LightDistribution));
         // // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
-        return new(ptr) SpatialLightDistribution(scene);
+        return new(ptr) LightDistribution(scene);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -65,7 +63,7 @@ STAT_INT_DISTRIBUTION("SpatialLightDistribution/Hash probes per lookup", nProbes
 // packed coordinate value, which we use to represent
 static const uint64_t invalidPackedPos = 0xffffffffffffffff;
 
-SpatialLightDistribution::SpatialLightDistribution(const Scene &scene,
+LightDistribution::LightDistribution(const Scene &scene,
                                                    int maxVoxels)
     : scene(scene) {
     // Compute the number of voxels so that the widest scene bounding box
@@ -91,12 +89,12 @@ SpatialLightDistribution::SpatialLightDistribution(const Scene &scene,
         hashTable[i].distribution = nullptr;
     }
 
-    LOG(INFO) << "SpatialLightDistribution: scene bounds " << b <<
+    LOG(INFO) << "LightDistribution: scene bounds " << b <<
         ", voxel res (" << nVoxels[0] << ", " << nVoxels[1] << ", " <<
         nVoxels[2] << ")";
 }
 
-SpatialLightDistribution::~SpatialLightDistribution() {
+LightDistribution::~LightDistribution() {
     // Gather statistics about how well the computed distributions are across
     // the buckets.
     for (size_t i = 0; i < hashTableSize; ++i) {
@@ -109,7 +107,7 @@ SpatialLightDistribution::~SpatialLightDistribution() {
 }
 
 __device__
-const Distribution1D *SpatialLightDistribution::Lookup(const Point3f &p) const {
+const Distribution1D *LightDistribution::Lookup(const Point3f &p) const {
     // ProfilePhase _(Prof::LightDistribLookup);
     // ++nLookups;
 
@@ -205,7 +203,7 @@ const Distribution1D *SpatialLightDistribution::Lookup(const Point3f &p) const {
 }
 __both__
 Distribution1D *
-SpatialLightDistribution::ComputeDistribution(Point3i pi) const {
+LightDistribution::ComputeDistribution(Point3i pi) const {
     // ProfilePhase _(Prof::LightDistribCreation);
     // ++nCreated;
     // ++nDistributions;

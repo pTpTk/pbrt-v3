@@ -63,24 +63,35 @@ class Light {
   public:
     // Light Interface
     virtual ~Light();
-    Light(int flags, const Transform &LightToWorld,
-          const MediumInterface &mediumInterface, int nSamples = 1);
+    // Light(int flags, const Transform &LightToWorld,
+    //       const MediumInterface &mediumInterface, int nSamples = 1);
+          
+    // Light(const Transform &LightToWorld, const MediumInterface &medium,
+    //       int nSamples);
+
+    Light(const Transform &LightToWorld,
+          const MediumInterface &mediumInterface, const Spectrum &Le,
+          int nSamples, Shape * const shape,
+          bool twoSided = false);
+
     __both__
-    virtual Spectrum Sample_Li(const Interaction &ref, const Point2f &u,
+    Spectrum Sample_Li(const Interaction &ref, const Point2f &u,
                                Vector3f *wi, Float *pdf,
-                               VisibilityTester *vis) const = 0;
-    virtual Spectrum Power() const = 0;
+                               VisibilityTester *vis) const;
+    Spectrum Power() const;
     __both__
-    virtual void Preprocess(const Scene &scene) {}
+    void Preprocess(const Scene &scene) {}
     __both__
-    virtual Spectrum Le(const RayDifferential &r) const;
+    Spectrum Le(const RayDifferential &r) const;
     __both__
-    virtual Float Pdf_Li(const Interaction &ref, const Vector3f &wi) const = 0;
-    virtual Spectrum Sample_Le(const Point2f &u1, const Point2f &u2, Float time,
+    Float Pdf_Li(const Interaction &ref, const Vector3f &wi) const;
+    Spectrum Sample_Le(const Point2f &u1, const Point2f &u2, Float time,
                                Ray *ray, Normal3f *nLight, Float *pdfPos,
-                               Float *pdfDir) const = 0;
-    virtual void Pdf_Le(const Ray &ray, const Normal3f &nLight, Float *pdfPos,
-                        Float *pdfDir) const = 0;
+                               Float *pdfDir) const;
+    void Pdf_Le(const Ray &ray, const Normal3f &nLight, Float *pdfPos,
+                        Float *pdfDir) const;
+    __both__
+    Spectrum L(const Interaction &intr, const Vector3f &w) const;
 
     // Light Public Data
     const int flags;
@@ -90,6 +101,15 @@ class Light {
   protected:
     // Light Protected Data
     const Transform LightToWorld, WorldToLight;
+
+    // DiffuseAreaLight Protected Data
+    const Spectrum Lemit;
+    Shape* shape;
+    // Added after book publication: by default, DiffuseAreaLights still
+    // only emit in the hemimsphere around the surface normal.  However,
+    // this behavior can now be overridden to give emission on both sides.
+    const bool twoSided;
+    const Float area;
 };
 
 class VisibilityTester {
@@ -107,14 +127,14 @@ class VisibilityTester {
     Interaction p0, p1;
 };
 
-class AreaLight : public Light {
-  public:
-    // AreaLight Interface
-    AreaLight(const Transform &LightToWorld, const MediumInterface &medium,
-              int nSamples);
-    __both__
-    virtual Spectrum L(const Interaction &intr, const Vector3f &w) const = 0;
-};
+// class AreaLight : public Light {
+//   public:
+//     // AreaLight Interface
+//     // AreaLight(const Transform &LightToWorld, const MediumInterface &medium,
+//     //           int nSamples);
+//     // __both__
+//     // virtual Spectrum L(const Interaction &intr, const Vector3f &w) const = 0;
+// };
 
 }  // namespace pbrt
 

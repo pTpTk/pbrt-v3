@@ -49,25 +49,11 @@ namespace pbrt {
 // space.
 class LightDistribution {
   public:
-    virtual ~LightDistribution();
+    LightDistribution(const Scene &scene, int maxVoxels = 64);
+    ~LightDistribution();
 
     // Given a point |p| in space, this method returns a (hopefully
     // effective) sampling distribution for light sources at that point.
-    __device__
-    virtual const Distribution1D *Lookup(const Point3f &p) const = 0;
-};
-
-LightDistribution* CreateLightSampleDistribution(
-    const std::string &name, const Scene &scene);
-
-// A spatially-varying light distribution that adjusts the probability of
-// sampling a light source based on an estimate of its contribution to a
-// region of space.  A fixed voxel grid is imposed over the scene bounds
-// and a sampling distribution is computed as needed for each voxel.
-class SpatialLightDistribution : public LightDistribution {
-  public:
-    SpatialLightDistribution(const Scene &scene, int maxVoxels = 64);
-    ~SpatialLightDistribution();
     __device__
     const Distribution1D *Lookup(const Point3f &p) const;
 
@@ -92,6 +78,42 @@ class SpatialLightDistribution : public LightDistribution {
     mutable HashEntry* hashTable;
     size_t hashTableSize;
 };
+
+LightDistribution* CreateLightSampleDistribution(
+    const std::string &name, const Scene &scene);
+
+// A spatially-varying light distribution that adjusts the probability of
+// sampling a light source based on an estimate of its contribution to a
+// region of space.  A fixed voxel grid is imposed over the scene bounds
+// and a sampling distribution is computed as needed for each voxel.
+// class SpatialLightDistribution : public LightDistribution {
+//   public:
+//     SpatialLightDistribution(const Scene &scene, int maxVoxels = 64);
+//     ~SpatialLightDistribution();
+//     __device__
+//     const Distribution1D *Lookup(const Point3f &p) const;
+
+//   private:
+//     // Compute the sampling distribution for the voxel with integer
+//     // coordiantes given by "pi".
+//     __both__
+//     Distribution1D *ComputeDistribution(Point3i pi) const;
+
+//     const Scene &scene;
+//     int nVoxels[3];
+
+//     // The hash table is a fixed number of HashEntry structs (where we
+//     // allocate more than enough entries in the SpatialLightDistribution
+//     // constructor). During rendering, the table is allocated without
+//     // locks, using atomic operations. (See the Lookup() method
+//     // implementation for details.)
+//     struct HashEntry {
+//         unsigned long long packedPos;
+//         Distribution1D * distribution;
+//     };
+//     mutable HashEntry* hashTable;
+//     size_t hashTableSize;
+// };
 
 }  // namespace pbrt
 

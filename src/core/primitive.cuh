@@ -81,7 +81,7 @@ class Primitive {
     __both__
     bool IntersectP(const Ray &r) const;
     __both__
-    const AreaLight *GetAreaLight() const;
+    const Light *GetAreaLight() const;
     __both__
     const Material *GetMaterial() const;
     __both__
@@ -114,7 +114,7 @@ class Primitive {
     // GeometricPrimitive Private Data
     Shape* shape;
     Material* material;
-    AreaLight* areaLight;
+    Light* areaLight;
     MediumInterface mediumInterface;
 
     // BVHAccel Private Methods

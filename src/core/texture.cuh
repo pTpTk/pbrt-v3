@@ -52,9 +52,15 @@ template <typename T>
 class Texture {
   public:
     // Texture Interface
+    ~Texture() {}
+
+    // ConstantTexture Public Methods
+    Texture(const T &value) : value(value) {}
     __both__
-    virtual T Evaluate(const SurfaceInteraction &) const = 0;
-    virtual ~Texture() {}
+    T Evaluate(const SurfaceInteraction &) const { return value; }
+
+  private:
+    T value;
 };
 
 }  // namespace pbrt
