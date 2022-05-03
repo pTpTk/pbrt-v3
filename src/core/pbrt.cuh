@@ -60,6 +60,7 @@
 #include <string.h>
 #include <glog/logging.h>
 #include <cuda_runtime.h>
+#include <cstdalign>
 #include "std.cuh"
 
 // Platform-specific definitions
@@ -142,7 +143,7 @@ class Medium;
 struct MediumInterface;
 class Light;
 class VisibilityTester;
-class AreaLight;
+// class AreaLight;
 struct Distribution1D;
 class Distribution2D;
 #ifdef PBRT_FLOAT_AS_DOUBLE

@@ -217,7 +217,7 @@ Primitive::~Primitive() {
 }
 
 __both__
-const AreaLight *Primitive::GetAreaLight() const {
+const Light *Primitive::GetAreaLight() const {
     switch (type) {
         case PrimitiveType::Aggregate: return nullptr;
         case PrimitiveType::GeometricPrimitive: return areaLight;
@@ -261,7 +261,7 @@ void Primitive::ComputeScatteringFunctions(SurfaceInteraction *isect,
 __both__
 Primitive::Primitive(Shape*     const shape,
                      Material*  const material,
-                     AreaLight* const areaLight,
+                     Light* const areaLight,
                      const MediumInterface &mediumInterface)
     : shape(shape),
     material(material),
@@ -329,6 +329,7 @@ bool Primitive::Intersect(const Ray &ray,
                           SurfaceInteraction *isect) const {
     switch (type) {
         case PrimitiveType::GeometricPrimitive: {
+            printf("here\n");
             Float tHit;
             if (!shape->Intersect(ray, &tHit, isect)) return false;
             ray.tMax = tHit;
@@ -343,16 +344,19 @@ bool Primitive::Intersect(const Ray &ray,
             return true;
         }
         case PrimitiveType::BVHAccel: {
-            //printf("nodes[%p]\n", nodes);
+            printf("nodes[%p]\n", nodes);
             if (!nodes) return false;
 
             // ProfilePhase p(Prof::AccelIntersect);
             bool hit = false;
-            Vector3f invDir(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
-            int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+            printf("ray[%p]", &ray);
+            printf("sizeof(Vector3f) = %d\n", sizeof(Vector3f));
+            Vector3f &invDir = *new Vector3f(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
+            printf("invDir[%p]\n", &invDir);
+            int* dirIsNeg = new int[3]{invDir.x < 0, invDir.y < 0, invDir.z < 0};
             // Follow ray through BVH nodes to find primitive intersections
             int toVisitOffset = 0, currentNodeIndex = 0;
-            int nodesToVisit[64];
+            int *nodesToVisit = new int[64];
             while (true) {
                 const LinearBVHNode *node = &nodes[currentNodeIndex];
                 // Check ray against BVH node
@@ -361,8 +365,10 @@ bool Primitive::Intersect(const Ray &ray,
                         // Intersect ray with primitives in leaf BVH node
                         for (int i = 0; i < node->nPrimitives; ++i)
                             if (primitives[node->primitivesOffset + i]->Intersect(
-                                    ray, isect))
+                                    ray, isect)) {
                                 hit = true;
+                                printf("here\n");
+                            }
                         if (toVisitOffset == 0) break;
                         currentNodeIndex = nodesToVisit[--toVisitOffset];
                     } else {
@@ -381,6 +387,9 @@ bool Primitive::Intersect(const Ray &ray,
                     currentNodeIndex = nodesToVisit[--toVisitOffset];
                 }
             }
+            delete &invDir;
+            delete dirIsNeg;
+            delete nodesToVisit;
             return hit;
         }
     }

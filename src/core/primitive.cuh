@@ -95,7 +95,7 @@ class Primitive {
     __both__
     Primitive(Shape*     const shape,
               Material*  const material,
-              AreaLight* const areaLight,
+              Light* const areaLight,
               const MediumInterface &mediumInterface);
 
     // BVHAccel Public Types

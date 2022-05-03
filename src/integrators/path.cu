@@ -54,9 +54,9 @@ PathIntegrator::PathIntegrator(int maxDepth,
       maxDepth(maxDepth),
       rrThreshold(rrThreshold),
       lightSampleStrategy(lightSampleStrategy) {
-            printf("integrator.maxDepth[%p]\n", &this->maxDepth);
-        printf("integrator.rrThreshold[%p]\n", &this->rrThreshold);
-        printf("integrator.lightSampleStrategy[%p]\n",&this->lightSampleStrategy);
+            // printf("integrator.maxDepth[%p]\n", &this->maxDepth);
+        // printf("integrator.rrThreshold[%p]\n", &this->rrThreshold);
+        // printf("integrator.lightSampleStrategy[%p]\n",&this->lightSampleStrategy);
       }
 
 void PathIntegrator::Preprocess(const Scene &scene, Sampler &sampler) {

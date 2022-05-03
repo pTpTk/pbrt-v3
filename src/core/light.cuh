@@ -91,7 +91,9 @@ class Light {
     void Pdf_Le(const Ray &ray, const Normal3f &nLight, Float *pdfPos,
                         Float *pdfDir) const;
     __both__
-    Spectrum L(const Interaction &intr, const Vector3f &w) const;
+    Spectrum L(const Interaction &intr, const Vector3f &w) const {
+        return (twoSided || Dot(intr.n, w) > 0) ? Lemit : Spectrum(0.f);
+    }
 
     // Light Public Data
     const int flags;

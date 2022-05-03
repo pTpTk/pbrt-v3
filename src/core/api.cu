@@ -868,7 +868,7 @@ void pbrtWorldEnd() {
         printf("%*sWorldEnd\n", catIndentCount, "");
     } else {
         Integrator* integrator(renderOptions->MakeIntegrator());
-        printf("light.size() = %d\n", renderOptions->lights.size());
+        // printf("light.size() = %d\n", renderOptions->lights.size());
         Scene* scene(renderOptions->MakeScene());
         // CallLiKernel(scene);
         // Render(integrator, scene);

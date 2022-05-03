@@ -385,8 +385,22 @@ Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
     // Return uniform PDF if point is inside sphere
     Point3f pOrigin =
         OffsetRayOrigin(ref.p, ref.pError, ref.n, pCenter - ref.p);
-    if (DistanceSquared(pOrigin, pCenter) <= radius * radius)
-        return Shape::Pdf(ref, wi);
+    if (DistanceSquared(pOrigin, pCenter) <= radius * radius){
+        // Intersect sample ray with area light geometry
+        Ray ray = ref.SpawnRay(wi);
+        Float tHit;
+        SurfaceInteraction isectLight;
+        // Ignore any alpha textures used for trimming the shape when performing
+        // this intersection. Hack for the "San Miguel" scene, where this is used
+        // to make an invisible area light.
+        if (!Intersect(ray, &tHit, &isectLight)) return 0;
+
+        // Convert light sample weight to solid angle measure
+        Float pdf = DistanceSquared(ref.p, isectLight.p) /
+                    (AbsDot(isectLight.n, -wi) * Area());
+        if (isinf(pdf)) pdf = 0.f;
+        return pdf;
+    }
 
     // Compute general sphere PDF
     Float sinThetaMax2 = radius * radius / DistanceSquared(ref.p, pCenter);

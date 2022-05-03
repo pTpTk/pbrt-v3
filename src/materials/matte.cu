@@ -61,20 +61,22 @@ namespace pbrt {
 // }
 
 Material *CreateMatteMaterial(const TextureParams &mp) {
-    Texture<Spectrum>* Kd;// = mp.GetSpectrumTexture("Kd", Spectrum(0.5f)).get();
-    Texture<Float>* sigma;// = mp.GetFloatTexture("sigma", 0.f).get();
-    Texture<Float>* bumpMap;// = mp.GetFloatTextureOrNull("bumpmap").get();
+    Texture<Spectrum>* Kd(nullptr);
+    Texture<Float>* sigma(nullptr);
+    Texture<Float>* bumpMap(nullptr);
     
-    cudaMallocManaged(&Kd, sizeof(Texture<Spectrum>));
-    // std::cout << "Error matte.cu: 69: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
-    cudaMallocManaged(&sigma, sizeof(Texture<Float>));
-    // std::cout << "Error matte.cu: 71: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
-    cudaMallocManaged(&bumpMap, sizeof(Texture<Float>));
-    // std::cout << "Error matte.cu: 73: " << cudaGetErrorString(cudaGetLastError()) << std::endl;
-
-    *Kd = *mp.GetSpectrumTexture("Kd", Spectrum(0.5f));
-    *sigma = *mp.GetFloatTexture("sigma", 0.f);
-    *bumpMap = *mp.GetFloatTextureOrNull("bumpmap");
+    if(mp.GetSpectrumTexture("Kd", Spectrum(0.5f))) {
+        cudaMallocManaged(&Kd, sizeof(Texture<Spectrum>));
+        *Kd = *mp.GetSpectrumTexture("Kd", Spectrum(0.5f));
+    }
+    if(mp.GetFloatTexture("sigma", 0.f)){
+        cudaMallocManaged(&sigma, sizeof(Texture<Float>));
+        *sigma = *mp.GetFloatTexture("sigma", 0.f);
+    }
+    if(mp.GetFloatTextureOrNull("bumpmap")){
+        cudaMallocManaged(&bumpMap, sizeof(Texture<Float>));
+        *bumpMap = *mp.GetFloatTextureOrNull("bumpmap");
+    }
 
     void* ptr;
     cudaMallocManaged(&ptr, sizeof(Material));

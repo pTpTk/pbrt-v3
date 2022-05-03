@@ -331,9 +331,9 @@ Shape* CreateSphereShape(const Transform *o2w, const Transform *w2o,
     Float zmax = params.FindOneFloat("zmax", radius);
     Float phimax = params.FindOneFloat("phimax", 360.f);
     void* ptr;
-    cudaMallocManaged(&ptr, sizeof(Sphere));
+    cudaMallocManaged(&ptr, sizeof(Shape));
     // LOG(ERROR) << "\n" << cudaGetErrorString(cudaGetLastError()) << std::endl;
-    return new(ptr) Sphere(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
+    return new(ptr) Shape(o2w, w2o, reverseOrientation, radius, zmin, zmax, phimax);
 }
 
 }  // namespace pbrt

@@ -46,8 +46,8 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
 
         // Intersect _ray_ with scene and store intersection in _isect_
         SurfaceInteraction isect;
-        //printf("isect[%p]\n", &isect);
-        //printf("scene[%p]\n", &scene);
+        printf("isect[%p]\n", &isect);
+        printf("scene[%p]\n", &scene);
         bool foundIntersection = scene.Intersect(ray, &isect);
 
         // Possibly add emitted light at intersection
@@ -240,24 +240,6 @@ Float BxDF::Pdf(const Vector3f &wo, const Vector3f &wi) const {
 
 __both__
 Bounds3f Shape::WorldBound() const { return (*ObjectToWorld)(ObjectBound()); }
-
-__both__
-Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
-    // Intersect sample ray with area light geometry
-    Ray ray = ref.SpawnRay(wi);
-    Float tHit;
-    SurfaceInteraction isectLight;
-    // Ignore any alpha textures used for trimming the shape when performing
-    // this intersection. Hack for the "San Miguel" scene, where this is used
-    // to make an invisible area light.
-    if (!Intersect(ray, &tHit, &isectLight)) return 0;
-
-    // Convert light sample weight to solid angle measure
-    Float pdf = DistanceSquared(ref.p, isectLight.p) /
-                (AbsDot(isectLight.n, -wi) * Area());
-    if (isinf(pdf)) pdf = 0.f;
-    return pdf;
-}
 
 __both__
 Float UniformConePdf(Float cosThetaMax) {
@@ -468,12 +450,9 @@ __both__
 bool Scene::Intersect(const Ray &ray, SurfaceInteraction *isect) const {
     // ++nIntersectionTests;
     assert(ray.d != Vector3f(0,0,0));
-    //printf("ray.d[%p]\n", &(ray.d));
-    //printf("aggregate[%p]\n", aggregate);
-    //return false;
-    //printf("aggregate->Intersect[%p]\n", &(aggregate->Intersect));
-    //return aggregate->Intersect(ray, isect);
-    return false;
+    printf("ray.d[%p]\n", &(ray.d));
+    printf("aggregate[%p]\n", aggregate);
+    return aggregate->Intersect(ray, isect);
 }
 
 // interaction
@@ -490,12 +469,30 @@ void LiKernel(Spectrum* Ls, PathIntegrator* integrator,
               MemoryArena &arena) {
     int sampleNum = threadIdx.x;
     Ls[sampleNum] = 0.f;
+    int j = 0;
     
     if (rayWeights[sampleNum] > 0){
+        for(int i = 0; i < 1000; i++){++j;}
+        // Ls[sampleNum] = sampleNum*
         //printf("integrator[%p], scene[%p], tileSampler[%p], arena[%p]\n", 
         //      integrator, &scene, tileSamplers[sampleNum], &arena);
         // printf("integrator.Li[%p]\n", &integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0));
-        Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0);
+        // Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0);
+    }
+}
+
+__global__
+void Kernel(Spectrum* Ls, const Float* rayWeights, int seed) {
+    int sampleNum = threadIdx.x;
+    Ls[sampleNum] = 0.f;
+    Float j = 1;
+    
+    if (rayWeights[sampleNum] > 0){
+        for(int i = 0; i < 100000; i++){j *= (1+rayWeights[sampleNum]);}
+        if(j > 1)
+            Ls[sampleNum][0] = (seed % 2) * 0.5;
+        Ls[sampleNum][1] = ((seed*seed) % 3) * 0.3;
+        Ls[sampleNum][2] = (7*seed % 5) * 0.2;
     }
 }
 
@@ -569,7 +566,7 @@ void Render(Integrator *i, Scene *s){
             new(Ls)            Spectrum[samplesPerPixel];
 
             tileSamplers = (Sampler**)tileSamplersPtr;
-
+            // printf("samplesPerPixel: %d\n", samplesPerPixel);
             // Loop over pixels in tile to render them
             for (Point2i pixel : tileBounds) {
                 if (!InsideExclusive(pixel, integrator->pixelBounds))
@@ -600,28 +597,34 @@ void Render(Integrator *i, Scene *s){
                 }
                 
                 // Evaluate radiance along camera ray
-                // CallLiKernel(s);
                 
-                cudaDeviceSynchronize();
-                LiKernel<<<1, samplesPerPixel>>>
-                    (Ls, integrator, rays, rayWeights, scene, tileSamplers, *arena);
-                cudaDeviceSynchronize();
+                // cudaDeviceSynchronize();
+                // // LiKernel<<<1, samplesPerPixel>>>
+                // //     (Ls, integrator, rays, rayWeights, scene, tileSamplers, *arena);
+                // Kernel<<<1, samplesPerPixel>>>(Ls, rayWeights, seed);
+                // cudaDeviceSynchronize();
+
+                for(int64_t sampleNum = 0; 
+                    sampleNum < samplesPerPixel; 
+                    sampleNum++) {
+
+                    Ls[sampleNum] = 0.f;
+                    Float j = 1;
+                    
+                    if (rayWeights[sampleNum] > 0){
+                        for(int i = 0; i < 100000; i++){j *= (1+rayWeights[sampleNum]);}
+                        if(j > 1)
+                            Ls[sampleNum][0] = (seed % 2) * 0.5;
+                        Ls[sampleNum][1] = ((seed*seed) % 3) * 0.3;
+                        Ls[sampleNum][2] = (7*seed % 5) * 0.2;
+                    }
+                }
 
                 // LOG(ERROR) << cudaGetErrorString(cudaGetLastError()) << std::endl;
 
                 for(int64_t sampleNum = 0; 
                     sampleNum < samplesPerPixel; 
                     sampleNum++) {
-                    
-                    // Ls[sampleNum] = 0.f;
-                    // if (rayWeights[sampleNum] > 0) 
-                    //     Ls[sampleNum] = 
-                    //         Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena);
-
-                    // Issue warning if unexpected radiance value returned
-                    // if (Ls[sampleNum] != Spectrum(20.0)) {
-                    //     // LOG(ERROR) << "kernel may not be running\n";
-                    // }
 
                     if (Ls[sampleNum].HasNaNs()) {
                         LOG(ERROR) << StringPrintf(

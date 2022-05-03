@@ -58,7 +58,6 @@ class Scene {
         std::size_t count = 0;
         for (int i = 0; i < lights_v.size(); ++i) {
             Light* light = lights_v[i];
-            printf("LIGHT*: %x\n", (uint64_t)light);
             light->Preprocess(*this);
             if (light->flags & (int)LightFlags::Infinite) {
                 ++count;
