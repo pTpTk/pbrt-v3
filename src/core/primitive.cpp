@@ -606,14 +606,22 @@ BVHBuildNode *Primitive::HLBVHBuild(
 
     // Compute Morton indices of primitives
     std::vector<MortonPrimitive> mortonPrims(primitiveInfo.size());
-    ParallelFor([&](int i) {
+    // ParallelFor([&](int i) {
+    //     // Initialize _mortonPrims[i]_ for _i_th primitive
+    //     PBRT_CONSTEXPR int mortonBits = 10;
+    //     PBRT_CONSTEXPR int mortonScale = 1 << mortonBits;
+    //     mortonPrims[i].primitiveIndex = primitiveInfo[i].primitiveNumber;
+    //     Vector3f centroidOffset = bounds.Offset(primitiveInfo[i].centroid);
+    //     mortonPrims[i].mortonCode = EncodeMorton3(centroidOffset * mortonScale);
+    // }, primitiveInfo.size(), 512);
+    for(int64_t i = 0; i < primitiveInfo.size(); i++){
         // Initialize _mortonPrims[i]_ for _i_th primitive
         PBRT_CONSTEXPR int mortonBits = 10;
         PBRT_CONSTEXPR int mortonScale = 1 << mortonBits;
         mortonPrims[i].primitiveIndex = primitiveInfo[i].primitiveNumber;
         Vector3f centroidOffset = bounds.Offset(primitiveInfo[i].centroid);
         mortonPrims[i].mortonCode = EncodeMorton3(centroidOffset * mortonScale);
-    }, primitiveInfo.size(), 512);
+    }
 
     // Radix sort primitive Morton indices
     RadixSort(&mortonPrims);
@@ -643,7 +651,18 @@ BVHBuildNode *Primitive::HLBVHBuild(
     // Create LBVHs for treelets in parallel
     std::atomic<int> atomicTotal(0), orderedPrimsOffset(0);
     orderedPrims.resize(primitives.size());
-    ParallelFor([&](int i) {
+    // ParallelFor([&](int i) {
+    //     // Generate _i_th LBVH treelet
+    //     int nodesCreated = 0;
+    //     const int firstBitIndex = 29 - 12;
+    //     LBVHTreelet &tr = treeletsToBuild[i];
+    //     tr.buildNodes =
+    //         emitLBVH(tr.buildNodes, primitiveInfo, &mortonPrims[tr.startIndex],
+    //                  tr.nPrimitives, &nodesCreated, orderedPrims,
+    //                  &orderedPrimsOffset, firstBitIndex);
+    //     atomicTotal += nodesCreated;
+    // }, treeletsToBuild.size());
+    for(int64_t i = 0; i < treeletsToBuild.size(); i++) {
         // Generate _i_th LBVH treelet
         int nodesCreated = 0;
         const int firstBitIndex = 29 - 12;
@@ -653,7 +672,7 @@ BVHBuildNode *Primitive::HLBVHBuild(
                      tr.nPrimitives, &nodesCreated, orderedPrims,
                      &orderedPrimsOffset, firstBitIndex);
         atomicTotal += nodesCreated;
-    }, treeletsToBuild.size());
+    }
     *totalNodes = atomicTotal;
 
     // Create and return SAH BVH from LBVH treelets
