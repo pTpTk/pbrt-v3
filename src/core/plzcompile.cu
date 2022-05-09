@@ -46,8 +46,8 @@ Spectrum PathIntegrator::Li(const RayDifferential &r, const Scene &scene,
 
         // Intersect _ray_ with scene and store intersection in _isect_
         SurfaceInteraction isect;
-        printf("isect[%p]\n", &isect);
-        printf("scene[%p]\n", &scene);
+        // printf("isect[%p]\n", &isect);
+        // printf("scene[%p]\n", &scene);
         bool foundIntersection = scene.Intersect(ray, &isect);
 
         // Possibly add emitted light at intersection
@@ -450,8 +450,8 @@ __both__
 bool Scene::Intersect(const Ray &ray, SurfaceInteraction *isect) const {
     // ++nIntersectionTests;
     assert(ray.d != Vector3f(0,0,0));
-    printf("ray.d[%p]\n", &(ray.d));
-    printf("aggregate[%p]\n", aggregate);
+    // printf("ray.d[%p]\n", &(ray.d));
+    // printf("aggregate[%p]\n", aggregate);
     return aggregate->Intersect(ray, isect);
 }
 
@@ -472,12 +472,7 @@ void LiKernel(Spectrum* Ls, PathIntegrator* integrator,
     int j = 0;
     
     if (rayWeights[sampleNum] > 0){
-        for(int i = 0; i < 1000; i++){++j;}
-        // Ls[sampleNum] = sampleNum*
-        //printf("integrator[%p], scene[%p], tileSampler[%p], arena[%p]\n", 
-        //      integrator, &scene, tileSamplers[sampleNum], &arena);
-        // printf("integrator.Li[%p]\n", &integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0));
-        // Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0);
+        Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0);
     }
 }
 
@@ -598,27 +593,10 @@ void Render(Integrator *i, Scene *s){
                 
                 // Evaluate radiance along camera ray
                 
-                // cudaDeviceSynchronize();
-                // // LiKernel<<<1, samplesPerPixel>>>
-                // //     (Ls, integrator, rays, rayWeights, scene, tileSamplers, *arena);
-                // Kernel<<<1, samplesPerPixel>>>(Ls, rayWeights, seed);
-                // cudaDeviceSynchronize();
-
-                for(int64_t sampleNum = 0; 
-                    sampleNum < samplesPerPixel; 
-                    sampleNum++) {
-
-                    Ls[sampleNum] = 0.f;
-                    Float j = 1;
-                    
-                    if (rayWeights[sampleNum] > 0){
-                        for(int i = 0; i < 100000; i++){j *= (1+rayWeights[sampleNum]);}
-                        if(j > 1)
-                            Ls[sampleNum][0] = (seed % 2) * 0.5;
-                        Ls[sampleNum][1] = ((seed*seed) % 3) * 0.3;
-                        Ls[sampleNum][2] = (7*seed % 5) * 0.2;
-                    }
-                }
+                cudaDeviceSynchronize();
+                LiKernel<<<1, samplesPerPixel>>>
+                    (Ls, integrator, rays, rayWeights, scene, tileSamplers, *arena);
+                cudaDeviceSynchronize();
 
                 // LOG(ERROR) << cudaGetErrorString(cudaGetLastError()) << std::endl;
 

@@ -1,7 +1,7 @@
 LookAt -200 0 0   50 0 0   0 0 1
 Camera "perspective" "float fov" [90]
 Film "image"  
-"integer xresolution" [100] "integer yresolution" [100]
+"integer xresolution" [10] "integer yresolution" [10]
 
 Sampler "halton" "integer pixelsamples" [512]
 

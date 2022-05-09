@@ -344,31 +344,33 @@ bool Primitive::Intersect(const Ray &ray,
             return true;
         }
         case PrimitiveType::BVHAccel: {
-            printf("nodes[%p]\n", nodes);
             if (!nodes) return false;
-
             // ProfilePhase p(Prof::AccelIntersect);
             bool hit = false;
-            printf("ray[%p]", &ray);
-            printf("sizeof(Vector3f) = %d\n", sizeof(Vector3f));
             Vector3f &invDir = *new Vector3f(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
-            printf("invDir[%p]\n", &invDir);
             int* dirIsNeg = new int[3]{invDir.x < 0, invDir.y < 0, invDir.z < 0};
             // Follow ray through BVH nodes to find primitive intersections
             int toVisitOffset = 0, currentNodeIndex = 0;
             int *nodesToVisit = new int[64];
             while (true) {
                 const LinearBVHNode *node = &nodes[currentNodeIndex];
+                printf("node[%p]\n", node);
                 // Check ray against BVH node
                 if (node->bounds.IntersectP(ray, invDir, dirIsNeg)) {
                     if (node->nPrimitives > 0) {
                         // Intersect ray with primitives in leaf BVH node
-                        for (int i = 0; i < node->nPrimitives; ++i)
+                        for (int i = 0; i < node->nPrimitives; ++i) {
+                            printf("shape hit check\n");
+                            printf("primitives[node->primitivesOffset + i]: %p\n", primitives[node->primitivesOffset + i]);
+                            printf("here\n");
+                            printf("isect[%p]\n", &isect);
                             if (primitives[node->primitivesOffset + i]->Intersect(
                                     ray, isect)) {
                                 hit = true;
                                 printf("here\n");
                             }
+                            printf("after function call\n");
+                        }
                         if (toVisitOffset == 0) break;
                         currentNodeIndex = nodesToVisit[--toVisitOffset];
                     } else {
