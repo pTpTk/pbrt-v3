@@ -469,7 +469,6 @@ void LiKernel(Spectrum* Ls, PathIntegrator* integrator,
               MemoryArena &arena) {
     int sampleNum = threadIdx.x;
     Ls[sampleNum] = 0.f;
-    int j = 0;
     
     if (rayWeights[sampleNum] > 0){
         Ls[sampleNum] = integrator->Li(rays[sampleNum], scene, *tileSamplers[sampleNum], arena, 0);
@@ -511,7 +510,9 @@ void Render(Integrator *i, Scene *s){
                    (sampleExtent.y + tileSize - 1) / tileSize);
     ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
     {
-        ParallelFor2D([&](Point2i tile) {
+        for (int y = 0; y < nTiles.y; ++y)
+        for (int x = 0; x < nTiles.x; ++x) {
+            Point2i tile(x,y);
             // Render section of image corresponding to _tile_
 
             // Allocate _MemoryArena_ for tile
@@ -648,7 +649,7 @@ void Render(Integrator *i, Scene *s){
             cudaFree(rays);
             cudaFree(rayWeights);
             cudaFree(Ls);
-        }, nTiles);
+        };
         reporter.Done();
     }
     LOG(INFO) << "Rendering finished";
